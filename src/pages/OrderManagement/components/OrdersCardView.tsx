@@ -1,0 +1,592 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
+import PageMeta from "../../../components/common/PageMeta";
+import ComponentCard from "../../../components/common/ComponentCard";
+import Button from "../../../components/ui/button/Button";
+import Badge from "../../../components/ui/badge/Badge";
+import { Modal } from "../../../components/ui/modal";
+import Label from "../../../components/form/Label";
+import Select from "../../../components/form/Select";
+import Autocomplete from "../../../components/form/Autocomplete";
+import TextArea from "../../../components/form/input/TextArea";
+import { EyeIcon, PlusIcon, PencilIcon } from "../../../icons";
+import type { Order } from "../../../types/order";
+import type { PaginationMeta } from "../../../types/pagination";
+import type { Store } from "../../../types/store";
+import type { AdminUser } from "../../../types/userManagement";
+import type { Location } from "../../../types/location";
+import Pagination from "../../../components/common/Pagination";
+import { useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation } from "../../../hooks/queries/orders";
+import { useOverviewQuery } from "../../../hooks/queries/overview";
+import type { OverviewData } from "../../../services/overview";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useModal } from "../../../hooks/useModal";
+
+const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
+  if (!status) return "light";
+  const statusLower = status.toLowerCase();
+  if (statusLower === "pending") return "warning";
+  if (statusLower === "processing") return "info";
+  if (statusLower === "completed") return "success";
+  if (statusLower === "cancelled" || statusLower === "canceled") return "error";
+  if (statusLower === "confirmed") return "info";
+  if (statusLower === "order_assigned") return "info";
+  return "light";
+};
+
+const getStatusCardColor = (status: string | undefined): string => {
+  if (!status) return "border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]";
+  const statusLower = status.toLowerCase();
+  if (statusLower === "pending") return "border-warning-200 bg-warning-50 dark:border-warning-900/30 dark:bg-warning-900/10";
+  if (statusLower === "processing" || statusLower === "confirmed" || statusLower === "order_assigned") return "border-info-200 bg-info-50 dark:border-info-900/30 dark:bg-info-900/10";
+  if (statusLower === "completed") return "border-success-200 bg-success-50 dark:border-success-900/30 dark:bg-success-900/10";
+  if (statusLower === "cancelled" || statusLower === "canceled") return "border-error-200 bg-error-50 dark:border-error-900/30 dark:bg-error-900/10";
+  return "border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]";
+};
+
+const UpdateStatusSchema = z.object({
+  status: z.string().min(1, "Status is required"),
+  notes: z.string().optional(),
+});
+
+const AssignDeliveryBoySchema = z.object({
+  delivery_boy_id: z.number().min(1, "Delivery boy is required"),
+  auto_update_status: z.boolean().default(true).optional(),
+  notes: z.string().optional(),
+});
+
+type UpdateStatusInput = z.infer<typeof UpdateStatusSchema>;
+type AssignDeliveryBoyInput = z.infer<typeof AssignDeliveryBoySchema>;
+
+type Props = {
+  orders: Order[];
+  isLoading: boolean;
+  page: number;
+  perPage: number;
+  setPage: (page: number) => void;
+  setPerPage: (perPage: number) => void;
+  meta: PaginationMeta | undefined;
+  status: string | undefined;
+  setStatus: (status: string | undefined) => void;
+  userId: number | undefined;
+  setUserId: (userId: number | undefined) => void;
+  storeId: number | undefined;
+  setStoreId: (storeId: number | undefined) => void;
+  locationId: number | undefined;
+  setLocationId: (locationId: number | undefined) => void;
+  deliveryBoyId: number | undefined;
+  setDeliveryBoyId: (deliveryBoyId: number | undefined) => void;
+  dateFrom: string | undefined;
+  setDateFrom: (date: string | undefined) => void;
+  dateTo: string | undefined;
+  setDateTo: (date: string | undefined) => void;
+  stores: Store[];
+  users: AdminUser[];
+  locations: Location[];
+  deliveryBoys: AdminUser[];
+  clearFilters: () => void;
+  hasActiveFilters: boolean;
+};
+
+const getStatusCount = (status: string | undefined, overview: OverviewData | undefined): number => {
+  if (!overview?.orders) return 0;
+  if (status === undefined) {
+    return overview.orders.total || 0;
+  }
+  // Map status values to overview order stats keys
+  const statusMap: Record<string, keyof typeof overview.orders> = {
+    pending: "pending",
+    confirmed: "confirmed",
+    processing: "preparing", // processing maps to preparing in overview
+    order_assigned: "order_assigned",
+    completed: "completed",
+    cancelled: "cancelled",
+  };
+  const statusKey = statusMap[status];
+  if (statusKey && overview.orders[statusKey] !== undefined) {
+    return overview.orders[statusKey] as number;
+  }
+  return 0;
+};
+
+const statusTabs = [
+  { value: undefined, label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "processing", label: "Processing" },
+  { value: "order_assigned", label: "Assigned" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+export function OrdersCardView(props: Props) {
+  const navigate = useNavigate();
+  const updateStatusMutation = useUpdateOrderStatusMutation();
+  const assignDeliveryBoyMutation = useAssignDeliveryBoyMutation();
+  const { isOpen: isStatusOpen, openModal: openStatusModal, closeModal: closeStatusModal } = useModal();
+  const { isOpen: isAssignOpen, openModal: openAssignModal, closeModal: closeAssignModal } = useModal();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const {
+    orders,
+    isLoading,
+    setPage,
+    meta,
+    status,
+    setStatus,
+    locationId,
+    setLocationId,
+    locations,
+    storeId,
+    setStoreId,
+    stores,
+    deliveryBoyId,
+    setDeliveryBoyId,
+    deliveryBoys,
+  } = props;
+  
+  // Fetch overview data for order counts with current filters
+  const { data: overview, isLoading: isLoadingOverview } = useOverviewQuery({
+    location_id: locationId,
+    store_id: storeId,
+    delivery_boy_id: deliveryBoyId,
+  });
+
+  const {
+    control: statusControl,
+    handleSubmit: handleStatusSubmit,
+    reset: resetStatus,
+    formState: { errors: statusErrors },
+  } = useForm<UpdateStatusInput>({
+    resolver: zodResolver(UpdateStatusSchema),
+    defaultValues: {
+      status: "",
+      notes: "",
+    },
+  });
+
+  const {
+    control: assignControl,
+    handleSubmit: handleAssignSubmit,
+    reset: resetAssign,
+    formState: { errors: assignErrors },
+  } = useForm<AssignDeliveryBoyInput>({
+    resolver: zodResolver(AssignDeliveryBoySchema),
+    defaultValues: {
+      delivery_boy_id: undefined,
+      auto_update_status: true,
+      notes: "",
+    },
+  });
+
+  const openStatusModalForOrder = (order: Order) => {
+    setSelectedOrder(order);
+    resetStatus({
+      status: order.status || "",
+      notes: "",
+    });
+    openStatusModal();
+  };
+
+  const openAssignModalForOrder = (order: Order) => {
+    setSelectedOrder(order);
+    resetAssign({
+      delivery_boy_id: undefined,
+      auto_update_status: true,
+      notes: "",
+    });
+    openAssignModal();
+  };
+
+  const onStatusSubmit = (data: UpdateStatusInput) => {
+    if (!selectedOrder) return;
+    updateStatusMutation.mutate(
+      {
+        id: selectedOrder.id,
+        status: data.status,
+        notes: data.notes || "",
+      },
+      {
+        onSuccess: () => {
+          closeStatusModal();
+          setSelectedOrder(null);
+        },
+      }
+    );
+  };
+
+  const onAssignSubmit = (data: AssignDeliveryBoyInput) => {
+    if (!selectedOrder) return;
+    assignDeliveryBoyMutation.mutate(
+      {
+        id: selectedOrder.id,
+        delivery_boy_id: data.delivery_boy_id,
+        auto_update_status: data.auto_update_status ?? true,
+        notes: data.notes || "",
+      },
+      {
+        onSuccess: () => {
+          closeAssignModal();
+          setSelectedOrder(null);
+        },
+      }
+    );
+  };
+
+  return (
+    <>
+      <PageMeta title="Pending Orders | Lapina Bakes Admin" description="View and manage pending orders" />
+      <PageBreadcrumb pageTitle="Pending Orders" />
+      <div className="space-y-6">
+        <ComponentCard title="">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">View and manage orders by status.</p>
+            <Button size="sm" onClick={() => navigate("/orders/manual-create")} startIcon={<PlusIcon className="w-4 h-4" />}>
+              Create Manual Order
+            </Button>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <Autocomplete
+                  options={[
+                    { value: "", label: "All Locations" },
+                    ...locations.map((location) => ({ value: String(location.id), label: location.name }))
+                  ]}
+                  placeholder="Filter by Location"
+                  value={locationId ? String(locationId) : ""}
+                  onChange={(value) => setLocationId(value ? Number(value) : undefined)}
+                />
+              </div>
+              <div>
+                <Autocomplete
+                  options={[
+                    { value: "", label: "All Stores" },
+                    ...stores.map((store) => ({ value: String(store.id), label: store.name }))
+                  ]}
+                  placeholder="Filter by Store"
+                  value={storeId ? String(storeId) : ""}
+                  onChange={(value) => setStoreId(value ? Number(value) : undefined)}
+                />
+              </div>
+              <div>
+                <Autocomplete
+                  options={[
+                    { value: "", label: "All Delivery Boys" },
+                    ...deliveryBoys.map((deliveryBoy) => ({ value: String(deliveryBoy.id), label: deliveryBoy.name }))
+                  ]}
+                  placeholder="Filter by Delivery Boy"
+                  value={deliveryBoyId ? String(deliveryBoyId) : ""}
+                  onChange={(value) => setDeliveryBoyId(value ? Number(value) : undefined)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status Tabs */}
+          <div className="mb-6">
+            <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900 overflow-x-auto">
+              {statusTabs.map((tab) => {
+                const isActive = status === tab.value;
+                const count = isLoadingOverview ? 0 : getStatusCount(tab.value, overview);
+                const getTabColor = () => {
+                  if (isActive) {
+                    return "shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800";
+                  }
+                  return "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800";
+                };
+                const getCountBadgeColor = () => {
+                  if (isActive) {
+                    return "bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300";
+                  }
+                  return "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+                };
+                return (
+                  <button
+                    key={tab.value || "all"}
+                    onClick={() => setStatus(tab.value)}
+                    className={`px-3 py-2 font-medium rounded-md text-sm whitespace-nowrap transition-all flex items-center gap-2 ${getTabColor()}`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-xs font-semibold transition-colors ${getCountBadgeColor()}`}>
+                      {isLoadingOverview ? "..." : count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Orders Grid */}
+          {isLoading ? (
+            <div className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              Loading orders...
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              No orders found
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {orders.map((order) => {
+                const statusCount = getStatusCount(order.status, overview);
+                return (
+                  <div
+                    key={order.id}
+                    className={`rounded-xl border p-4 hover:shadow-md transition-shadow ${getStatusCardColor(order.status)}`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                          {order.order_number || `#${order.id}`}
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {order.created_at ? new Date(order.created_at).toLocaleDateString() : "—"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant="light" color={getStatusBadgeColor(order.status)} size="sm">
+                          {order.status?.charAt(0).toUpperCase() + order.status?.slice(1).replace("_", " ") || "—"}
+                        </Badge>
+                        {statusCount > 0 && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            {statusCount} {statusCount === 1 ? 'order' : 'orders'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Customer:</span>
+                      <span className="font-medium text-gray-800 dark:text-white/90">{order.user?.name || "—"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                      <span className="font-semibold text-gray-800 dark:text-white/90">
+                        {order.total_amount && !isNaN(parseFloat(order.total_amount))
+                          ? `₹${parseFloat(order.total_amount).toFixed(2)}`
+                          : "—"}
+                      </span>
+                    </div>
+                    {order.delivery_boy && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Delivery Boy:</span>
+                        <span className="font-medium text-gray-800 dark:text-white/90">{order.delivery_boy.name || "—"}</span>
+                      </div>
+                    )}
+                    {order.store && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Store:</span>
+                        <span className="font-medium text-gray-800 dark:text-white/90">{order.store.name || "—"}</span>
+                      </div>
+                    )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
+                    <button
+                      onClick={() => navigate(`/orders/${order.id}`)}
+                      className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06] transition-colors"
+                      aria-label="View Order"
+                      title="View Order Details"
+                    >
+                      <EyeIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => openStatusModalForOrder(order)}
+                      className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06] transition-colors"
+                      aria-label="Change Status"
+                      title="Change Order Status"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => openAssignModalForOrder(order)}
+                      className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06] transition-colors"
+                      aria-label="Assign Delivery Boy"
+                      title="Assign Delivery Boy"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {meta && (
+            <div className="mt-4">
+              <Pagination
+                meta={meta}
+                onPageChange={setPage}
+                onPerPageChange={(perPage) => {
+                  props.setPerPage(perPage);
+                  setPage(1);
+                }}
+                isLoading={isLoading}
+              />
+            </div>
+          )}
+        </ComponentCard>
+      </div>
+
+      {/* Update Status Modal */}
+      <Modal isOpen={isStatusOpen} onClose={closeStatusModal} className="w-full max-w-md mx-4 sm:mx-6">
+        <form onSubmit={handleStatusSubmit(onStatusSubmit)}>
+          <div className="p-6">
+            <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Update Order Status</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="status">
+                  Status <span className="text-error-500">*</span>
+                </Label>
+                <Controller
+                  name="status"
+                  control={statusControl}
+                  render={({ field }) => (
+                    <Select
+                      options={[
+                        { value: "pending", label: "Pending" },
+                        { value: "confirmed", label: "Confirmed" },
+                        { value: "processing", label: "Processing" },
+                        { value: "order_assigned", label: "Order Assigned" },
+                        { value: "completed", label: "Completed" },
+                        { value: "cancelled", label: "Cancelled" },
+                      ]}
+                      placeholder="Select Status"
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value || "")}
+                    />
+                  )}
+                />
+                {statusErrors.status && (
+                  <p className="mt-1.5 text-xs text-error-500">{statusErrors.status.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Controller
+                  name="notes"
+                  control={statusControl}
+                  render={({ field }) => (
+                    <TextArea
+                      placeholder="Enter notes for this status update..."
+                      rows={4}
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value)}
+                      error={!!statusErrors.notes}
+                      hint={statusErrors.notes?.message}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
+              <Button variant="outline" onClick={closeStatusModal} disabled={updateStatusMutation.isPending} type="button" className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button variant="primary" disabled={updateStatusMutation.isPending} type="submit" className="w-full sm:w-auto">
+                {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Assign Delivery Boy Modal */}
+      <Modal isOpen={isAssignOpen} onClose={closeAssignModal} className="w-full max-w-md mx-4 sm:mx-6">
+        <form onSubmit={handleAssignSubmit(onAssignSubmit)}>
+          <div className="p-6">
+            <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Assign Delivery Boy</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="delivery_boy_id">
+                  Delivery Boy <span className="text-error-500">*</span>
+                </Label>
+                <Controller
+                  name="delivery_boy_id"
+                  control={assignControl}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={deliveryBoys.map((boy) => ({
+                        value: String(boy.id),
+                        label: boy.name,
+                      }))}
+                      placeholder="Select Delivery Boy"
+                      value={field.value ? String(field.value) : ""}
+                      onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                    />
+                  )}
+                />
+                {assignErrors.delivery_boy_id && (
+                  <p className="mt-1.5 text-xs text-error-500">{assignErrors.delivery_boy_id.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="auto_update_status">
+                  <Controller
+                    name="auto_update_status"
+                    control={assignControl}
+                    render={({ field }) => (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="auto_update_status"
+                          checked={field.value ?? true}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Auto update status</span>
+                      </div>
+                    )}
+                  />
+                </Label>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Controller
+                  name="notes"
+                  control={assignControl}
+                  render={({ field }) => (
+                    <TextArea
+                      placeholder="Enter notes for this assignment..."
+                      rows={4}
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value)}
+                      error={!!assignErrors.notes}
+                      hint={assignErrors.notes?.message}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
+              <Button variant="outline" onClick={closeAssignModal} disabled={assignDeliveryBoyMutation.isPending} type="button" className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button variant="primary" disabled={assignDeliveryBoyMutation.isPending} type="submit" className="w-full sm:w-auto">
+                {assignDeliveryBoyMutation.isPending ? "Assigning..." : "Assign Delivery Boy"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
+    </>
+  );
+}
+

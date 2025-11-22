@@ -1,0 +1,272 @@
+import { Link, useNavigate } from "react-router";
+import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
+import PageMeta from "../../../components/common/PageMeta";
+import ComponentCard from "../../../components/common/ComponentCard";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../components/ui/table";
+import Button from "../../../components/ui/button/Button";
+import { Modal } from "../../../components/ui/modal";
+import InputField from "../../../components/form/input/InputField";
+import Switch from "../../../components/form/switch/Switch";
+import Select from "../../../components/form/Select";
+import type { Store } from "../../../types/store";
+import type { Location } from "../../../types/location";
+import type { PaginationMeta } from "../../../types/pagination";
+import { EyeIcon, PencilIcon, TrashBinIcon, PlusIcon, BoxIcon } from "../../../icons";
+import Pagination from "../../../components/common/Pagination";
+
+type Props = {
+  stores: Store[];
+  isLoading: boolean;
+  search: string;
+  page: number;
+  perPage: number;
+  setPage: (page: number) => void;
+  setPerPage: (perPage: number) => void;
+  meta: PaginationMeta | undefined;
+  locationId: number | undefined;
+  setLocationId: (id: number | undefined) => void;
+  isActive: boolean | undefined;
+  setIsActive: (active: boolean | undefined) => void;
+  status: string | undefined;
+  setStatus: (status: string | undefined) => void;
+  locations: Location[];
+  onSearchChange: (value: string) => void;
+  clearFilters: () => void;
+
+  isDeleteOpen: boolean;
+  closeDeleteModal: () => void;
+
+  selectedStore: Store | null;
+
+  openDelete: (store: Store) => void;
+  confirmDelete: () => void;
+
+  isDeletePending: boolean;
+};
+
+export function StoresView(props: Props) {
+  const navigate = useNavigate();
+  const {
+    stores,
+    isLoading,
+    search,
+    setPage,
+    meta,
+    locationId,
+    setLocationId,
+    isActive,
+    setIsActive,
+    status,
+    setStatus,
+    locations,
+    onSearchChange,
+    clearFilters,
+    isDeleteOpen,
+    closeDeleteModal,
+    selectedStore,
+    openDelete,
+    confirmDelete,
+    isDeletePending,
+  } = props;
+
+  return (
+    <>
+      <PageMeta title="Stores | Lapina Bakes Admin" description="Manage stores" />
+      <PageBreadcrumb pageTitle="Stores" />
+      <div className="space-y-6">
+        <ComponentCard title="">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Create, edit, and configure store information here.</p>
+            <Button size="sm" onClick={() => navigate("/stores/new")} startIcon={<PlusIcon className="w-4 h-4" />}>
+              Add Store
+            </Button>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <InputField
+                id="search"
+                placeholder="Search stores..."
+                value={search}
+                onChange={(e) => onSearchChange(e.currentTarget.value)}
+              />
+            </div>
+            <div>
+              <Select
+                options={[
+                  { value: "", label: "All Locations" },
+                  ...locations.map((loc) => ({ value: String(loc.id), label: loc.name })),
+                ]}
+                placeholder="Filter by Location"
+                defaultValue={locationId ? String(locationId) : ""}
+                onChange={(value) => setLocationId(value ? Number(value) : undefined)}
+              />
+            </div>
+            <div>
+              <Select
+                options={[
+                  { value: "", label: "All Status" },
+                  { value: "active", label: "Active" },
+                  { value: "inactive", label: "Inactive" },
+                  { value: "maintenance", label: "Maintenance" },
+                  { value: "closed", label: "Closed" },
+                ]}
+                placeholder="Filter by Status"
+                defaultValue={status || ""}
+                onChange={(value) => setStatus(value || undefined)}
+              />
+            </div>
+            <div>
+              <Select
+                options={[
+                  { value: "", label: "All Active Status" },
+                  { value: "true", label: "Active" },
+                  { value: "false", label: "Inactive" },
+                ]}
+                placeholder="Filter by Active"
+                defaultValue={isActive !== undefined ? String(isActive) : ""}
+                onChange={(value) => setIsActive(value ? value === "true" : undefined)}
+              />
+            </div>
+            <div>
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="max-w-full overflow-x-auto">
+              <Table>
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Name
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Location
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Owner
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Active
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell className="px-5 py-4 text-center text-gray-500">Loading stores...</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                    </TableRow>
+                  ) : Array.isArray(stores) && stores.length > 0 ? (
+                    stores.map((store) => (
+                      <TableRow key={store.id}>
+                        <TableCell className="px-5 py-4 text-start">
+                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                            {store.name}
+                          </span>
+                          <span className="text-theme-xs text-gray-500 dark:text-gray-400">ID: {store.id}</span>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-start">
+                          <span className="text-gray-700 text-theme-sm dark:text-gray-300">
+                            {store.location?.name || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-start">
+                          <span className="text-gray-700 text-theme-sm dark:text-gray-300">
+                            {store.owner?.name || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-start">
+                          <Switch
+                            label="Active"
+                            defaultChecked={true}
+                            checked={store.is_active}
+                            onChange={() => {}}
+                          />
+                        </TableCell>
+                        <TableCell className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <Link
+                              to={`/stores/${store.id}`}
+                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              aria-label="View"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              to={`/stores/${store.id}/edit`}
+                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              aria-label="Edit"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              to={`/orders/all?store_id=${store.id}`}
+                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              aria-label="View Orders"
+                              title="View Orders for this Store"
+                            >
+                              <BoxIcon className="w-4 h-4" />
+                            </Link>
+                            <button
+                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-error-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              aria-label="Delete"
+                              onClick={() => openDelete(store)}
+                            >
+                              <TrashBinIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="px-5 py-4 text-center text-gray-500">No stores found</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                      <TableCell>{null}</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {meta && meta.last_page > 1 && (
+              <Pagination meta={meta} onPageChange={setPage} isLoading={isLoading} />
+            )}
+          </div>
+        </ComponentCard>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={closeDeleteModal} className="w-full max-w-md mx-4 sm:mx-6">
+        <div className="p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Confirm Delete</h3>
+          <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete the store &quot;{selectedStore?.name}&quot;? This action cannot be undone.
+          </p>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={closeDeleteModal} disabled={isDeletePending}>
+              Cancel
+            </Button>
+            <Button variant="primary" disabled={isDeletePending} onClick={confirmDelete}>
+              {isDeletePending ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
