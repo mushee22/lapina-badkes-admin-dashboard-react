@@ -10,14 +10,10 @@ export interface OverviewParams {
 
 export interface OrderStats {
   total: number;
-  pending: number;
-  confirmed: number;
-  preparing: number;
-  ready: number;
-  order_assigned: number;
-  order_pickup: number;
-  out_for_delivery: number;
-  completed: number;
+  order_placed: number;
+  ready_to_dispatch: number;
+  out_of_delivery: number;
+  delivered: number;
   cancelled: number;
 }
 
@@ -28,6 +24,8 @@ export interface RevenueStats {
   completed_amount: number;
   pending_amount: number;
   active_amount: number;
+  order_placed_amount: number;
+  ready_to_dispatch_amount: number;
 }
 
 export interface UserStats {
@@ -81,9 +79,11 @@ export interface StatusBreakdown {
 
 export interface TimePeriodStats {
   total: number;
-  completed: number;
+  completed?: number;
   pending?: number;
   active?: number;
+  delivered?: number;
+  order_placed?: number;
   amount: number;
 }
 

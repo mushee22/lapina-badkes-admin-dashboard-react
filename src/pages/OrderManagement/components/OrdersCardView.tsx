@@ -28,23 +28,42 @@ import { useModal } from "../../../hooks/useModal";
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
   const statusLower = status.toLowerCase();
-  if (statusLower === "pending") return "warning";
-  if (statusLower === "processing") return "info";
-  if (statusLower === "completed") return "success";
+  if (statusLower === "order_placed") return "warning";
+  if (statusLower === "ready_to_dispatch") return "info";
+  if (statusLower === "out_of_delivery") return "info";
+  if (statusLower === "delivered") return "success";
   if (statusLower === "cancelled" || statusLower === "canceled") return "error";
-  if (statusLower === "confirmed") return "info";
-  if (statusLower === "order_assigned") return "info";
   return "light";
 };
 
 const getStatusCardColor = (status: string | undefined): string => {
   if (!status) return "border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]";
   const statusLower = status.toLowerCase();
-  if (statusLower === "pending") return "border-warning-200 bg-warning-50 dark:border-warning-900/30 dark:bg-warning-900/10";
-  if (statusLower === "processing" || statusLower === "confirmed" || statusLower === "order_assigned") return "border-info-200 bg-info-50 dark:border-info-900/30 dark:bg-info-900/10";
-  if (statusLower === "completed") return "border-success-200 bg-success-50 dark:border-success-900/30 dark:bg-success-900/10";
+  if (statusLower === "order_placed") return "border-warning-200 bg-warning-50 dark:border-warning-900/30 dark:bg-warning-900/10";
+  if (statusLower === "ready_to_dispatch" || statusLower === "out_of_delivery") return "border-info-200 bg-info-50 dark:border-info-900/30 dark:bg-info-900/10";
+  if (statusLower === "delivered") return "border-success-200 bg-success-50 dark:border-success-900/30 dark:bg-success-900/10";
   if (statusLower === "cancelled" || statusLower === "canceled") return "border-error-200 bg-error-50 dark:border-error-900/30 dark:bg-error-900/10";
   return "border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]";
+};
+
+const formatStatusForDisplay = (status: string | undefined): string => {
+  if (!status) return "—";
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case "order_placed":
+      return "Order Placed";
+    case "ready_to_dispatch":
+      return "Ready to Dispatch";
+    case "out_of_delivery":
+      return "Out of Delivery";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      // Fallback: capitalize first letter and replace underscores with spaces
+      return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+  }
 };
 
 const UpdateStatusSchema = z.object({
@@ -98,11 +117,10 @@ const getStatusCount = (status: string | undefined, overview: OverviewData | und
   }
   // Map status values to overview order stats keys
   const statusMap: Record<string, keyof typeof overview.orders> = {
-    pending: "pending",
-    confirmed: "confirmed",
-    processing: "preparing", // processing maps to preparing in overview
-    order_assigned: "order_assigned",
-    completed: "completed",
+    order_placed: "order_placed",
+    ready_to_dispatch: "ready_to_dispatch",
+    out_of_delivery: "out_of_delivery",
+    delivered: "delivered",
     cancelled: "cancelled",
   };
   const statusKey = statusMap[status];
@@ -114,11 +132,10 @@ const getStatusCount = (status: string | undefined, overview: OverviewData | und
 
 const statusTabs = [
   { value: undefined, label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "confirmed", label: "Confirmed" },
-  { value: "processing", label: "Processing" },
-  { value: "order_assigned", label: "Assigned" },
-  { value: "completed", label: "Completed" },
+  { value: "order_placed", label: "Order Placed" },
+  { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+  { value: "out_of_delivery", label: "Out of Delivery" },
+  { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
 ];
 
@@ -154,6 +171,39 @@ export function OrdersCardView(props: Props) {
     store_id: storeId,
     delivery_boy_id: deliveryBoyId,
   });
+
+  // Helper function to get allowed status transitions
+  const getAllowedStatusTransitions = (currentStatus: string) => {
+    const statusLower = currentStatus.toLowerCase();
+    switch (statusLower) {
+      case "order_placed":
+        return [
+          { value: "ready_to_dispatch", label: "Ready to Dispatch", color: "info" as const },
+          { value: "cancelled", label: "Cancel", color: "error" as const },
+        ];
+      case "ready_to_dispatch":
+        return [
+          { value: "out_of_delivery", label: "Out of Delivery", color: "info" as const },
+          { value: "cancelled", label: "Cancel", color: "error" as const },
+        ];
+      case "out_of_delivery":
+        return [
+          { value: "delivered", label: "Delivered", color: "success" as const },
+          { value: "cancelled", label: "Cancel", color: "error" as const },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Quick status update function
+  const handleQuickStatusUpdate = (order: Order, newStatus: string) => {
+    updateStatusMutation.mutate({
+      id: order.id,
+      status: newStatus,
+      notes: `Status changed from ${order.status} to ${newStatus} via quick action`,
+    });
+  };
 
   const {
     control: statusControl,
@@ -351,7 +401,7 @@ export function OrdersCardView(props: Props) {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Badge variant="light" color={getStatusBadgeColor(order.status)} size="sm">
-                          {order.status?.charAt(0).toUpperCase() + order.status?.slice(1).replace("_", " ") || "—"}
+                          {formatStatusForDisplay(order.status)}
                         </Badge>
                         {statusCount > 0 && (
                           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -387,6 +437,43 @@ export function OrdersCardView(props: Props) {
                       </div>
                     )}
                     </div>
+
+                    {/* Status Transition Buttons */}
+                    {(() => {
+                      const allowedTransitions = getAllowedStatusTransitions(order.status);
+                      return allowedTransitions.length > 0 && (
+                        <div className="pt-3 border-t border-gray-100 dark:border-white/[0.05]">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Quick Actions:</span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {allowedTransitions.map((transition) => {
+                              const getButtonClasses = () => {
+                                if (transition.color === "success") {
+                                  return "bg-success-50 text-success-700 hover:bg-success-100 border-success-200 dark:bg-success-900/20 dark:text-success-300 dark:hover:bg-success-900/30 dark:border-success-800";
+                                }
+                                if (transition.color === "error") {
+                                  return "bg-error-50 text-error-700 hover:bg-error-100 border-error-200 dark:bg-error-900/20 dark:text-error-300 dark:hover:bg-error-900/30 dark:border-error-800";
+                                }
+                                return "bg-info-50 text-info-700 hover:bg-info-100 border-info-200 dark:bg-info-900/20 dark:text-info-300 dark:hover:bg-info-900/30 dark:border-info-800";
+                              };
+                              
+                              return (
+                                <button
+                                  key={transition.value}
+                                  onClick={() => handleQuickStatusUpdate(order, transition.value)}
+                                  disabled={updateStatusMutation.isPending}
+                                  className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${getButtonClasses()}`}
+                                  title={`Change status to ${transition.label}`}
+                                >
+                                  {updateStatusMutation.isPending ? "..." : transition.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
                     <button
@@ -455,11 +542,10 @@ export function OrdersCardView(props: Props) {
                   render={({ field }) => (
                     <Select
                       options={[
-                        { value: "pending", label: "Pending" },
-                        { value: "confirmed", label: "Confirmed" },
-                        { value: "processing", label: "Processing" },
-                        { value: "order_assigned", label: "Order Assigned" },
-                        { value: "completed", label: "Completed" },
+                        { value: "order_placed", label: "Order Placed" },
+                        { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+                        { value: "out_of_delivery", label: "Out of Delivery" },
+                        { value: "delivered", label: "Delivered" },
                         { value: "cancelled", label: "Cancelled" },
                       ]}
                       placeholder="Select Status"

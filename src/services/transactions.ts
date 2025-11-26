@@ -1,6 +1,6 @@
 import * as http from "./http";
-import { CreateTransactionSchema, UpdateTransactionSchema } from "../types/transaction";
-import type { CreateTransactionInput, UpdateTransactionInput } from "../types/transaction";
+import { CreateTransactionSchema, UpdateTransactionSchema, CreateStoreTransactionSchema } from "../types/transaction";
+import type { CreateTransactionInput, UpdateTransactionInput, CreateStoreTransactionInput } from "../types/transaction";
 import type { PaginatedResponse } from "../types/pagination";
 
 export interface TransactionUser {
@@ -129,6 +129,30 @@ export async function updateTransaction(id: number, input: UpdateTransactionInpu
   }
   const response = await http.put<{ data?: Transaction; transaction?: Transaction } | Transaction>(
     `/transactions/${id}`,
+    validated.data
+  );
+  
+  // Handle wrapped response
+  if (response && typeof response === "object" && "data" in response && response.data) {
+    return response.data as Transaction;
+  }
+  
+  // Handle transaction key wrapper
+  if (response && typeof response === "object" && "transaction" in response && response.transaction) {
+    return response.transaction as Transaction;
+  }
+  
+  // Direct response
+  return response as Transaction;
+}
+
+export async function createStoreTransaction(input: CreateStoreTransactionInput): Promise<Transaction> {
+  const validated = CreateStoreTransactionSchema.safeParse(input);
+  if (!validated.success) {
+    throw new Error("Invalid store transaction payload");
+  }
+  const response = await http.post<{ data?: Transaction; transaction?: Transaction } | Transaction>(
+    "/transactions",
     validated.data
   );
   

@@ -162,6 +162,44 @@ export async function getOrderCustomers(search?: string): Promise<OrderCustomer[
   return [];
 }
 
+export interface OrderStoreOwner {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  store?: {
+    id: number;
+    name: string;
+    phone?: string;
+  };
+}
+
+export async function getOrderStoreOwners(search?: string): Promise<OrderStoreOwner[]> {
+  const qs = new URLSearchParams();
+  if (search) qs.set("search", search);
+  qs.set("role", "store_owner");
+  const query = qs.toString();
+  const path = query ? `/orders/customers?${query}` : "/orders/customers?role=store_owner";
+  const response = await http.get<{ customers: { data: OrderStoreOwner[] } } | OrderStoreOwner[] | { data: OrderStoreOwner[] }>(path);
+  
+  // Handle customers key wrapper with nested data
+  if (response && typeof response === "object" && "customers" in response && response.customers && typeof response.customers === "object" && "data" in response.customers && Array.isArray(response.customers.data)) {
+    return response.customers.data;
+  }
+  
+  // Handle data key wrapper
+  if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
+    return response.data;
+  }
+  
+  // Handle direct array
+  if (Array.isArray(response)) {
+    return response;
+  }
+  
+  return [];
+}
+
 export async function getOrderStores(): Promise<OrderStore[]> {
   const response = await http.get<{ stores: OrderStore[] } | OrderStore[] | { data: OrderStore[] }>("/orders/stores");
   
@@ -252,6 +290,33 @@ export async function assignDeliveryBoy(
     auto_update_status,
     notes,
   });
+
+  // Handle wrapped response
+  if (response && typeof response === "object" && "data" in response && response.data) {
+    return response.data as Order;
+  }
+
+  // Handle order key wrapper
+  if (response && typeof response === "object" && "order" in response && response.order) {
+    return response.order as Order;
+  }
+
+  // Direct response
+  return response as Order;
+}
+
+export interface UpdateOrderItemInput {
+  id?: number; // Optional for existing items
+  product_id: number;
+  quantity: number;
+}
+
+export interface UpdateOrderItemsInput {
+  items: UpdateOrderItemInput[];
+}
+
+export async function updateOrderItems(orderId: number, input: UpdateOrderItemsInput): Promise<Order> {
+  const response = await http.put<{ data?: Order; order?: Order } | Order>(`/orders/${orderId}/items`, input);
 
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {

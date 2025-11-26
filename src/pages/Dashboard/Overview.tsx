@@ -152,7 +152,7 @@ export default function Overview() {
                       {overview?.orders?.total || 0}
                     </p>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Pending: {overview?.orders?.pending || 0} | Completed: {overview?.orders?.completed || 0}
+                      Order Placed: {overview?.orders?.order_placed || 0} | Delivered: {overview?.orders?.delivered || 0}
                     </p>
                     <button
                       onClick={() => {
@@ -183,7 +183,7 @@ export default function Overview() {
                       ₹{(overview?.revenue?.total_amount || 0).toFixed(2)}
                     </p>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Completed: ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
+                      Delivered: ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="flex items-center justify-center w-12 h-12 bg-success/10 rounded-xl">
@@ -236,7 +236,7 @@ export default function Overview() {
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
                   onClick={() => {
                     const params = new URLSearchParams();
-                    params.set("status", "pending");
+                    params.set("status", "order_placed");
                     if (storeId) params.set("store_id", storeId);
                     if (deliveryBoyId) params.set("delivery_boy_id", deliveryBoyId);
                     if (locationId) params.set("location_id", String(locationId));
@@ -245,16 +245,16 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Order Placed</p>
                   <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
-                    {overview?.orders?.pending || 0}
+                    {overview?.orders?.order_placed || 0}
                   </p>
                 </div>
                 <div
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
                   onClick={() => {
                     const params = new URLSearchParams();
-                    params.set("status", "confirmed");
+                    params.set("status", "ready_to_dispatch");
                     if (storeId) params.set("store_id", storeId);
                     if (deliveryBoyId) params.set("delivery_boy_id", deliveryBoyId);
                     if (locationId) params.set("location_id", String(locationId));
@@ -263,16 +263,16 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Confirmed</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Ready to Dispatch</p>
                   <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
-                    {overview?.orders?.confirmed || 0}
+                    {overview?.orders?.ready_to_dispatch || 0}
                   </p>
                 </div>
                 <div
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
                   onClick={() => {
                     const params = new URLSearchParams();
-                    params.set("status", "completed");
+                    params.set("status", "out_of_delivery");
                     if (storeId) params.set("store_id", storeId);
                     if (deliveryBoyId) params.set("delivery_boy_id", deliveryBoyId);
                     if (locationId) params.set("location_id", String(locationId));
@@ -281,9 +281,27 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Out of Delivery</p>
                   <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
-                    {overview?.orders?.completed || 0}
+                    {overview?.orders?.out_of_delivery || 0}
+                  </p>
+                </div>
+                <div
+                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    params.set("status", "delivered");
+                    if (storeId) params.set("store_id", storeId);
+                    if (deliveryBoyId) params.set("delivery_boy_id", deliveryBoyId);
+                    if (locationId) params.set("location_id", String(locationId));
+                    if (dateFrom) params.set("date_from", dateFrom);
+                    if (dateTo) params.set("date_to", dateTo);
+                    navigate(`/orders/all?${params.toString()}`);
+                  }}
+                >
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Delivered</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                    {overview?.orders?.delivered || 0}
                   </p>
                 </div>
                 <div
@@ -304,30 +322,12 @@ export default function Overview() {
                     {overview?.orders?.cancelled || 0}
                   </p>
                 </div>
-                <div
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
-                  onClick={() => {
-                    const params = new URLSearchParams();
-                    params.set("status", "out_for_delivery");
-                    if (storeId) params.set("store_id", storeId);
-                    if (deliveryBoyId) params.set("delivery_boy_id", deliveryBoyId);
-                    if (locationId) params.set("location_id", String(locationId));
-                    if (dateFrom) params.set("date_from", dateFrom);
-                    if (dateTo) params.set("date_to", dateTo);
-                    navigate(`/orders/all?${params.toString()}`);
-                  }}
-                >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Out for Delivery</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
-                    {overview?.orders?.out_for_delivery || 0}
-                  </p>
-                </div>
               </div>
             </ComponentCard>
 
             {/* Revenue Breakdown */}
             <ComponentCard title="Revenue Breakdown">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                   <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
                   <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
@@ -335,15 +335,21 @@ export default function Overview() {
                   </p>
                 </div>
                 <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Completed Amount</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Delivered Amount</p>
                   <p className="mt-1 text-2xl font-bold text-success">
                     ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Pending Amount</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Order Placed Amount</p>
                   <p className="mt-1 text-2xl font-bold text-warning">
-                    ₹{(overview?.revenue?.pending_amount || 0).toFixed(2)}
+                    ₹{(overview?.revenue?.order_placed_amount || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Ready to Dispatch Amount</p>
+                  <p className="mt-1 text-2xl font-bold text-info">
+                    ₹{(overview?.revenue?.ready_to_dispatch_amount || 0).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -357,6 +363,18 @@ export default function Overview() {
                     <span className="text-sm text-gray-500 dark:text-gray-400">Total Orders</span>
                     <span className="text-lg font-bold text-gray-800 dark:text-white/90">
                       {overview?.today?.total || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Delivered</span>
+                    <span className="text-lg font-bold text-success">
+                      {overview?.today?.delivered || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Order Placed</span>
+                    <span className="text-lg font-bold text-warning">
+                      {overview?.today?.order_placed || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -377,6 +395,12 @@ export default function Overview() {
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Delivered</span>
+                    <span className="text-lg font-bold text-success">
+                      {overview?.this_week?.delivered || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-sm text-gray-500 dark:text-gray-400">Amount</span>
                     <span className="text-lg font-bold text-gray-800 dark:text-white/90">
                       ₹{(overview?.this_week?.amount || 0).toFixed(2)}
@@ -391,6 +415,12 @@ export default function Overview() {
                     <span className="text-sm text-gray-500 dark:text-gray-400">Total Orders</span>
                     <span className="text-lg font-bold text-gray-800 dark:text-white/90">
                       {overview?.this_month?.total || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Delivered</span>
+                    <span className="text-lg font-bold text-success">
+                      {overview?.this_month?.delivered || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">

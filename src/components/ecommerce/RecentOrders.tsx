@@ -15,10 +15,31 @@ interface RecentOrdersProps {
 
 const getStatusBadgeColor = (status: string): "warning" | "info" | "success" | "error" | "light" => {
   const statusLower = status.toLowerCase();
-  if (statusLower === "pending") return "warning";
-  if (statusLower === "completed" || statusLower === "delivered") return "success";
+  if (statusLower === "order_placed") return "warning";
+  if (statusLower === "ready_to_dispatch" || statusLower === "out_of_delivery") return "info";
+  if (statusLower === "delivered") return "success";
   if (statusLower === "cancelled" || statusLower === "canceled") return "error";
   return "light";
+};
+
+const formatStatusForDisplay = (status: string | undefined): string => {
+  if (!status) return "—";
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case "order_placed":
+      return "Order Placed";
+    case "ready_to_dispatch":
+      return "Ready to Dispatch";
+    case "out_of_delivery":
+      return "Out of Delivery";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      // Fallback: capitalize first letter and replace underscores with spaces
+      return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+  }
 };
 
 export default function RecentOrders({ recentOrders = [] }: RecentOrdersProps) {
@@ -150,7 +171,7 @@ export default function RecentOrders({ recentOrders = [] }: RecentOrdersProps) {
                       size="sm"
                       color={getStatusBadgeColor(order.status)}
                     >
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {formatStatusForDisplay(order.status)}
                     </Badge>
                   </TableCell>
                 </TableRow>

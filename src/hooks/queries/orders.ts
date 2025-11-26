@@ -9,11 +9,14 @@ import {
   downloadOrderInvoice,
   createManualOrder,
   getOrderCustomers,
+  getOrderStoreOwners,
   getOrderStores,
   getOrderDeliveryBoys,
   updateOrderStatus,
   assignDeliveryBoy,
-  type OrderListParams 
+  updateOrderItems,
+  type OrderListParams,
+  type UpdateOrderItemsInput 
 } from "../../services/orders";
 import type { PaginatedResponse } from "../../types/pagination";
 import { useToast } from "../../context/ToastContext";
@@ -145,6 +148,16 @@ export function useOrderCustomersQuery(search?: string) {
   });
 }
 
+export function useOrderStoreOwnersQuery(search?: string) {
+  return useQuery({
+    queryKey: [...ordersKey, "store-owners", search],
+    queryFn: () => getOrderStoreOwners(search),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
 export function useOrderStoresQuery() {
   return useQuery({
     queryKey: [...ordersKey, "stores"],
@@ -211,6 +224,23 @@ export function useAssignDeliveryBoyMutation() {
     },
     onError: (error) => {
       const message = error.message || "Failed to assign delivery boy";
+      showToast("error", message, "Error");
+    },
+  });
+}
+
+export function useUpdateOrderItemsMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  return useMutation<Order, Error, { orderId: number; items: UpdateOrderItemsInput }>({
+    mutationFn: ({ orderId, items }) => updateOrderItems(orderId, items),
+    onSuccess: (_, { orderId }) => {
+      qc.invalidateQueries({ queryKey: ordersKey });
+      qc.invalidateQueries({ queryKey: [...ordersKey, orderId] });
+      showToast("success", "Order items updated successfully", "Success");
+    },
+    onError: (error) => {
+      const message = error.message || "Failed to update order items";
       showToast("error", message, "Error");
     },
   });

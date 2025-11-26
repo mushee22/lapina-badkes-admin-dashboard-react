@@ -1,6 +1,9 @@
 import { useParams, useNavigate } from "react-router";
 import { useStoreQuery, useUpdateStoreMutation, useDeleteStoreMutation, useSetStoreDiscountMutation, useDeactivateStoreDiscountMutation } from "../../hooks/queries/stores";
 import { useOrdersPaginatedQuery } from "../../hooks/queries/orders";
+import { useCreateStoreTransactionMutation } from "../../hooks/queries/transactions";
+import { useAdminUsersQuery } from "../../hooks/queries/adminUsers";
+import { useDeliveryBoysListQuery } from "../../hooks/queries/deliveryBoys";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -10,27 +13,50 @@ import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Switch from "../../components/form/switch/Switch";
 import DatePicker from "../../components/form/date-picker";
+import Select from "../../components/form/Select";
+import Autocomplete from "../../components/form/Autocomplete";
+import TextArea from "../../components/form/input/TextArea";
 import { useModal } from "../../hooks/useModal";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { SetStoreDiscountSchema } from "../../types/store";
 import type { SetStoreDiscountInput } from "../../types/store";
-import { ChevronLeftIcon, PencilIcon, TrashBinIcon, EyeIcon, BoxIcon } from "../../icons";
+import { CreateStoreTransactionSchema, type CreateStoreTransactionInput } from "../../types/transaction";
+import { ChevronLeftIcon, PencilIcon, TrashBinIcon, EyeIcon, BoxIcon, DollarLineIcon } from "../../icons";
 import { useToast } from "../../context/ToastContext";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
 import Badge from "../../components/ui/badge/Badge";
 import Pagination from "../../components/common/Pagination";
-import Select from "../../components/form/Select";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
   const statusLower = status.toLowerCase();
-  if (statusLower === "pending") return "warning";
-  if (statusLower === "processing") return "info";
-  if (statusLower === "completed") return "success";
+  if (statusLower === "order_placed") return "warning";
+  if (statusLower === "ready_to_dispatch" || statusLower === "out_of_delivery") return "info";
+  if (statusLower === "delivered") return "success";
   if (statusLower === "cancelled" || statusLower === "canceled") return "error";
   return "light";
+};
+
+const formatStatusForDisplay = (status: string | undefined): string => {
+  if (!status) return "—";
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case "order_placed":
+      return "Order Placed";
+    case "ready_to_dispatch":
+      return "Ready to Dispatch";
+    case "out_of_delivery":
+      return "Out of Delivery";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      // Fallback: capitalize first letter and replace underscores with spaces
+      return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+  }
 };
 
 export default function StoreDetails() {
@@ -58,11 +84,15 @@ export default function StoreDetails() {
   const { isOpen: isDeactivateDiscountOpen, openModal: openDeactivateDiscountModal, closeModal: closeDeactivateDiscountModal } = useModal();
   const { isOpen: isActivateDiscountOpen, openModal: openActivateDiscountModal, closeModal: closeActivateDiscountModal } = useModal();
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
+  const { isOpen: isStorePaymentOpen, openModal: openStorePaymentModal, closeModal: closeStorePaymentModal } = useModal();
 
   const updateStoreMutation = useUpdateStoreMutation();
   const deleteStoreMutation = useDeleteStoreMutation();
   const setDiscountMutation = useSetStoreDiscountMutation();
   const deactivateDiscountMutation = useDeactivateStoreDiscountMutation();
+  const createStoreTransactionMutation = useCreateStoreTransactionMutation();
+  const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
+  const { data: adminUsers = [] } = useAdminUsersQuery();
 
   const {
     control: discountControl,
@@ -76,6 +106,23 @@ export default function StoreDetails() {
       discount_start_date: store?.discount?.start_date ? store.discount.start_date.split('T')[0] : "",
       discount_end_date: store?.discount?.end_date ? store.discount.end_date.split('T')[0] : "",
       discount_description: store?.discount?.description || "",
+    },
+  });
+
+  const {
+    control: storePaymentControl,
+    handleSubmit: handleStorePaymentSubmit,
+    reset: resetStorePayment,
+    formState: { errors: storePaymentErrors },
+  } = useForm<CreateStoreTransactionInput>({
+    resolver: zodResolver(CreateStoreTransactionSchema),
+    defaultValues: {
+      store_id: id ? Number(id) : 0,
+      amount: 0,
+      payment_mode: "cash",
+      payment_note: "",
+      collected_by: undefined,
+      transaction_date: new Date().toISOString().split('T')[0],
     },
   });
 
@@ -150,6 +197,27 @@ export default function StoreDetails() {
     }
   };
 
+  const onStorePaymentSubmit = handleStorePaymentSubmit((data) => {
+    createStoreTransactionMutation.mutate(data, {
+      onSuccess: () => {
+        closeStorePaymentModal();
+      },
+    });
+  });
+
+  useEffect(() => {
+    if (id && isStorePaymentOpen) {
+      resetStorePayment({
+        store_id: Number(id),
+        amount: 0,
+        payment_mode: "cash",
+        payment_note: "",
+        collected_by: undefined,
+        transaction_date: new Date().toISOString().split('T')[0],
+      });
+    }
+  }, [id, isStorePaymentOpen, resetStorePayment]);
+
   if (isLoading) {
     return (
       <>
@@ -188,6 +256,14 @@ export default function StoreDetails() {
             Back to Stores
           </Button>
           <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={openStorePaymentModal}
+              startIcon={<DollarLineIcon className="w-4 h-4" />}
+            >
+              Add Store Payment
+            </Button>
             <Button 
               size="sm" 
               variant="outline" 
@@ -432,9 +508,10 @@ export default function StoreDetails() {
               <Select
                 options={[
                   { value: "", label: "All Status" },
-                  { value: "pending", label: "Pending" },
-                  { value: "processing", label: "Processing" },
-                  { value: "completed", label: "Completed" },
+                  { value: "order_placed", label: "Order Placed" },
+                  { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+                  { value: "out_of_delivery", label: "Out of Delivery" },
+                  { value: "delivered", label: "Delivered" },
                   { value: "cancelled", label: "Cancelled" },
                 ]}
                 placeholder="Filter by Status"
@@ -503,7 +580,7 @@ export default function StoreDetails() {
                         <TableCell className="px-5 py-4 text-start">
                           {order.status ? (
                             <Badge variant="light" color={getStatusBadgeColor(order.status)} size="sm">
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              {formatStatusForDisplay(order.status)}
                             </Badge>
                           ) : (
                             <span className="text-gray-700 text-theme-sm dark:text-gray-300">—</span>
@@ -723,6 +800,157 @@ export default function StoreDetails() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Store Payment Modal */}
+      <Modal isOpen={isStorePaymentOpen} onClose={closeStorePaymentModal} className="w-full max-w-lg mx-4 sm:mx-6">
+        <form onSubmit={onStorePaymentSubmit}>
+          <div className="p-6">
+            <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Add Store Payment</h3>
+            
+            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Store</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                {store?.name}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="amount">
+                  Amount <span className="text-error-500">*</span>
+                </Label>
+                <Controller
+                  name="amount"
+                  control={storePaymentControl}
+                  render={({ field }) => (
+                    <InputField
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(parseFloat(e.currentTarget.value) || 0)}
+                      error={!!storePaymentErrors.amount}
+                      hint={storePaymentErrors.amount?.message}
+                    />
+                  )}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="payment_mode">
+                  Payment Mode <span className="text-error-500">*</span>
+                </Label>
+                <Controller
+                  name="payment_mode"
+                  control={storePaymentControl}
+                  render={({ field }) => (
+                    <Select
+                      options={[
+                        { value: "cash", label: "Cash" },
+                        { value: "online", label: "Online" },
+                        { value: "bank_transfer", label: "Bank Transfer" },
+                        { value: "other", label: "Other" },
+                      ]}
+                      placeholder="Select Payment Mode"
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value || "")}
+                    />
+                  )}
+                />
+                {storePaymentErrors.payment_mode && (
+                  <p className="mt-1.5 text-xs text-error-500">{storePaymentErrors.payment_mode.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="transaction_date">
+                  Transaction Date <span className="text-error-500">*</span>
+                </Label>
+                <Controller
+                  name="transaction_date"
+                  control={storePaymentControl}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="transaction_date"
+                      placeholder="Select Date"
+                      defaultDate={field.value || new Date().toISOString().split('T')[0]}
+                      onChange={(_dates, currentDateString) => {
+                        field.onChange(currentDateString || "");
+                      }}
+                    />
+                  )}
+                />
+                {storePaymentErrors.transaction_date && (
+                  <p className="mt-1.5 text-xs text-error-500">{storePaymentErrors.transaction_date.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="collected_by">
+                  Collected By (Optional)
+                </Label>
+                <Controller
+                  name="collected_by"
+                  control={storePaymentControl}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={[
+                        ...deliveryBoys.map((boy) => ({
+                          value: String(boy.id),
+                          label: `${boy.name} (Delivery Boy)`,
+                        })),
+                        ...adminUsers.map((user) => ({
+                          value: String(user.id),
+                          label: `${user.name} (Admin)`,
+                        })),
+                      ]}
+                      placeholder="Select Person (Optional)"
+                      value={field.value ? String(field.value) : ""}
+                      onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                    />
+                  )}
+                />
+                {storePaymentErrors.collected_by && (
+                  <p className="mt-1.5 text-xs text-error-500">{storePaymentErrors.collected_by.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="payment_note">Payment Note (Optional)</Label>
+                <Controller
+                  name="payment_note"
+                  control={storePaymentControl}
+                  render={({ field }) => (
+                    <TextArea
+                      placeholder="Store payment covering multiple orders..."
+                      rows={3}
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value || null)}
+                      error={!!storePaymentErrors.payment_note}
+                      hint={storePaymentErrors.payment_note?.message}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
+              <Button variant="outline" onClick={closeStorePaymentModal} disabled={createStoreTransactionMutation.isPending} type="button" className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                disabled={createStoreTransactionMutation.isPending} 
+                type="submit"
+                className="w-full sm:w-auto"
+              >
+                {createStoreTransactionMutation.isPending ? "Recording..." : "Record Payment"}
+              </Button>
+            </div>
+          </div>
+        </form>
       </Modal>
 
       {/* Delete Store Modal */}

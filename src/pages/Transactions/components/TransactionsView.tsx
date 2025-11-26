@@ -95,7 +95,7 @@ export function TransactionsView(props: Props) {
     resolver: zodResolver(UpdateTransactionSchema),
     defaultValues: {
       amount: 0,
-      payment_mode: "",
+      payment_mode: undefined,
       payment_note: "",
       payment_discount: 0,
       collected_by: undefined,
@@ -107,7 +107,7 @@ export function TransactionsView(props: Props) {
     setSelectedTransaction(transaction);
     reset({
       amount: transaction.amount,
-      payment_mode: transaction.payment_mode,
+      payment_mode: transaction.payment_mode as "cash" | "card" | "online" | "upi" | "bank_transfer" | "other" | undefined,
       payment_note: transaction.payment_note || "",
       payment_discount: transaction.payment_discount || 0,
       collected_by: transaction.collected_by || undefined,

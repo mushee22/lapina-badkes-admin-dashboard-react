@@ -111,10 +111,9 @@ export const ManualOrderItemSchema = z.object({
 });
 
 export const CreateManualOrderSchema = z.object({
-  customer_id: z.number().min(1, "Customer is required"),
-  delivery_boy_id: z.number().optional(),
+  customer_id: z.number().min(1, "Store owner is required"),
   items: z.array(ManualOrderItemSchema).min(1, "At least one item is required"),
-  phone: z.string().nullable().optional(),
+  phone: z.string().min(1, "Phone number is required"),
   status: z.string().min(1, "Status is required"),
   notes: z.string().nullable().optional(),
 });

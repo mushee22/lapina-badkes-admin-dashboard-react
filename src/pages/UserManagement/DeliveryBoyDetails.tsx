@@ -416,7 +416,7 @@ export default function DeliveryBoyDetails() {
                     {overview?.orders?.total || 0}
                   </p>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Pending: {overview?.orders?.pending || 0} | Completed: {overview?.orders?.completed || 0}
+                    Order Placed: {overview?.orders?.order_placed || 0} | Delivered: {overview?.orders?.delivered || 0}
                   </p>
                   <button
                     onClick={() => {
@@ -442,7 +442,7 @@ export default function DeliveryBoyDetails() {
                     ₹{(overview?.revenue?.total_amount || 0).toFixed(2)}
                   </p>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Completed: ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
+                    Delivered: ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
                   </p>
                 </div>
 
@@ -465,33 +465,33 @@ export default function DeliveryBoyDetails() {
                 <h4 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Orders Breakdown</h4>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                   <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Pending</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Order Placed</p>
                     <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
-                      {overview?.orders?.pending || 0}
+                      {overview?.orders?.order_placed || 0}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Completed</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Ready to Dispatch</p>
                     <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
-                      {overview?.orders?.completed || 0}
+                      {overview?.orders?.ready_to_dispatch || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Out of Delivery</p>
+                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                      {overview?.orders?.out_of_delivery || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Delivered</p>
+                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                      {overview?.orders?.delivered || 0}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Cancelled</p>
                     <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
                       {overview?.orders?.cancelled || 0}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Out for Delivery</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
-                      {overview?.orders?.out_for_delivery || 0}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Confirmed</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
-                      {overview?.orders?.confirmed || 0}
                     </p>
                   </div>
                 </div>

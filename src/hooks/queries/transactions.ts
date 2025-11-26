@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { CreateTransactionInput, UpdateTransactionInput } from "../../types/transaction";
+import type { CreateTransactionInput, UpdateTransactionInput, CreateStoreTransactionInput } from "../../types/transaction";
 import * as api from "../../services/transactions";
 import type { TransactionListParams } from "../../services/transactions";
 import type { PaginatedResponse } from "../../types/pagination";
@@ -82,6 +82,24 @@ export function useUpdateTransactionMutation() {
     },
     onError: (error: Error) => {
       const message = error.message || "Failed to update transaction";
+      showToast("error", message, "Error");
+    },
+  });
+}
+
+export function useCreateStoreTransactionMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: (input: CreateStoreTransactionInput) => api.createStoreTransaction(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: transactionsKey });
+      qc.invalidateQueries({ queryKey: ["stores"] }); // Invalidate stores to refresh store data
+      showToast("success", "Store payment recorded successfully", "Success");
+    },
+    onError: (error: Error) => {
+      const message = error.message || "Failed to record store payment";
       showToast("error", message, "Error");
     },
   });

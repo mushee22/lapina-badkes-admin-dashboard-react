@@ -11,10 +11,10 @@ import { OrdersCardView } from "./components/OrdersCardView";
 export default function PendingOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Initialize state from URL params, default to "pending" if no status is set
+  // Initialize state from URL params, default to "order_placed" if no status is set
   const [page, setPage] = useState<number>(Number(searchParams.get("page")) || 1);
   const [perPage, setPerPage] = useState<number>(Number(searchParams.get("per_page")) || 15);
-  const [status, setStatus] = useState<string | undefined>(searchParams.get("status") || "pending");
+  const [status, setStatus] = useState<string | undefined>(searchParams.get("status") || "order_placed");
   const [locationId, setLocationId] = useState<number | undefined>(
     searchParams.get("location_id") ? Number(searchParams.get("location_id")) : undefined
   );

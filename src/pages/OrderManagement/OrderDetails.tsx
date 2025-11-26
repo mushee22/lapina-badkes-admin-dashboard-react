@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useOrderQuery, useUpdateOrderMutation, useAssignDeliveryBoyMutation, useDeleteOrderMutation, useGenerateOrderInvoiceMutation, useDownloadOrderInvoiceMutation } from "../../hooks/queries/orders";
+import { useOrderQuery, useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation, useDeleteOrderMutation, useGenerateOrderInvoiceMutation, useDownloadOrderInvoiceMutation, useUpdateOrderItemsMutation } from "../../hooks/queries/orders";
+import { useProductsPaginatedQuery } from "../../hooks/queries/products";
 import { useDeliveryBoysListQuery } from "../../hooks/queries/deliveryBoys";
 import { useAdminUsersQuery } from "../../hooks/queries/adminUsers";
 import { useCreateTransactionMutation, useOrderTransactionsQuery, useUpdateTransactionMutation, useDeleteTransactionMutation } from "../../hooks/queries/transactions";
@@ -21,19 +22,44 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CreateTransactionSchema, type CreateTransactionInput, UpdateTransactionSchema, type UpdateTransactionInput } from "../../types/transaction";
-import { UpdateOrderSchema, type UpdateOrderInput } from "../../types/order";
-import { ChevronLeftIcon, DownloadIcon, TrashBinIcon, FileIcon, DollarLineIcon, PencilIcon } from "../../icons";
+import type { UpdateOrderItemsInput } from "../../services/orders";
+const UpdateOrderStatusSchema = z.object({
+  status: z.string().min(1, "Status is required"),
+  notes: z.string().optional(),
+});
+
+type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
+import { DownloadIcon, TrashBinIcon, FileIcon, DollarLineIcon, PencilIcon, PlusIcon } from "../../icons";
 import { useState } from "react";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
   const statusLower = status.toLowerCase();
-  if (statusLower === "pending") return "warning";
-  if (statusLower === "processing") return "info";
-  if (statusLower === "completed") return "success";
+  if (statusLower === "order_placed") return "warning";
+  if (statusLower === "ready_to_dispatch" || statusLower === "out_of_delivery") return "info";
+  if (statusLower === "delivered") return "success";
   if (statusLower === "cancelled" || statusLower === "canceled") return "error";
-  if (statusLower === "confirmed") return "info";
   return "light";
+};
+
+const formatStatusForDisplay = (status: string | undefined): string => {
+  if (!status) return "—";
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case "order_placed":
+      return "Order Placed";
+    case "ready_to_dispatch":
+      return "Ready to Dispatch";
+    case "out_of_delivery":
+      return "Out of Delivery";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      // Fallback: capitalize first letter and replace underscores with spaces
+      return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+  }
 };
 
 const AssignDeliveryBoySchema = z.object({
@@ -49,11 +75,12 @@ export default function OrderDetails() {
   const navigate = useNavigate();
   const { data: order, isLoading } = useOrderQuery(id ? Number(id) : null);
   const { data: orderTransactions = [], isLoading: isLoadingTransactions } = useOrderTransactionsQuery(id ? Number(id) : null);
-  const updateOrderMutation = useUpdateOrderMutation();
+  const updateOrderStatusMutation = useUpdateOrderStatusMutation();
   const assignDeliveryBoyMutation = useAssignDeliveryBoyMutation();
   const deleteMutation = useDeleteOrderMutation();
   const generateInvoiceMutation = useGenerateOrderInvoiceMutation();
   const downloadInvoiceMutation = useDownloadOrderInvoiceMutation();
+  const updateOrderItemsMutation = useUpdateOrderItemsMutation();
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
   const { data: adminUsers = [] } = useAdminUsersQuery();
   const createTransactionMutation = useCreateTransactionMutation();
@@ -65,15 +92,20 @@ export default function OrderDetails() {
   const { isOpen: isPaymentOpen, openModal: openPaymentModal, closeModal: closePaymentModal } = useModal();
   const { isOpen: isEditTransactionOpen, openModal: openEditTransactionModal, closeModal: closeEditTransactionModal } = useModal();
   const { isOpen: isDeleteTransactionOpen, openModal: openDeleteTransactionModal, closeModal: closeDeleteTransactionModal } = useModal();
+  const { isOpen: isEditItemsOpen, openModal: openEditItemsModal, closeModal: closeEditItemsModal } = useModal();
   const [selectedTransaction, setSelectedTransaction] = useState<import("../../services/transactions").Transaction | null>(null);
+  const [editingItems, setEditingItems] = useState<UpdateOrderItemsInput["items"]>([]);
+  const [newItems, setNewItems] = useState<Array<{ product_id: number; quantity: number; product_name?: string }>>([]);
+  const { data: productsData } = useProductsPaginatedQuery({ page: 1, per_page: 50 });
+  const products = productsData?.data || [];
 
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<UpdateOrderInput>({
-    resolver: zodResolver(UpdateOrderSchema),
+  } = useForm<UpdateOrderStatusInput>({
+    resolver: zodResolver(UpdateOrderStatusSchema),
     defaultValues: {
       status: order?.status || "",
       notes: "",
@@ -107,7 +139,7 @@ export default function OrderDetails() {
       transactionable_type: "order",
       transactionable_id: id ? Number(id) : 0,
       amount: 0,
-      payment_mode: "",
+      payment_mode: undefined,
       payment_note: "",
       payment_discount: undefined,
       collected_by: undefined,
@@ -128,13 +160,14 @@ export default function OrderDetails() {
     resolver: zodResolver(UpdateTransactionSchema),
     defaultValues: {
       amount: 0,
-      payment_mode: "",
+      payment_mode: undefined,
       payment_note: "",
       payment_discount: 0,
       collected_by: undefined,
       transaction_date: "",
     },
   });
+
 
   useEffect(() => {
     if (order) {
@@ -156,7 +189,7 @@ export default function OrderDetails() {
         transactionable_type: "order",
         transactionable_id: order.id,
         amount: 0,
-        payment_mode: "",
+        payment_mode: undefined,
         payment_note: "",
         payment_discount: undefined,
         collected_by: undefined,
@@ -165,10 +198,11 @@ export default function OrderDetails() {
     }
   }, [order, isPaymentOpen, resetPayment]);
 
-  const onSubmit = (data: UpdateOrderInput) => {
+
+  const onSubmit = (data: UpdateOrderStatusInput) => {
     if (!id) return;
-    updateOrderMutation.mutate(
-      { id: Number(id), data },
+    updateOrderStatusMutation.mutate(
+      { id: Number(id), status: data.status, notes: data.notes || "" },
       {
         onSuccess: () => {
           closeEditModal();
@@ -233,7 +267,7 @@ export default function OrderDetails() {
     setSelectedTransaction(transaction);
     resetUpdateTransaction({
       amount: transaction.amount,
-      payment_mode: transaction.payment_mode,
+      payment_mode: transaction.payment_mode as "cash" | "card" | "online" | "upi" | "bank_transfer" | "other" | undefined,
       payment_note: transaction.payment_note || "",
       payment_discount: transaction.payment_discount || 0,
       collected_by: transaction.collected_by || undefined,
@@ -266,6 +300,81 @@ export default function OrderDetails() {
       onSuccess: () => {
         closeDeleteTransactionModal();
         setSelectedTransaction(null);
+      },
+    });
+  };
+
+  const openEditItems = () => {
+    if (!order?.order_items) return;
+    // Only existing items for editing quantity or removal
+    setEditingItems(
+      order.order_items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+      }))
+    );
+    // Reset new items
+    setNewItems([]);
+    openEditItemsModal();
+  };
+
+  const addNewItem = () => {
+    setNewItems(prev => [...prev, { product_id: 0, quantity: 1 }]);
+  };
+
+  const removeItem = (index: number) => {
+    setEditingItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewItem = (index: number) => {
+    setNewItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateItem = (index: number, field: keyof UpdateOrderItemsInput["items"][0], value: number) => {
+    setEditingItems(prev => prev.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const updateNewItem = (index: number, field: 'product_id' | 'quantity', value: number) => {
+    setNewItems(prev => prev.map((item, i) => {
+      if (i === index) {
+        const updatedItem = { ...item, [field]: value };
+        // Add product name for display
+        if (field === 'product_id') {
+          const product = products.find(p => p.id === value);
+          updatedItem.product_name = product?.name;
+        }
+        return updatedItem;
+      }
+      return item;
+    }));
+  };
+
+  const onSubmitItemsEdit = () => {
+    if (!id) return;
+    
+    // Filter existing items with valid quantity
+    const validExistingItems = editingItems.filter(item => 
+      item.quantity > 0
+    );
+    
+    // Filter new items with valid product_id and quantity
+    const validNewItems = newItems.filter(item => 
+      item.product_id > 0 && item.quantity > 0
+    ).map(item => ({ product_id: item.product_id, quantity: item.quantity }));
+    
+    const allItems = [...validExistingItems, ...validNewItems];
+    
+    if (allItems.length === 0) return;
+    
+    updateOrderItemsMutation.mutate({
+      orderId: Number(id),
+      items: { items: allItems }
+    }, {
+      onSuccess: () => {
+        closeEditItemsModal();
       },
     });
   };
@@ -308,28 +417,27 @@ export default function OrderDetails() {
       <PageMeta title={`Order ${order.order_number} | Lapina Bakes Admin`} description="Order details" />
       <PageBreadcrumb pageTitle="Order Details" />
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="outline" size="sm" onClick={() => navigate("/orders/all")} startIcon={<ChevronLeftIcon className="w-4 h-4" />}>
-            Back to Orders
-          </Button>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={openPaymentModal}
-              startIcon={<DollarLineIcon className="w-4 h-4" />}
-              className="flex-1 sm:flex-initial"
-            >
-              <span className="hidden sm:inline">Add Payment</span>
-              <span className="sm:hidden">Payment</span>
-            </Button>
+        <div className="flex">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full sm:w-auto">
+            {order.status?.toLowerCase() === "delivered" && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={openPaymentModal}
+                startIcon={<DollarLineIcon className="w-4 h-4" />}
+                className="w-full"
+              >
+                <span className="hidden sm:inline">Add Payment</span>
+                <span className="sm:hidden">Payment</span>
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => id && generateInvoiceMutation.mutate(Number(id))}
               startIcon={<FileIcon className="w-4 h-4" />}
               disabled={generateInvoiceMutation.isPending}
-              className="flex-1 sm:flex-initial"
+              className="w-full"
             >
               <span className="hidden sm:inline">{generateInvoiceMutation.isPending ? "Generating..." : "Generate Invoice"}</span>
               <span className="sm:hidden">{generateInvoiceMutation.isPending ? "Generating..." : "Invoice"}</span>
@@ -340,7 +448,7 @@ export default function OrderDetails() {
               onClick={() => id && downloadInvoiceMutation.mutate(Number(id))}
               startIcon={<DownloadIcon className="w-4 h-4" />}
               disabled={downloadInvoiceMutation.isPending}
-              className="flex-1 sm:flex-initial"
+              className="w-full"
             >
               <span className="hidden sm:inline">{downloadInvoiceMutation.isPending ? "Downloading..." : "Download Invoice"}</span>
               <span className="sm:hidden">{downloadInvoiceMutation.isPending ? "Downloading..." : "Download"}</span>
@@ -350,16 +458,16 @@ export default function OrderDetails() {
               size="sm" 
               onClick={openEditModal}
               startIcon={<PencilIcon className="w-4 h-4" />}
-              className="flex-1 sm:flex-initial"
+              className="w-full"
             >
-              <span className="hidden sm:inline">Edit Order</span>
-              <span className="sm:hidden">Edit</span>
+              <span className="hidden sm:inline">Update Status</span>
+              <span className="sm:hidden">Status</span>
             </Button>
             <Button 
               variant="primary" 
               size="sm" 
               onClick={openAssignModal}
-              className="flex-1 sm:flex-initial"
+              className="w-full"
             >
               <span className="hidden sm:inline">Assign Delivery Boy</span>
               <span className="sm:hidden">Assign</span>
@@ -369,7 +477,7 @@ export default function OrderDetails() {
               size="sm" 
               onClick={openDeleteModal}
               startIcon={<TrashBinIcon className="w-4 h-4" />}
-              className="flex-1 sm:flex-initial"
+              className="w-full"
             >
               <span className="hidden sm:inline">Delete Order</span>
               <span className="sm:hidden">Delete</span>
@@ -396,7 +504,7 @@ export default function OrderDetails() {
                   <div className="mt-1">
                     {order.status ? (
                       <Badge variant="light" color={getStatusBadgeColor(order.status)} size="sm">
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {formatStatusForDisplay(order.status)}
                       </Badge>
                     ) : (
                       <span className="text-sm text-gray-700 dark:text-gray-300">—</span>
@@ -573,7 +681,19 @@ export default function OrderDetails() {
         )}
 
         {/* Order Items */}
-        <ComponentCard title="Order Items">
+        <ComponentCard title="">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Order Items</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={openEditItems}
+              startIcon={<PencilIcon className="w-4 h-4" />}
+            >
+              <span className="hidden sm:inline">Edit Items</span>
+              <span className="sm:hidden">Edit</span>
+            </Button>
+          </div>
           {order.order_items && order.order_items.length > 0 ? (
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
               <div className="max-w-full overflow-x-auto">
@@ -629,19 +749,19 @@ export default function OrderDetails() {
                         </td>
                         <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
                           <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.gst_percentage !== null && item.gst_percentage !== undefined
+                            {item.gst_percentage !== null && item.gst_percentage !== undefined && item.gst_percentage > 0
                               ? `${item.gst_percentage}%`
                               : "—"}
                           </span>
                         </td>
                         <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
                           <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.gst_amount !== null && item.gst_amount !== undefined && !isNaN(item.gst_amount)
+                            {item.gst_amount !== null && item.gst_amount !== undefined && !isNaN(item.gst_amount) && item.gst_amount > 0
                               ? `₹${item.gst_amount.toFixed(2)}`
                               : "—"}
                           </span>
                         </td>
-                        <td className="px-3 py-4 sm:px-5">
+                        <td className="px-3 py-4 sm:px-5 text-right">
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-gray-800 dark:text-white/90">
                               {item.subtotal_with_gst && !isNaN(item.subtotal_with_gst)
@@ -672,7 +792,7 @@ export default function OrderDetails() {
                         </td>
                       </tr>
                     )}
-                    {order.total_gst_amount && parseFloat(order.total_gst_amount) > 0 && (
+                    {order.total_gst_amount && parseFloat(order.total_gst_amount) > 0 ? (
                       <tr>
                         <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 3 : 5} className="px-3 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300 sm:px-5">
                           Total GST:
@@ -682,7 +802,7 @@ export default function OrderDetails() {
                           ₹{parseFloat(order.total_gst_amount).toFixed(2)}
                         </td>
                       </tr>
-                    )}
+                    ): null}
                     <tr>
                       <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 3 : 5} className="px-3 py-4 text-right text-sm font-semibold text-gray-800 dark:text-white/90 sm:px-5">
                         Total:
@@ -818,7 +938,7 @@ export default function OrderDetails() {
         <Modal isOpen={isEditOpen} onClose={closeEditModal} className="w-full max-w-md mx-4 sm:mx-6">
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="p-6">
-              <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Order</h3>
+              <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Update Order Status</h3>
               
               <div className="space-y-4">
                 <div>
@@ -831,10 +951,10 @@ export default function OrderDetails() {
                     render={({ field }) => (
                       <Select
                         options={[
-                          { value: "pending", label: "Pending" },
-                          { value: "confirmed", label: "Confirmed" },
-                          { value: "processing", label: "Processing" },
-                          { value: "completed", label: "Completed" },
+                          { value: "order_placed", label: "Order Placed" },
+                          { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+                          { value: "out_of_delivery", label: "Out of Delivery" },
+                          { value: "delivered", label: "Delivered" },
                           { value: "cancelled", label: "Cancelled" },
                         ]}
                         placeholder="Select Status"
@@ -870,11 +990,11 @@ export default function OrderDetails() {
               </div>
 
               <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
-                <Button variant="outline" onClick={closeEditModal} disabled={updateOrderMutation.isPending} type="button" className="w-full sm:w-auto">
+                <Button variant="outline" onClick={closeEditModal} disabled={updateOrderStatusMutation.isPending} type="button" className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button variant="primary" disabled={updateOrderMutation.isPending} type="submit" className="w-full sm:w-auto">
-                  {updateOrderMutation.isPending ? "Updating..." : "Update Order"}
+                <Button variant="primary" disabled={updateOrderStatusMutation.isPending} type="submit" className="w-full sm:w-auto">
+                  {updateOrderStatusMutation.isPending ? "Updating..." : "Update Status"}
                 </Button>
               </div>
             </div>
@@ -1020,10 +1140,9 @@ export default function OrderDetails() {
                       <Select
                         options={[
                           { value: "cash", label: "Cash" },
-                          { value: "card", label: "Card" },
                           { value: "online", label: "Online" },
-                          { value: "upi", label: "UPI" },
                           { value: "bank_transfer", label: "Bank Transfer" },
+                          { value: "other", label: "Other" },
                         ]}
                         placeholder="Select Payment Mode"
                         value={field.value || ""}
@@ -1220,10 +1339,9 @@ export default function OrderDetails() {
                       <Select
                         options={[
                           { value: "cash", label: "Cash" },
-                          { value: "card", label: "Card" },
                           { value: "online", label: "Online" },
-                          { value: "upi", label: "UPI" },
                           { value: "bank_transfer", label: "Bank Transfer" },
+                          { value: "other", label: "Other" },
                         ]}
                         placeholder="Select Payment Mode"
                         value={field.value || ""}
@@ -1351,6 +1469,133 @@ export default function OrderDetails() {
               </Button>
               <Button variant="primary" onClick={onDeleteTransaction} disabled={deleteTransactionMutation.isPending} className="w-full sm:w-auto">
                 {deleteTransactionMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Edit Order Items Modal */}
+        <Modal isOpen={isEditItemsOpen} onClose={closeEditItemsModal} className="w-full max-w-4xl mx-4 sm:mx-6">
+          <div className="p-6">
+            <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Order Items</h3>
+            
+            <div className="space-y-6">
+              {/* Existing Items */}
+              {editingItems.length > 0 && (
+                <div>
+                  <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Existing Items</h4>
+                  <div className="space-y-3">
+                    {editingItems.map((item, index) => {
+                      const orderItem = order?.order_items?.find(oi => oi.id === item.id);
+                      return (
+                        <div key={`existing-${index}`} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                          <div>
+                            <Label>Product</Label>
+                            <div className="px-3 py-2 text-sm text-gray-800 dark:text-white/90 bg-gray-50 dark:bg-gray-800 rounded-md">
+                              {orderItem?.product?.name || `Product ID: ${item.product_id}`}
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor={`existing_quantity_${index}`}>Quantity</Label>
+                            <InputField
+                              id={`existing_quantity_${index}`}
+                              type="number"
+                              placeholder="Quantity"
+                              value={item.quantity || ""}
+                              onChange={(e) => updateItem(index, "quantity", parseInt(e.currentTarget.value) || 0)}
+                            />
+                          </div>
+                          <div>
+                            <Label>Item ID</Label>
+                            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-md">
+                              #{item.id}
+                            </div>
+                          </div>
+                          <div className="flex items-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeItem(index)}
+                              startIcon={<TrashBinIcon className="w-4 h-4" />}
+                              className="text-error-600 hover:text-error-700"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* New Items */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Add New Items</h4>
+                <div className="space-y-3">
+                  {newItems.map((item, index) => (
+                    <div key={`new-${index}`} className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-blue-50 dark:bg-blue-900/10">
+                      <div>
+                        <Label htmlFor={`new_product_${index}`}>Product</Label>
+                        <Autocomplete
+                          options={products.map(product => ({
+                            value: String(product.id),
+                            label: product.name
+                          }))}
+                          placeholder="Select Product"
+                          value={item.product_id ? String(item.product_id) : ""}
+                          onChange={(value) => updateNewItem(index, "product_id", value ? parseInt(value) : 0)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`new_quantity_${index}`}>Quantity</Label>
+                        <InputField
+                          id={`new_quantity_${index}`}
+                          type="number"
+                          placeholder="Quantity"
+                          value={item.quantity || ""}
+                          onChange={(e) => updateNewItem(index, "quantity", parseInt(e.currentTarget.value) || 0)}
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeNewItem(index)}
+                          startIcon={<TrashBinIcon className="w-4 h-4" />}
+                          className="text-error-600 hover:text-error-700"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addNewItem}
+                      startIcon={<PlusIcon className="w-4 h-4" />}
+                    >
+                      Add New Item
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
+              <Button variant="outline" onClick={closeEditItemsModal} disabled={updateOrderItemsMutation.isPending} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={onSubmitItemsEdit} 
+                disabled={updateOrderItemsMutation.isPending || (editingItems.length === 0 && newItems.length === 0)}
+                className="w-full sm:w-auto"
+              >
+                {updateOrderItemsMutation.isPending ? "Updating..." : "Update Items"}
               </Button>
             </div>
           </div>

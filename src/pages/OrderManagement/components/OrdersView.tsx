@@ -19,11 +19,31 @@ import Pagination from "../../../components/common/Pagination";
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
   const statusLower = status.toLowerCase();
-  if (statusLower === "pending") return "warning";
-  if (statusLower === "processing") return "info";
-  if (statusLower === "completed") return "success";
+  if (statusLower === "order_placed") return "warning";
+  if (statusLower === "ready_to_dispatch" || statusLower === "out_of_delivery") return "info";
+  if (statusLower === "delivered") return "success";
   if (statusLower === "cancelled" || statusLower === "canceled") return "error";
   return "light";
+};
+
+const formatStatusForDisplay = (status: string | undefined): string => {
+  if (!status) return "—";
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case "order_placed":
+      return "Order Placed";
+    case "ready_to_dispatch":
+      return "Ready to Dispatch";
+    case "out_of_delivery":
+      return "Out of Delivery";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      // Fallback: capitalize first letter and replace underscores with spaces
+      return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+  }
 };
 
 type Props = {
@@ -104,9 +124,10 @@ export function OrdersView(props: Props) {
               <Select
                 options={[
                   { value: "", label: "All Status" },
-                  { value: "pending", label: "Pending" },
-                  { value: "processing", label: "Processing" },
-                  { value: "completed", label: "Completed" },
+                  { value: "order_placed", label: "Order Placed" },
+                  { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+                  { value: "out_of_delivery", label: "Out of Delivery" },
+                  { value: "delivered", label: "Delivered" },
                   { value: "cancelled", label: "Cancelled" },
                 ]}
                 placeholder="Filter by Status"
@@ -247,7 +268,7 @@ export function OrdersView(props: Props) {
                         <TableCell className="px-5 py-4 text-start">
                           {order.status ? (
                             <Badge variant="light" color={getStatusBadgeColor(order.status)} size="sm">
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              {formatStatusForDisplay(order.status)}
                             </Badge>
                           ) : (
                             <span className="text-gray-700 text-theme-sm dark:text-gray-300">—</span>

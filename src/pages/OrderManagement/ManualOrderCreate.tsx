@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import InputField from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 import Autocomplete from "../../components/form/Autocomplete";
 import TextArea from "../../components/form/input/TextArea";
-import { useCreateManualOrderMutation, useOrderCustomersQuery, useOrderDeliveryBoysQuery } from "../../hooks/queries/orders";
+import { useCreateManualOrderMutation, useOrderStoreOwnersQuery } from "../../hooks/queries/orders";
 import { useProductsPaginatedQuery } from "../../hooks/queries/products";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { CreateManualOrderSchema, type CreateManualOrderInput } from "../../types/order";
@@ -21,10 +21,9 @@ export default function ManualOrderCreate() {
   const navigate = useNavigate();
   const createMutation = useCreateManualOrderMutation();
   
-  const [customerSearch, setCustomerSearch] = useState("");
-  const debouncedCustomerSearch = useDebouncedValue(customerSearch, 400);
-  const { data: customers = [] } = useOrderCustomersQuery(debouncedCustomerSearch);
-  const { data: deliveryBoys = [] } = useOrderDeliveryBoysQuery();
+  const [storeOwnerSearch, setStoreOwnerSearch] = useState("");
+  const debouncedStoreOwnerSearch = useDebouncedValue(storeOwnerSearch, 400);
+  const { data: storeOwners = [] } = useOrderStoreOwnersQuery(debouncedStoreOwnerSearch);
   const { data: productsRes } = useProductsPaginatedQuery({ per_page: 100, is_available: true });
   const products = productsRes?.data ?? [];
 
@@ -32,21 +31,34 @@ export default function ManualOrderCreate() {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateManualOrderInput>({
     resolver: zodResolver(CreateManualOrderSchema),
     defaultValues: {
       customer_id: undefined,
-      delivery_boy_id: undefined,
       items: [{ product_id: 0, quantity: 1 }],
       phone: "",
-      status: "pending",
+      status: "order_placed",
       notes: "",
     },
   });
 
-  // Watch all items to validate stock
+  // Watch all items to validate stock and customer selection
   const watchedItems = watch("items");
+  const watchedCustomerId = watch("customer_id");
+  
+  // Find selected store owner and auto-fill phone if available
+  const selectedStoreOwner = storeOwners.find(owner => owner.id === watchedCustomerId);
+  
+  // Auto-fill phone number when store owner is selected
+  React.useEffect(() => {
+    if (selectedStoreOwner?.store?.phone) {
+      setValue("phone", selectedStoreOwner.store.phone);
+    } else if (selectedStoreOwner?.phone) {
+      setValue("phone", selectedStoreOwner.phone);
+    }
+  }, [selectedStoreOwner, setValue]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -106,21 +118,21 @@ export default function ManualOrderCreate() {
         <ComponentCard title="Create Manual Order">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Customer Selection */}
+              {/* Store Owner Selection */}
               <div>
                 <Label htmlFor="customer_id">
-                  Customer <span className="text-error-500">*</span>
+                  Store Owner <span className="text-error-500">*</span>
                 </Label>
                 <Controller
                   name="customer_id"
                   control={control}
                   render={({ field }) => (
                     <Autocomplete
-                      options={customers.map((customer) => ({
-                        value: String(customer.id),
-                        label: `${customer.name} (${customer.email})`,
+                      options={storeOwners.map((owner) => ({
+                        value: String(owner.id),
+                        label: owner.store ? `${owner.name} - ${owner.store.name}` : `${owner.name} (${owner.email})`,
                       }))}
-                      placeholder="Search and select customer..."
+                      placeholder="Search and select store owner..."
                       value={field.value ? String(field.value) : ""}
                       onChange={(value) => field.onChange(value ? Number(value) : undefined)}
                     />
@@ -131,51 +143,37 @@ export default function ManualOrderCreate() {
                 )}
                 <div className="mt-2">
                   <InputField
-                    id="customer_search"
-                    placeholder="Search customers..."
-                    value={customerSearch}
-                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    id="store_owner_search"
+                    placeholder="Search store owners..."
+                    value={storeOwnerSearch}
+                    onChange={(e) => setStoreOwnerSearch(e.target.value)}
                   />
                 </div>
-              </div>
-
-              {/* Delivery Boy Selection */}
-              <div>
-                <Label htmlFor="delivery_boy_id">Delivery Boy</Label>
-                <Controller
-                  name="delivery_boy_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Autocomplete
-                      options={deliveryBoys.map((boy) => ({
-                        value: String(boy.id),
-                        label: `${boy.name} (${boy.email})`,
-                      }))}
-                      placeholder="Select delivery boy..."
-                      value={field.value ? String(field.value) : ""}
-                      onChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                    />
-                  )}
-                />
-                {errors.delivery_boy_id && (
-                  <p className="mt-1.5 text-xs text-error-500">{errors.delivery_boy_id.message}</p>
+                {selectedStoreOwner?.store && (
+                  <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Store: <span className="font-medium">{selectedStoreOwner.store.name}</span>
+                    </p>
+                  </div>
                 )}
               </div>
 
-              {/* Phone */}
+              {/* Phone - Auto-filled from store */}
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">
+                  Phone <span className="text-error-500">*</span>
+                </Label>
                 <Controller
                   name="phone"
                   control={control}
                   render={({ field }) => (
                     <InputField
                       id="phone"
-                      placeholder="Enter phone number"
+                      placeholder="Phone number will be auto-filled from store"
                       value={field.value || ""}
                       onChange={(e) => field.onChange(e.target.value || null)}
                       error={!!errors.phone}
-                      hint={errors.phone?.message}
+                      hint={errors.phone?.message || (selectedStoreOwner?.store?.phone ? "Auto-filled from store" : "Manual entry required")}
                     />
                   )}
                 />
@@ -192,10 +190,10 @@ export default function ManualOrderCreate() {
                   render={({ field }) => (
                     <Select
                       options={[
-                        { value: "pending", label: "Pending" },
-                        { value: "confirmed", label: "Confirmed" },
-                        { value: "processing", label: "Processing" },
-                        { value: "completed", label: "Completed" },
+                        { value: "order_placed", label: "Order Placed" },
+                        { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+                        { value: "out_of_delivery", label: "Out of Delivery" },
+                        { value: "delivered", label: "Delivered" },
                         { value: "cancelled", label: "Cancelled" },
                       ]}
                       placeholder="Select status"
