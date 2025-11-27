@@ -296,35 +296,35 @@ export function TransactionsView(props: Props) {
             </div>
           </div>
 
-          <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+          <div className="mt-6 overflow-hidden rounded-xl border-2 border-blue-100/60 bg-gradient-to-br from-white via-blue-50/20 to-indigo-50/30 dark:border-blue-800/40 dark:bg-gradient-to-br dark:from-gray-800/70 dark:via-blue-900/20 dark:to-indigo-900/30 shadow-lg">
             <div className="max-w-full overflow-x-auto">
               <Table>
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                <TableHeader className="border-b-2 border-blue-200/60 bg-gradient-to-r from-blue-100/40 via-indigo-100/50 to-purple-100/40 dark:border-blue-700/60 dark:bg-gradient-to-r dark:from-blue-900/30 dark:via-indigo-900/40 dark:to-purple-900/30">
                   <TableRow>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5">
                       ID / Related To
                     </TableCell>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5">
                       Amount
                     </TableCell>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5">
                       Payment Mode
                     </TableCell>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5">
                       Status
                     </TableCell>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5 hidden md:table-cell">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5 hidden md:table-cell">
                       Collected / Added By
                     </TableCell>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5 hidden lg:table-cell">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5 hidden lg:table-cell">
                       Date
                     </TableCell>
-                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
+                    <TableCell isHeader className="px-3 py-3 font-semibold text-blue-700 dark:text-blue-300 text-start text-theme-xs uppercase tracking-wider sm:px-5">
                       Actions
                     </TableCell>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                <TableBody className="divide-y divide-blue-100/60 dark:divide-blue-800/40">
                   {isLoading ? (
                     <TableRow>
                       <TableCell colSpan={7} className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -338,8 +338,8 @@ export function TransactionsView(props: Props) {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
+                    transactions.map((transaction, index) => (
+                      <TableRow key={transaction.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white/80 dark:bg-gray-800/40' : 'bg-blue-25/30 dark:bg-blue-950/20'}`}>
                         <TableCell className="px-3 py-4 sm:px-5">
                           <div className="flex flex-col gap-1">
                             <span className="text-sm text-gray-700 dark:text-gray-300">#{transaction.id}</span>
@@ -419,7 +419,7 @@ export function TransactionsView(props: Props) {
                             {(transaction.transactionable_type === "order" || transaction.transactionable_type === "App\\Models\\Order") && (
                               <button
                                 onClick={() => navigate(`/orders/${transaction.transactionable_id}`)}
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-info-600 hover:text-info-800 hover:bg-info-50 dark:text-info-400 dark:hover:text-info-300 dark:hover:bg-info-900/20"
                                 aria-label="View Order"
                                 title="View Order"
                               >
@@ -429,7 +429,7 @@ export function TransactionsView(props: Props) {
                             {(transaction.transactionable_type === "store" || transaction.transactionable_type === "App\\Models\\Store") && (
                               <button
                                 onClick={() => navigate(`/stores/${transaction.transactionable_id}`)}
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-info-600 hover:text-info-800 hover:bg-info-50 dark:text-info-400 dark:hover:text-info-300 dark:hover:bg-info-900/20"
                                 aria-label="View Store"
                                 title="View Store"
                               >
@@ -438,7 +438,7 @@ export function TransactionsView(props: Props) {
                             )}
                             <button
                               onClick={() => openEdit(transaction)}
-                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              className="inline-flex items-center justify-center rounded-md p-2 text-warning-600 hover:text-warning-800 hover:bg-warning-50 dark:text-warning-400 dark:hover:text-warning-300 dark:hover:bg-warning-900/20"
                               aria-label="Edit"
                               title="Edit Transaction"
                             >
@@ -446,7 +446,7 @@ export function TransactionsView(props: Props) {
                             </button>
                             <button
                               onClick={() => openDelete(transaction)}
-                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-error-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              className="inline-flex items-center justify-center rounded-md p-2 text-error-600 hover:text-error-800 hover:bg-error-50 dark:text-error-400 dark:hover:text-error-300 dark:hover:bg-error-900/20"
                               aria-label="Delete"
                               title="Delete Transaction"
                             >

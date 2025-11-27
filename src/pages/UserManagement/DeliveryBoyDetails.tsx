@@ -216,8 +216,9 @@ export default function DeliveryBoyDetails() {
   return (
     <>
       <PageMeta title={`${deliveryBoy.name} | Lapina Bakes Admin`} description="Delivery boy details" />
-      <PageBreadcrumb pageTitle="Delivery Boy Details" />
-      <div className="space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/50 dark:from-gray-900 dark:via-slate-900/80 dark:to-blue-900/30 -mx-6 -my-6 px-6 py-6">
+        <PageBreadcrumb pageTitle="Delivery Boy Details" />
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={() => navigate("/users/delivery-boys")} startIcon={<ChevronLeftIcon className="w-4 h-4" />}>
             Back to Delivery Boys
@@ -300,22 +301,22 @@ export default function DeliveryBoyDetails() {
 
         <ComponentCard title={`Assigned Locations (${deliveryBoy.locations_count || 0})`}>
           {deliveryBoy.locations && deliveryBoy.locations.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="overflow-hidden rounded-xl border-2 border-blue-100/60 bg-gradient-to-br from-white via-blue-50/20 to-indigo-50/30 dark:border-blue-800/40 dark:bg-gradient-to-br dark:from-gray-800/70 dark:via-blue-900/20 dark:to-indigo-900/30 shadow-lg">
               <div className="max-w-full overflow-x-auto">
                 <table className="w-full">
-                  <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <thead className="border-b-2 border-blue-200/60 bg-gradient-to-r from-blue-100/40 via-indigo-100/50 to-purple-100/40 dark:border-blue-700/60 dark:bg-gradient-to-r dark:from-blue-900/30 dark:via-indigo-900/40 dark:to-purple-900/30">
                     <tr>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Name</th>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Code</th>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Address</th>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">City</th>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Primary</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Name</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Code</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Address</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">City</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Status</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Primary</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                    {deliveryBoy.locations.map((location) => (
-                      <tr key={location.id}>
+                  <tbody className="divide-y divide-blue-100/60 dark:divide-blue-800/40">
+                    {deliveryBoy.locations.map((location, index) => (
+                      <tr key={location.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white/80 dark:bg-gray-800/40' : 'bg-blue-25/30 dark:bg-blue-950/20'}`}>
                         <td className="px-5 py-4 text-sm text-gray-800 dark:text-white/90">{location.name}</td>
                         <td className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{location.code}</td>
                         <td className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{location.address}</td>
@@ -351,7 +352,7 @@ export default function DeliveryBoyDetails() {
         ) : overview ? (
           <>
             {/* Overview Filters */}
-            <ComponentCard title="Overview Filters" className="mb-6">
+            <ComponentCard title="Overview Filters" className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border-blue-200 dark:border-blue-800">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <Autocomplete
@@ -403,11 +404,11 @@ export default function DeliveryBoyDetails() {
               </div>
             </ComponentCard>
 
-            <ComponentCard title="Overview Statistics">
+            <ComponentCard title="Overview Statistics" className="bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/80 dark:from-gray-900/50 dark:via-slate-900/50 dark:to-blue-900/20 border-gray-200/80 dark:border-gray-700/80">
               <div className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl border-2 border-blue-100/80 dark:border-blue-800/60 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/50 dark:from-gray-800/50 dark:via-blue-900/20 dark:to-indigo-900/30 hover:shadow-lg transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Total Orders</p>
                     <BoxIconLine className="text-primary size-5" />
@@ -433,7 +434,7 @@ export default function DeliveryBoyDetails() {
                   </button>
                 </div>
 
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl border-2 border-emerald-100/80 dark:border-emerald-800/60 bg-gradient-to-br from-white via-emerald-50/30 to-green-50/50 dark:from-gray-800/50 dark:via-emerald-900/20 dark:to-green-900/30 hover:shadow-lg transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
                     <DollarLineIcon className="text-success size-5" />
@@ -446,7 +447,7 @@ export default function DeliveryBoyDetails() {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="p-4 rounded-xl border-2 border-amber-100/80 dark:border-amber-800/60 bg-gradient-to-br from-white via-amber-50/30 to-yellow-50/50 dark:from-gray-800/50 dark:via-amber-900/20 dark:to-yellow-900/30 hover:shadow-lg transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Assigned Orders</p>
                     <BoxIcon className="text-warning size-5" />
@@ -464,33 +465,33 @@ export default function DeliveryBoyDetails() {
               <div>
                 <h4 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Orders Breakdown</h4>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Order Placed</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-warning-200 bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 dark:border-warning-800">
+                    <p className="text-xs font-medium text-warning-700 dark:text-warning-300">Order Placed</p>
+                    <p className="mt-1 text-lg font-bold text-warning-800 dark:text-warning-200">
                       {overview?.orders?.order_placed || 0}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Ready to Dispatch</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-info-200 bg-gradient-to-br from-info-50 to-info-100/50 dark:from-info-900/20 dark:to-info-800/10 dark:border-info-800">
+                    <p className="text-xs font-medium text-info-700 dark:text-info-300">Ready to Dispatch</p>
+                    <p className="mt-1 text-lg font-bold text-info-800 dark:text-info-200">
                       {overview?.orders?.ready_to_dispatch || 0}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Out of Delivery</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 dark:border-blue-800">
+                    <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Out of Delivery</p>
+                    <p className="mt-1 text-lg font-bold text-blue-800 dark:text-blue-200">
                       {overview?.orders?.out_of_delivery || 0}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Delivered</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-success-200 bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 dark:border-success-800">
+                    <p className="text-xs font-medium text-success-700 dark:text-success-300">Delivered</p>
+                    <p className="mt-1 text-lg font-bold text-success-800 dark:text-success-200">
                       {overview?.orders?.delivered || 0}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Cancelled</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-error-200 bg-gradient-to-br from-error-50 to-error-100/50 dark:from-error-900/20 dark:to-error-800/10 dark:border-error-800">
+                    <p className="text-xs font-medium text-error-700 dark:text-error-300">Cancelled</p>
+                    <p className="mt-1 text-lg font-bold text-error-800 dark:text-error-200">
                       {overview?.orders?.cancelled || 0}
                     </p>
                   </div>
@@ -501,30 +502,30 @@ export default function DeliveryBoyDetails() {
               <div>
                 <h4 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Time Period Statistics</h4>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Today</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-cyan-200 bg-gradient-to-br from-cyan-50 to-cyan-100/50 dark:from-cyan-900/20 dark:to-cyan-800/10 dark:border-cyan-800">
+                    <p className="text-xs font-medium text-cyan-700 dark:text-cyan-300">Today</p>
+                    <p className="mt-1 text-lg font-bold text-cyan-800 dark:text-cyan-200">
                       {overview?.today?.total || 0} orders
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs font-medium text-cyan-700 dark:text-cyan-300">
                       ₹{(overview?.today?.amount || 0).toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">This Week</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-900/20 dark:to-indigo-800/10 dark:border-indigo-800">
+                    <p className="text-xs font-medium text-indigo-700 dark:text-indigo-300">This Week</p>
+                    <p className="mt-1 text-lg font-bold text-indigo-800 dark:text-indigo-200">
                       {overview?.this_week?.total || 0} orders
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
                       ₹{(overview?.this_week?.amount || 0).toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">This Month</p>
-                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-3 rounded-lg border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100/50 dark:from-pink-900/20 dark:to-pink-800/10 dark:border-pink-800">
+                    <p className="text-xs font-medium text-pink-700 dark:text-pink-300">This Month</p>
+                    <p className="mt-1 text-lg font-bold text-pink-800 dark:text-pink-200">
                       {overview?.this_month?.total || 0} orders
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs font-medium text-pink-700 dark:text-pink-300">
                       ₹{(overview?.this_month?.amount || 0).toFixed(2)}
                     </p>
                   </div>
@@ -534,6 +535,7 @@ export default function DeliveryBoyDetails() {
           </ComponentCard>
           </>
         ) : null}
+        </div>
       </div>
 
       {/* Edit Modal */}

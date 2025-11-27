@@ -416,19 +416,49 @@ export function OrdersCardView(props: Props) {
 
           {/* Status Tabs */}
           <div className="mb-4">
-            <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900 overflow-x-auto">
+            <div className="flex items-center gap-0.5 rounded-lg bg-gradient-to-r from-slate-100 to-slate-50 p-0.5 dark:from-slate-800 dark:to-slate-900 overflow-x-auto border border-slate-200 dark:border-slate-600">
               {statusTabs.map((tab) => {
                 const isActive = status === tab.value;
                 const count = isLoadingOverview ? 0 : getStatusCount(tab.value, overview);
                 const getTabColor = () => {
                   if (isActive) {
-                    return "shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800";
+                    if (tab.value === "order_placed") {
+                      return "shadow-md text-white bg-gradient-to-r from-warning-500 to-warning-600 dark:from-warning-600 dark:to-warning-700";
+                    }
+                    if (tab.value === "ready_to_dispatch") {
+                      return "shadow-md text-white bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700";
+                    }
+                    if (tab.value === "out_of_delivery") {
+                      return "shadow-md text-white bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700";
+                    }
+                    if (tab.value === "delivered") {
+                      return "shadow-md text-white bg-gradient-to-r from-success-500 to-success-600 dark:from-success-600 dark:to-success-700";
+                    }
+                    if (tab.value === "cancelled") {
+                      return "shadow-md text-white bg-gradient-to-r from-error-500 to-error-600 dark:from-error-600 dark:to-error-700";
+                    }
+                    return "shadow-md text-white bg-gradient-to-r from-brand-500 to-brand-600 dark:from-brand-600 dark:to-brand-700";
                   }
-                  return "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800";
+                  return "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-gray-600/50 font-medium";
                 };
                 const getCountBadgeColor = () => {
                   if (isActive) {
-                    return "bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300";
+                    return "bg-white/20 text-white font-bold";
+                  }
+                  if (tab.value === "order_placed") {
+                    return "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-300";
+                  }
+                  if (tab.value === "ready_to_dispatch") {
+                    return "bg-blue-100 text-blue-900 dark:bg-blue-800/50 dark:text-blue-100 font-semibold";
+                  }
+                  if (tab.value === "out_of_delivery") {
+                    return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+                  }
+                  if (tab.value === "delivered") {
+                    return "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300";
+                  }
+                  if (tab.value === "cancelled") {
+                    return "bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-300";
                   }
                   return "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
                 };
@@ -442,7 +472,7 @@ export function OrdersCardView(props: Props) {
                     className={`px-3 py-2 font-medium rounded-md text-sm whitespace-nowrap transition-all flex items-center gap-2 ${getTabColor()}`}
                   >
                     <span>{tab.label}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-xs font-semibold transition-colors ${getCountBadgeColor()}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold transition-colors ${getCountBadgeColor()}`}>
                       {isLoadingOverview ? "..." : count}
                     </span>
                   </button>

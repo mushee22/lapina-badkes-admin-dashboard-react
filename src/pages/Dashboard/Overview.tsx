@@ -145,13 +145,13 @@ export default function Overview() {
           <div className="space-y-6">
             {/* Key Metrics */}
             <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${storeId ? (overview?.users ? 'lg:grid-cols-3' : 'lg:grid-cols-2') : (overview?.users ? 'lg:grid-cols-4' : 'lg:grid-cols-3')}`}>
-              <ComponentCard title="Total Orders" className="p-5">
+              <ComponentCard title="Total Orders" className="p-5 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border-blue-200 dark:border-blue-800">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-3xl font-bold text-gray-800 dark:text-white/90">
+                    <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                       {overview?.orders?.total || 0}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
                       Order Placed: {overview?.orders?.order_placed || 0} | Delivered: {overview?.orders?.delivered || 0}
                     </p>
                     <button
@@ -165,64 +165,64 @@ export default function Overview() {
                         const query = params.toString();
                         navigate(`/orders/all${query ? `?${query}` : ""}`);
                       }}
-                      className="mt-3 text-sm font-medium text-primary hover:text-primary/80 dark:text-primary-400 dark:hover:text-primary-300"
+                      className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       View Orders →
                     </button>
                   </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl">
-                    <BoxIconLine className="text-primary size-6" />
+                  <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                    <BoxIconLine className="text-white size-7" />
                   </div>
                 </div>
               </ComponentCard>
 
-              <ComponentCard title="Total Revenue" className="p-5">
+              <ComponentCard title="Total Revenue" className="p-5 bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 border-success-200 dark:border-success-800">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-3xl font-bold text-gray-800 dark:text-white/90">
+                    <p className="text-3xl font-bold text-success-700 dark:text-success-300">
                       ₹{(overview?.revenue?.total_amount || 0).toFixed(2)}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-success-600 dark:text-success-400">
                       Delivered: ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-success/10 rounded-xl">
-                    <DollarLineIcon className="text-success size-6" />
+                  <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-success-500 to-success-600 rounded-xl shadow-lg">
+                    <DollarLineIcon className="text-white size-7" />
                   </div>
                 </div>
               </ComponentCard>
 
               {overview?.users && (
-                <ComponentCard title="Total Users" className="p-5">
+                <ComponentCard title="Total Users" className="p-5 bg-gradient-to-br from-info-50 to-info-100/50 dark:from-info-900/20 dark:to-info-800/10 border-info-200 dark:border-info-800">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-3xl font-bold text-gray-800 dark:text-white/90">
+                      <p className="text-3xl font-bold text-info-700 dark:text-info-300">
                         {overview.users.total_users || 0}
                       </p>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-info-600 dark:text-info-400">
                         Active: {overview.users.active_users || 0}
                       </p>
                     </div>
-                    <div className="flex items-center justify-center w-12 h-12 bg-info/10 rounded-xl">
-                      <GroupIcon className="text-info size-6" />
+                    <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-info-500 to-info-600 rounded-xl shadow-lg">
+                      <GroupIcon className="text-white size-7" />
                     </div>
                   </div>
                 </ComponentCard>
               )}
 
               {!storeId && (
-                <ComponentCard title="Total Stores" className="p-5">
+                <ComponentCard title="Total Stores" className="p-5 bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 border-warning-200 dark:border-warning-800">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-3xl font-bold text-gray-800 dark:text-white/90">
+                      <p className="text-3xl font-bold text-warning-700 dark:text-warning-300">
                         {overview?.stores?.total_stores || 0}
                       </p>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-warning-600 dark:text-warning-400">
                         Active: {overview?.stores?.active_stores || 0}
                       </p>
                     </div>
-                    <div className="flex items-center justify-center w-12 h-12 bg-warning/10 rounded-xl">
-                      <BoxIcon className="text-warning size-6" />
+                    <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-warning-500 to-warning-600 rounded-xl shadow-lg">
+                      <BoxIcon className="text-white size-7" />
                     </div>
                   </div>
                 </ComponentCard>
@@ -233,7 +233,7 @@ export default function Overview() {
             <ComponentCard title="Orders Breakdown">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
                 <div
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  className="p-4 rounded-lg border-2 border-warning-200 bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 dark:border-warning-800 cursor-pointer hover:shadow-md hover:scale-105 transition-all"
                   onClick={() => {
                     const params = new URLSearchParams();
                     params.set("status", "order_placed");
@@ -245,13 +245,13 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Order Placed</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <p className="text-sm font-medium text-warning-700 dark:text-warning-300">Order Placed</p>
+                  <p className="mt-1 text-2xl font-bold text-warning-800 dark:text-warning-200">
                     {overview?.orders?.order_placed || 0}
                   </p>
                 </div>
                 <div
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  className="p-4 rounded-lg border-2 border-info-200 bg-gradient-to-br from-info-50 to-info-100/50 dark:from-info-900/20 dark:to-info-800/10 dark:border-info-800 cursor-pointer hover:shadow-md hover:scale-105 transition-all"
                   onClick={() => {
                     const params = new URLSearchParams();
                     params.set("status", "ready_to_dispatch");
@@ -263,13 +263,13 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Ready to Dispatch</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <p className="text-sm font-medium text-info-700 dark:text-info-300">Ready to Dispatch</p>
+                  <p className="mt-1 text-2xl font-bold text-info-800 dark:text-info-200">
                     {overview?.orders?.ready_to_dispatch || 0}
                   </p>
                 </div>
                 <div
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  className="p-4 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 dark:border-blue-800 cursor-pointer hover:shadow-md hover:scale-105 transition-all"
                   onClick={() => {
                     const params = new URLSearchParams();
                     params.set("status", "out_of_delivery");
@@ -281,13 +281,13 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Out of Delivery</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Out of Delivery</p>
+                  <p className="mt-1 text-2xl font-bold text-blue-800 dark:text-blue-200">
                     {overview?.orders?.out_of_delivery || 0}
                   </p>
                 </div>
                 <div
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  className="p-4 rounded-lg border-2 border-success-200 bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 dark:border-success-800 cursor-pointer hover:shadow-md hover:scale-105 transition-all"
                   onClick={() => {
                     const params = new URLSearchParams();
                     params.set("status", "delivered");
@@ -299,13 +299,13 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Delivered</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <p className="text-sm font-medium text-success-700 dark:text-success-300">Delivered</p>
+                  <p className="mt-1 text-2xl font-bold text-success-800 dark:text-success-200">
                     {overview?.orders?.delivered || 0}
                   </p>
                 </div>
                 <div
-                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  className="p-4 rounded-lg border-2 border-error-200 bg-gradient-to-br from-error-50 to-error-100/50 dark:from-error-900/20 dark:to-error-800/10 dark:border-error-800 cursor-pointer hover:shadow-md hover:scale-105 transition-all"
                   onClick={() => {
                     const params = new URLSearchParams();
                     params.set("status", "cancelled");
@@ -317,8 +317,8 @@ export default function Overview() {
                     navigate(`/orders/all?${params.toString()}`);
                   }}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Cancelled</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <p className="text-sm font-medium text-error-700 dark:text-error-300">Cancelled</p>
+                  <p className="mt-1 text-2xl font-bold text-error-800 dark:text-error-200">
                     {overview?.orders?.cancelled || 0}
                   </p>
                 </div>
@@ -328,27 +328,27 @@ export default function Overview() {
             {/* Revenue Breakdown */}
             <ComponentCard title="Revenue Breakdown">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                <div className="p-4 rounded-lg border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-800/10 dark:border-purple-800">
+                  <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Amount</p>
+                  <p className="mt-1 text-2xl font-bold text-purple-800 dark:text-purple-200">
                     ₹{(overview?.revenue?.total_amount || 0).toFixed(2)}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Delivered Amount</p>
-                  <p className="mt-1 text-2xl font-bold text-success">
+                <div className="p-4 rounded-lg border-2 border-success-200 bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 dark:border-success-800">
+                  <p className="text-sm font-medium text-success-700 dark:text-success-300">Delivered Amount</p>
+                  <p className="mt-1 text-2xl font-bold text-success-800 dark:text-success-200">
                     ₹{(overview?.revenue?.completed_amount || 0).toFixed(2)}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Order Placed Amount</p>
-                  <p className="mt-1 text-2xl font-bold text-warning">
+                <div className="p-4 rounded-lg border-2 border-warning-200 bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 dark:border-warning-800">
+                  <p className="text-sm font-medium text-warning-700 dark:text-warning-300">Order Placed Amount</p>
+                  <p className="mt-1 text-2xl font-bold text-warning-800 dark:text-warning-200">
                     ₹{(overview?.revenue?.order_placed_amount || 0).toFixed(2)}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Ready to Dispatch Amount</p>
-                  <p className="mt-1 text-2xl font-bold text-info">
+                <div className="p-4 rounded-lg border-2 border-info-200 bg-gradient-to-br from-info-50 to-info-100/50 dark:from-info-900/20 dark:to-info-800/10 dark:border-info-800">
+                  <p className="text-sm font-medium text-info-700 dark:text-info-300">Ready to Dispatch Amount</p>
+                  <p className="mt-1 text-2xl font-bold text-info-800 dark:text-info-200">
                     ₹{(overview?.revenue?.ready_to_dispatch_amount || 0).toFixed(2)}
                   </p>
                 </div>
@@ -357,75 +357,75 @@ export default function Overview() {
 
             {/* Time Period Stats */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <ComponentCard title="Today" className="p-5">
+              <ComponentCard title="Today" className="p-5 bg-gradient-to-br from-cyan-50 to-cyan-100/50 dark:from-cyan-900/20 dark:to-cyan-800/10 border-cyan-200 dark:border-cyan-800">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Total Orders</span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <span className="text-sm font-medium text-cyan-700 dark:text-cyan-300">Total Orders</span>
+                    <span className="text-lg font-bold text-cyan-800 dark:text-cyan-200">
                       {overview?.today?.total || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Delivered</span>
-                    <span className="text-lg font-bold text-success">
+                    <span className="text-sm font-medium text-cyan-700 dark:text-cyan-300">Delivered</span>
+                    <span className="text-lg font-bold text-success-700 dark:text-success-300">
                       {overview?.today?.delivered || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Order Placed</span>
-                    <span className="text-lg font-bold text-warning">
+                    <span className="text-sm font-medium text-cyan-700 dark:text-cyan-300">Order Placed</span>
+                    <span className="text-lg font-bold text-warning-700 dark:text-warning-300">
                       {overview?.today?.order_placed || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Amount</span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <span className="text-sm font-medium text-cyan-700 dark:text-cyan-300">Amount</span>
+                    <span className="text-lg font-bold text-cyan-800 dark:text-cyan-200">
                       ₹{(overview?.today?.amount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
               </ComponentCard>
 
-              <ComponentCard title="This Week" className="p-5">
+              <ComponentCard title="This Week" className="p-5 bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-900/20 dark:to-indigo-800/10 border-indigo-200 dark:border-indigo-800">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Total Orders</span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Total Orders</span>
+                    <span className="text-lg font-bold text-indigo-800 dark:text-indigo-200">
                       {overview?.this_week?.total || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Delivered</span>
-                    <span className="text-lg font-bold text-success">
+                    <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Delivered</span>
+                    <span className="text-lg font-bold text-success-700 dark:text-success-300">
                       {overview?.this_week?.delivered || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Amount</span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Amount</span>
+                    <span className="text-lg font-bold text-indigo-800 dark:text-indigo-200">
                       ₹{(overview?.this_week?.amount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
               </ComponentCard>
 
-              <ComponentCard title="This Month" className="p-5">
+              <ComponentCard title="This Month" className="p-5 bg-gradient-to-br from-pink-50 to-pink-100/50 dark:from-pink-900/20 dark:to-pink-800/10 border-pink-200 dark:border-pink-800">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Total Orders</span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <span className="text-sm font-medium text-pink-700 dark:text-pink-300">Total Orders</span>
+                    <span className="text-lg font-bold text-pink-800 dark:text-pink-200">
                       {overview?.this_month?.total || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Delivered</span>
-                    <span className="text-lg font-bold text-success">
+                    <span className="text-sm font-medium text-pink-700 dark:text-pink-300">Delivered</span>
+                    <span className="text-lg font-bold text-success-700 dark:text-success-300">
                       {overview?.this_month?.delivered || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Amount</span>
-                    <span className="text-lg font-bold text-gray-800 dark:text-white/90">
+                    <span className="text-sm font-medium text-pink-700 dark:text-pink-300">Amount</span>
+                    <span className="text-lg font-bold text-pink-800 dark:text-pink-200">
                       ₹{(overview?.this_month?.amount || 0).toFixed(2)}
                     </span>
                   </div>
@@ -552,27 +552,27 @@ export default function Overview() {
             {!storeId && overview?.delivery_boys && (
               <ComponentCard title="Delivery Boys" className="p-5">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-4 rounded-lg border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-800/10 dark:border-purple-800">
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Total</p>
+                    <p className="mt-1 text-2xl font-bold text-purple-800 dark:text-purple-200">
                       {overview?.delivery_boys?.total_delivery_boys || 0}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-                    <p className="mt-1 text-2xl font-bold text-success">
+                  <div className="p-4 rounded-lg border-2 border-success-200 bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 dark:border-success-800">
+                    <p className="text-sm font-medium text-success-700 dark:text-success-300">Active</p>
+                    <p className="mt-1 text-2xl font-bold text-success-800 dark:text-success-200">
                       {overview?.delivery_boys?.active_delivery_boys || 0}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Assigned Orders</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">
+                  <div className="p-4 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 dark:border-blue-800">
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Assigned Orders</p>
+                    <p className="mt-1 text-2xl font-bold text-blue-800 dark:text-blue-200">
                       {overview?.delivery_boys?.assigned_orders || 0}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Unassigned Orders</p>
-                    <p className="mt-1 text-2xl font-bold text-warning">
+                  <div className="p-4 rounded-lg border-2 border-warning-200 bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 dark:border-warning-800">
+                    <p className="text-sm font-medium text-warning-700 dark:text-warning-300">Unassigned Orders</p>
+                    <p className="mt-1 text-2xl font-bold text-warning-800 dark:text-warning-200">
                       {overview?.delivery_boys?.unassigned_orders || 0}
                     </p>
                   </div>

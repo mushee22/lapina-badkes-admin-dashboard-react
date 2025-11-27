@@ -698,19 +698,19 @@ export default function OrderDetails() {
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
               <div className="max-w-full overflow-x-auto">
                 <table className="w-full">
-                  <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <thead className="border-b-2 border-blue-200/60 bg-gradient-to-r from-blue-100/40 via-indigo-100/50 to-purple-100/40 dark:border-blue-700/60 dark:bg-gradient-to-r dark:from-blue-900/30 dark:via-indigo-900/40 dark:to-purple-900/30">
                     <tr>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Product</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Price</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Quantity</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Product</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Price</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Quantity</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">GST %</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">GST Amount</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Subtotal</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Subtotal</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                    {order.order_items.map((item) => (
-                      <tr key={item.id}>
+                  <tbody className="divide-y divide-blue-100/60 dark:divide-blue-800/40">
+                    {order.order_items.map((item, index) => (
+                      <tr key={item.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white/80 dark:bg-gray-800/40' : 'bg-blue-25/30 dark:bg-blue-950/20'}`}>
                         <td className="px-3 py-4 sm:px-5">
                           <div className="flex items-center gap-2 sm:gap-3">
                             {item.product?.main_image_url && (
@@ -833,21 +833,21 @@ export default function OrderDetails() {
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
               <div className="max-w-full overflow-x-auto">
                 <table className="w-full">
-                  <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <thead className="border-b-2 border-blue-200/60 bg-gradient-to-r from-blue-100/40 via-indigo-100/50 to-purple-100/40 dark:border-blue-700/60 dark:bg-gradient-to-r dark:from-blue-900/30 dark:via-indigo-900/40 dark:to-purple-900/30">
                     <tr>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">ID</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Amount</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Payment Mode</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Status</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">ID</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Amount</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Payment Mode</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Status</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden sm:table-cell">Collected By</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">Added By</th>
                       <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">Date</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Actions</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider sm:px-5">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                    {orderTransactions.map((transaction) => (
-                      <tr key={transaction.id}>
+                  <tbody className="divide-y divide-blue-100/60 dark:divide-blue-800/40">
+                    {orderTransactions.map((transaction, index) => (
+                      <tr key={transaction.id} className={`hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white/80 dark:bg-gray-800/40' : 'bg-blue-25/30 dark:bg-blue-950/20'}`}>
                         <td className="px-3 py-4 sm:px-5">
                           <span className="text-sm text-gray-700 dark:text-gray-300">#{transaction.id}</span>
                         </td>

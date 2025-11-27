@@ -5,7 +5,7 @@ import {
   GridIcon,
   GroupIcon,
   TaskIcon,
-  BoxCubeIcon,
+  BuildingIcon,
   PageIcon,
   DollarLineIcon,
   DocsIcon,
@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <BuildingIcon />,
     name: "Store Management",
     subItems: [
       { name: "Locations", path: "/stores/locations" },
@@ -95,6 +95,7 @@ const AppSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -168,7 +169,7 @@ const AppSidebar: React.FC = () => {
               }`}
             >
               <span
-                className={`menu-item-icon-size  ${
+                className={`menu-item-icon-size ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
@@ -275,7 +276,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-800 dark:border-gray-700 text-gray-900 dark:text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-slate-200 shadow-xl 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-blue-950 text-white shadow-xl h-screen transition-all duration-300 ease-in-out z-50 border-r border-blue-800 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -294,7 +295,7 @@ const AppSidebar: React.FC = () => {
         }`}
       >
         <Link to="/">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Lapina Bakes</h2>
+          <h2 className="text-xl font-bold text-yellow-400">Lapina Bakes</h2>
         </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
@@ -302,7 +303,7 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-blue-200 ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
@@ -319,7 +320,7 @@ const AppSidebar: React.FC = () => {
             {othersItems.length > 0 && (
               <div className="">
                 <h2
-                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-blue-200 ${
                     !isExpanded && !isHovered
                       ? "lg:justify-center"
                       : "justify-start"
