@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
@@ -8,6 +9,7 @@ import Select from "../../../components/form/Select";
 import Autocomplete from "../../../components/form/Autocomplete";
 import DatePicker from "../../../components/form/date-picker";
 import Badge from "../../../components/ui/badge/Badge";
+import Checkbox from "../../../components/form/input/Checkbox";
 import { EyeIcon, PlusIcon } from "../../../icons";
 import type { Order } from "../../../types/order";
 import type { PaginationMeta } from "../../../types/pagination";
@@ -15,6 +17,8 @@ import type { Store } from "../../../types/store";
 import type { AdminUser } from "../../../types/userManagement";
 import type { Location } from "../../../types/location";
 import Pagination from "../../../components/common/Pagination";
+import { useUpdateOrderStatusMutation } from "../../../hooks/queries/orders";
+import { useToast } from "../../../context/ToastContext";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
@@ -78,6 +82,12 @@ type Props = {
 
 export function OrdersView(props: Props) {
   const navigate = useNavigate();
+  const updateStatusMutation = useUpdateOrderStatusMutation();
+  const { showToast } = useToast();
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<string>("");
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  
   const {
     orders,
     isLoading,
@@ -105,6 +115,66 @@ export function OrdersView(props: Props) {
     hasActiveFilters,
   } = props;
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds(orders.map((order) => order.id));
+    } else {
+      setSelectedOrderIds([]);
+    }
+  };
+
+  const handleSelectOrder = (orderId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds((prev) => [...prev, orderId]);
+    } else {
+      setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId));
+    }
+  };
+
+  const handleBulkStatusChange = async () => {
+    if (!bulkStatus) {
+      showToast("error", "Please select a status", "Error");
+      return;
+    }
+    if (selectedOrderIds.length === 0) {
+      showToast("error", "Please select at least one order", "Error");
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    const errors: string[] = [];
+    const successCount = { count: 0 };
+
+    // Use for loop to update each order
+    for (let i = 0; i < selectedOrderIds.length; i++) {
+      const orderId = selectedOrderIds[i];
+      try {
+        await updateStatusMutation.mutateAsync({
+          id: orderId,
+          status: bulkStatus,
+          notes: `Bulk status update to ${formatStatusForDisplay(bulkStatus)}`,
+        });
+        successCount.count++;
+      } catch (error) {
+        const order = orders.find((o) => o.id === orderId);
+        errors.push(`Order #${order?.order_number || orderId}: ${error instanceof Error ? error.message : "Failed"}`);
+      }
+    }
+
+    setIsBulkUpdating(false);
+    setSelectedOrderIds([]);
+    setBulkStatus("");
+
+    if (successCount.count > 0) {
+      showToast("success", `Successfully updated ${successCount.count} order(s)`, "Success");
+    }
+    if (errors.length > 0) {
+      showToast("error", `Failed to update ${errors.length} order(s)`, "Error");
+    }
+  };
+
+  const allSelected = orders.length > 0 && selectedOrderIds.length === orders.length;
+
   return (
     <>
       <PageMeta title="All Orders | Lapina Bakes Admin" description="View all orders" />
@@ -117,6 +187,46 @@ export function OrdersView(props: Props) {
               Create Manual Order
             </Button>
           </div>
+
+          {/* Bulk Actions - Only show when status filter is selected */}
+          {status && (
+            <div className="mb-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all-orders"
+                  checked={allSelected}
+                  onChange={handleSelectAll}
+                  label={`Select All (${selectedOrderIds.length} selected)`}
+                />
+              </div>
+              {selectedOrderIds.length > 0 && (
+                <>
+                  <div className="flex-1">
+                    <Select
+                      options={[
+                        { value: "", label: "Select Status" },
+                        { value: "order_placed", label: "Order Placed" },
+                        { value: "ready_to_dispatch", label: "Ready to Dispatch" },
+                        { value: "out_of_delivery", label: "Out of Delivery" },
+                        { value: "delivered", label: "Delivered" },
+                        { value: "cancelled", label: "Cancelled" },
+                      ]}
+                      placeholder="Bulk Status Change"
+                      value={bulkStatus}
+                      onChange={(value) => setBulkStatus(value || "")}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleBulkStatusChange}
+                    disabled={!bulkStatus || isBulkUpdating}
+                    size="sm"
+                  >
+                    {isBulkUpdating ? "Updating..." : `Update ${selectedOrderIds.length} Order(s)`}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Filters */}
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-8">
@@ -217,6 +327,15 @@ export function OrdersView(props: Props) {
               <Table>
                 <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
+                    {status && (
+                      <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 w-12">
+                        <Checkbox
+                          id="select-all-header"
+                          checked={allSelected}
+                          onChange={handleSelectAll}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                       Order Number
                     </TableCell>
@@ -246,11 +365,20 @@ export function OrdersView(props: Props) {
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                   {isLoading ? (
                     <TableRow>
-                      <TableCell className="px-5 py-4 text-center text-gray-500" colSpan={8}>Loading orders...</TableCell>
+                      <TableCell className="px-5 py-4 text-center text-gray-500" colSpan={status ? 9 : 8}>Loading orders...</TableCell>
                     </TableRow>
                   ) : Array.isArray(orders) && orders.length > 0 ? (
                     orders.map((order) => (
                       <TableRow key={order.id}>
+                        {status && (
+                          <TableCell className="px-5 py-4 text-start">
+                            <Checkbox
+                              id={`select-order-${order.id}`}
+                              checked={selectedOrderIds.includes(order.id)}
+                              onChange={(checked) => handleSelectOrder(order.id, checked)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className="px-5 py-4 text-start">
                           <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
                             {order.order_number || `#${order.id}`}
@@ -300,7 +428,7 @@ export function OrdersView(props: Props) {
                         </TableCell>
                         <TableCell className="px-5 py-4 text-start">
                           <button
-                            className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                            className="inline-flex items-center justify-center rounded-md p-2 text-info-600 hover:text-info-700 hover:bg-info-50 dark:text-info-400 dark:hover:text-info-300 dark:hover:bg-info-900/20 transition-colors"
                             aria-label="View Order"
                             onClick={() => navigate(`/orders/${order.id}`)}
                             title="View Order Details"
@@ -312,7 +440,7 @@ export function OrdersView(props: Props) {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="px-5 py-4 text-center text-gray-500" colSpan={8}>No orders found</TableCell>
+                      <TableCell className="px-5 py-4 text-center text-gray-500" colSpan={status ? 9 : 8}>No orders found</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

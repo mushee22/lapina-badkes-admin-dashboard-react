@@ -1,5 +1,5 @@
 import { AdminUser, AdminUserInput } from "../types/userManagement";
-import { AdminUserSchema, AdminUserCreateSchema } from "../types/userManagement";
+import { AdminUserCreateSchema } from "../types/userManagement";
 import * as http from "./http";
 import { Roles } from "../constants/roles";
 
@@ -75,22 +75,32 @@ async function remoteListAdminUsersPaginated(params: AdminUserListParams): Promi
   return { data: [] };
 }
 
-async function remoteCreateAdminUser(input: AdminUserInput): Promise<AdminUser> {
+async function remoteCreateAdminUser(input: AdminUserInput & { location_ids?: number[]; primary_location_id?: number }): Promise<AdminUser> {
+  // Extract location fields before validation
+  const { location_ids, primary_location_id, ...userInput } = input;
+  
   // The form/hook uses 'roles', but the validation schema expects 'role'.
   // Map to schema input before validating, then send single 'role' to API.
-  const payloadForValidation = { ...input, role: (input.roles?.[0] ?? Roles.Admin) } as unknown;
+  const payloadForValidation = { ...userInput, role: (userInput.roles?.[0] ?? Roles.Admin) } as unknown;
   const validated = AdminUserCreateSchema.safeParse(payloadForValidation);
   if (!validated.success) {
     throw new Error("Invalid admin user create payload");
   }
   const { role, ...rest } = validated.data;
   const apiBody: Record<string, unknown> = { ...rest, role: role };
-  const data = await http.post<unknown>("/users", apiBody);
-  const parsed = AdminUserSchema.safeParse(data);
-  if (!parsed.success) {
-    throw new Error("Invalid admin user response after create");
+  
+  // Add location fields if provided
+  if (location_ids && location_ids.length > 0) {
+    apiBody.location_ids = location_ids;
   }
-  return parsed.data as AdminUser;
+  if (primary_location_id !== undefined) {
+    apiBody.primary_location_id = primary_location_id;
+  }
+  
+  // Success is determined by HTTP status code, not response schema
+  // If http.post completes without throwing, the request was successful (status 200-299)
+  const data = await http.post<AdminUser>("/users", apiBody);
+  return data as AdminUser;
 }
 
 async function remoteUpdateAdminUser(

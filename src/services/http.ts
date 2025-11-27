@@ -83,3 +83,21 @@ export async function postFormData<T>(path: string, formData: FormData): Promise
 
   return handleResponse<T>(res);
 }
+
+export async function putFormData<T>(path: string, formData: FormData): Promise<T> {
+  const headers = new Headers();
+  const token = getAuthToken();
+  
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  // Don't set Content-Type for FormData - browser will set it with boundary
+
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "PUT",
+    headers,
+    body: formData,
+  });
+
+  return handleResponse<T>(res);
+}

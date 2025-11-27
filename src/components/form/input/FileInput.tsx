@@ -1,15 +1,19 @@
 import { FC } from "react";
 
 interface FileInputProps {
+  id?: string;
   className?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  accept?: string;
 }
 
-const FileInput: FC<FileInputProps> = ({ className, onChange }) => {
+const FileInput: FC<FileInputProps> = ({ id, className, onChange, accept }) => {
   return (
     <input
+      id={id}
       type="file"
-      className={`focus:border-ring-brand-300 h-11 w-full overflow-hidden rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 shadow-theme-xs transition-colors file:mr-5 file:border-collapse file:cursor-pointer file:rounded-l-lg file:border-0 file:border-r file:border-solid file:border-gray-200 file:bg-gray-50 file:py-3 file:pl-3.5 file:pr-3 file:text-sm file:text-gray-700 placeholder:text-gray-400 hover:file:bg-gray-100 focus:outline-hidden focus:file:ring-brand-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:text-white/90 dark:file:border-gray-800 dark:file:bg-white/[0.03] dark:file:text-gray-400 dark:placeholder:text-gray-400 ${className}`}
+      accept={accept}
+      className={`h-11 rounded-lg border border-gray-300 bg-transparent text-sm text-gray-500 shadow-theme-xs transition-colors appearance-none px-4 py-2.5 file:mr-4 file:border-0 file:bg-transparent file:py-0 file:px-0 file:text-sm file:text-gray-700 file:cursor-pointer focus:outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:file:text-gray-400 dark:focus:border-brand-800 ${className}`}
       onChange={onChange}
     />
   );

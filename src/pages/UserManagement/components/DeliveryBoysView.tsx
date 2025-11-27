@@ -89,9 +89,13 @@ export function DeliveryBoysView(props: Props) {
   const { data: locations = [] } = useLocationsQuery();
   const assignLocationsMutation = useAssignDeliveryBoyLocationsMutation();
   
-  // Location assignment state
+  // Location assignment state (for location assignment modal)
   const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
   const [primaryLocationId, setPrimaryLocationId] = useState<number | undefined>(undefined);
+  
+  // Location selection state (for creation modal)
+  const [formLocationIds, setFormLocationIds] = useState<number[]>([]);
+  const [formPrimaryLocationId, setFormPrimaryLocationId] = useState<number | undefined>(undefined);
 
   const initialValues: DeliveryBoyFormInput = selectedUser
     ? {
@@ -123,9 +127,9 @@ export function DeliveryBoysView(props: Props) {
     reValidateMode: "onBlur",
   });
 
-  function toDeliveryBoyInput(values: DeliveryBoyFormInput): AdminUserInput {
+  function toDeliveryBoyInput(values: DeliveryBoyFormInput): AdminUserInput & { location_ids?: number[]; primary_location_id?: number } {
     const normalizedRoles = selectedUser?.roles ?? [Roles.DeliveryBoy];
-    return {
+    const baseInput: AdminUserInput = {
       name: values.name,
       email: values.email,
       phone: values.phone ? values.phone : undefined,
@@ -134,7 +138,44 @@ export function DeliveryBoysView(props: Props) {
       password: values.password ? values.password : undefined,
       active: values.active,
     };
+    
+    // Add location data when creating (not editing)
+    if (!selectedUser) {
+      return {
+        ...baseInput,
+        location_ids: formLocationIds.length > 0 ? formLocationIds : undefined,
+        primary_location_id: formPrimaryLocationId,
+      } as AdminUserInput & { location_ids?: number[]; primary_location_id?: number };
+    }
+    
+    return baseInput;
   }
+  
+  const handleFormLocationToggle = (locationId: number) => {
+    setFormLocationIds((prev) => {
+      if (prev.includes(locationId)) {
+        // Remove location
+        const newIds = prev.filter((id) => id !== locationId);
+        // If it was the primary location, clear primary
+        if (formPrimaryLocationId === locationId) {
+          setFormPrimaryLocationId(undefined);
+        }
+        return newIds;
+      } else {
+        // Add location
+        return [...prev, locationId];
+      }
+    });
+  };
+
+  const handleFormPrimaryLocationChange = (locationId: string) => {
+    const id = Number(locationId);
+    setFormPrimaryLocationId(id);
+    // Ensure the primary location is in selected locations
+    if (!formLocationIds.includes(id)) {
+      setFormLocationIds((prev) => [...prev, id]);
+    }
+  };
 
   const formSubmit = handleSubmit(
     (values: DeliveryBoyFormInput) => onSubmitData(toDeliveryBoyInput(values)),
@@ -154,6 +195,9 @@ export function DeliveryBoysView(props: Props) {
   useEffect(() => {
     if (isOpen) {
       reset(initialValues);
+      // Reset location selection when modal opens
+      setFormLocationIds([]);
+      setFormPrimaryLocationId(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, selectedUser]);
@@ -468,6 +512,54 @@ export function DeliveryBoysView(props: Props) {
                   )}
                 />
               </div>
+              
+              {!selectedUser && (
+                <>
+                  <div>
+                    <Label className="mb-3 block">Select Locations (Optional)</Label>
+                    {locations.length === 0 ? (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">No locations available.</p>
+                    ) : (
+                      <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+                        {locations.map((location) => (
+                          <div key={location.id} className="flex items-center justify-between py-2">
+                            <Checkbox
+                              id={`form-location-${location.id}`}
+                              checked={formLocationIds.includes(location.id)}
+                              onChange={() => handleFormLocationToggle(location.id)}
+                              label={`${location.name} - ${location.address}`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {formLocationIds.length > 0 && (
+                    <div>
+                      <Label className="mb-3 block">Primary Location (Optional)</Label>
+                      <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+                        {formLocationIds.map((locationId) => {
+                          const location = locations.find((l) => l.id === locationId);
+                          if (!location) return null;
+                          return (
+                            <Radio
+                              key={location.id}
+                              id={`form-primary-${location.id}`}
+                              name="form_primary_location"
+                              value={String(location.id)}
+                              checked={formPrimaryLocationId === location.id}
+                              onChange={handleFormPrimaryLocationChange}
+                              label={`${location.name} - ${location.address}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={closeModal} disabled={isSubmitting}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>

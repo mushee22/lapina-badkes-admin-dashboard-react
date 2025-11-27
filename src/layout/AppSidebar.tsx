@@ -275,7 +275,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-800 dark:border-gray-700 text-gray-900 dark:text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-slate-200 shadow-xl 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -294,7 +294,7 @@ const AppSidebar: React.FC = () => {
         }`}
       >
         <Link to="/">
-          <h2 className="text-xl font-medium">Lapina Bakes</h2>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Lapina Bakes</h2>
         </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">

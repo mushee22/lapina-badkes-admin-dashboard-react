@@ -13,16 +13,17 @@ import { Modal } from "../../../components/ui/modal";
 import Label from "../../../components/form/Label";
 import InputField from "../../../components/form/input/InputField";
 import TextArea from "../../../components/form/input/TextArea";
-import { EyeIcon, PencilIcon, TrashBinIcon } from "../../../icons";
+import { EyeIcon, PencilIcon, TrashBinIcon, PlusIcon } from "../../../icons";
 import type { Transaction } from "../../../services/transactions";
 import type { PaginationMeta } from "../../../types/pagination";
 import Pagination from "../../../components/common/Pagination";
 import { useDeliveryBoysListQuery } from "../../../hooks/queries/deliveryBoys";
 import { useAdminUsersQuery } from "../../../hooks/queries/adminUsers";
-import { useUpdateTransactionMutation, useDeleteTransactionMutation } from "../../../hooks/queries/transactions";
+import { useStoresPaginatedQuery } from "../../../hooks/queries/stores";
+import { useUpdateTransactionMutation, useDeleteTransactionMutation, useCreateStoreTransactionMutation } from "../../../hooks/queries/transactions";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UpdateTransactionSchema, type UpdateTransactionInput } from "../../../types/transaction";
+import { UpdateTransactionSchema, CreateStoreTransactionSchema, type UpdateTransactionInput, type CreateStoreTransactionInput } from "../../../types/transaction";
 import { useModal } from "../../../hooks/useModal";
 
 type Props = {
@@ -55,10 +56,14 @@ export function TransactionsView(props: Props) {
   const navigate = useNavigate();
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
   const { data: adminUsers = [] } = useAdminUsersQuery();
+  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
+  const stores = storesRes?.data ?? [];
   const updateMutation = useUpdateTransactionMutation();
   const deleteMutation = useDeleteTransactionMutation();
+  const createStoreTransactionMutation = useCreateStoreTransactionMutation();
   const { isOpen: isEditOpen, openModal: openEditModal, closeModal: closeEditModal } = useModal();
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
+  const { isOpen: isCreateOpen, openModal: openCreateModal, closeModal: closeCreateModal } = useModal();
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   
   const {
@@ -103,6 +108,23 @@ export function TransactionsView(props: Props) {
     },
   });
 
+  const {
+    control: createControl,
+    handleSubmit: handleCreateSubmit,
+    reset: resetCreate,
+    formState: { errors: createErrors },
+  } = useForm<CreateStoreTransactionInput>({
+    resolver: zodResolver(CreateStoreTransactionSchema),
+    defaultValues: {
+      store_id: undefined,
+      amount: 0,
+      payment_mode: "cash",
+      payment_note: "",
+      collected_by: undefined,
+      transaction_date: new Date().toISOString().split('T')[0],
+    },
+  });
+
   const openEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     reset({
@@ -144,14 +166,37 @@ export function TransactionsView(props: Props) {
     });
   };
 
+  const onCreate = () => {
+    resetCreate({
+      store_id: undefined,
+      amount: 0,
+      payment_mode: "cash",
+      payment_note: "",
+      collected_by: undefined,
+      transaction_date: new Date().toISOString().split('T')[0],
+    });
+    openCreateModal();
+  };
+
+  const onCreateSubmit = (data: CreateStoreTransactionInput) => {
+    createStoreTransactionMutation.mutate(data, {
+      onSuccess: () => {
+        closeCreateModal();
+      },
+    });
+  };
+
   return (
     <>
       <PageMeta title="Transactions | Lapina Bakes Admin" description="View and manage transactions" />
       <PageBreadcrumb pageTitle="Transactions" />
       <div className="space-y-6">
         <ComponentCard title="">
-          <div className="mb-3">
+          <div className="mb-3 flex items-center justify-between">
             <p className="text-sm text-gray-600 dark:text-gray-400">View and manage all transactions here.</p>
+            <Button size="sm" onClick={onCreate} startIcon={<PlusIcon className="w-4 h-4" />}>
+              Add Transaction
+            </Button>
           </div>
 
           {/* Filters */}
@@ -600,6 +645,156 @@ export function TransactionsView(props: Props) {
               {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Create Store Transaction Modal */}
+      <Modal isOpen={isCreateOpen} onClose={closeCreateModal} className="w-full max-w-2xl mx-4 sm:mx-6">
+        <div className="p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+            Add Store Transaction
+          </h3>
+          <form noValidate onSubmit={handleCreateSubmit(onCreateSubmit)}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="store_id">Store <span className="text-error-500">*</span></Label>
+                <Controller
+                  name="store_id"
+                  control={createControl}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={[
+                        { value: "", label: "Select Store" },
+                        ...stores.map((store) => ({ value: String(store.id), label: store.name }))
+                      ]}
+                      placeholder="Select Store"
+                      value={field.value ? String(field.value) : ""}
+                      onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                    />
+                  )}
+                />
+                {createErrors.store_id && (
+                  <p className="mt-1.5 text-xs text-error-500">{createErrors.store_id.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="amount">Amount <span className="text-error-500">*</span></Label>
+                <Controller
+                  name="amount"
+                  control={createControl}
+                  render={({ field }) => (
+                    <InputField
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="Enter amount"
+                      value={field.value ? String(field.value) : ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                      error={!!createErrors.amount}
+                      hint={createErrors.amount?.message as string}
+                    />
+                  )}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="payment_mode">Payment Mode</Label>
+                <Controller
+                  name="payment_mode"
+                  control={createControl}
+                  render={({ field }) => (
+                    <Select
+                      options={[
+                        { value: "cash", label: "Cash" },
+                        { value: "online", label: "Online" },
+                        { value: "bank_transfer", label: "Bank Transfer" },
+                        { value: "other", label: "Other" },
+                      ]}
+                      placeholder="Select Payment Mode"
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value || undefined)}
+                    />
+                  )}
+                />
+                {createErrors.payment_mode && (
+                  <p className="mt-1.5 text-xs text-error-500">{createErrors.payment_mode.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="payment_note">Payment Note (Optional)</Label>
+                <Controller
+                  name="payment_note"
+                  control={createControl}
+                  render={({ field }) => (
+                    <TextArea
+                      placeholder="Enter payment notes..."
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value || null)}
+                      rows={3}
+                    />
+                  )}
+                />
+                {createErrors.payment_note && (
+                  <p className="mt-1.5 text-xs text-error-500">{createErrors.payment_note.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="collected_by">Collected By (Optional)</Label>
+                <Controller
+                  name="collected_by"
+                  control={createControl}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={[
+                        { value: "", label: "Select User" },
+                        ...allUsers.map((user) => ({ value: String(user.id), label: user.name }))
+                      ]}
+                      placeholder="Select User"
+                      value={field.value ? String(field.value) : ""}
+                      onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                    />
+                  )}
+                />
+                {createErrors.collected_by && (
+                  <p className="mt-1.5 text-xs text-error-500">{createErrors.collected_by.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="transaction_date">Transaction Date <span className="text-error-500">*</span></Label>
+                <Controller
+                  name="transaction_date"
+                  control={createControl}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="transaction_date"
+                      placeholder="Select Transaction Date"
+                      defaultDate={field.value || undefined}
+                      onChange={(_dates, currentDateString) => {
+                        field.onChange(currentDateString || "");
+                      }}
+                    />
+                  )}
+                />
+                {createErrors.transaction_date && (
+                  <p className="mt-1.5 text-xs text-error-500">{createErrors.transaction_date.message}</p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={closeCreateModal} disabled={createStoreTransactionMutation.isPending}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createStoreTransactionMutation.isPending}>
+                  {createStoreTransactionMutation.isPending ? "Creating..." : "Create Transaction"}
+                </Button>
+              </div>
+            </div>
+          </form>
         </div>
       </Modal>
     </>

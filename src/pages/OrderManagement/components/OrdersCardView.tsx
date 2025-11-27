@@ -10,6 +10,7 @@ import Label from "../../../components/form/Label";
 import Select from "../../../components/form/Select";
 import Autocomplete from "../../../components/form/Autocomplete";
 import TextArea from "../../../components/form/input/TextArea";
+import Checkbox from "../../../components/form/input/Checkbox";
 import { EyeIcon, PlusIcon, PencilIcon } from "../../../icons";
 import type { Order } from "../../../types/order";
 import type { PaginationMeta } from "../../../types/pagination";
@@ -24,6 +25,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useModal } from "../../../hooks/useModal";
+import { useToast } from "../../../context/ToastContext";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
@@ -143,9 +145,12 @@ export function OrdersCardView(props: Props) {
   const navigate = useNavigate();
   const updateStatusMutation = useUpdateOrderStatusMutation();
   const assignDeliveryBoyMutation = useAssignDeliveryBoyMutation();
+  const { showToast } = useToast();
   const { isOpen: isStatusOpen, openModal: openStatusModal, closeModal: closeStatusModal } = useModal();
   const { isOpen: isAssignOpen, openModal: openAssignModal, closeModal: closeAssignModal } = useModal();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const {
     orders,
@@ -193,6 +198,77 @@ export function OrdersCardView(props: Props) {
         ];
       default:
         return [];
+    }
+  };
+
+  // Get next status (first non-cancelled transition)
+  const getNextStatus = (currentStatus: string | undefined): string | null => {
+    if (!currentStatus) return null;
+    const transitions = getAllowedStatusTransitions(currentStatus);
+    const nextTransition = transitions.find((t) => t.value !== "cancelled");
+    return nextTransition?.value || null;
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds(orders.map((order) => order.id));
+    } else {
+      setSelectedOrderIds([]);
+    }
+  };
+
+  const handleSelectOrder = (orderId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds((prev) => [...prev, orderId]);
+    } else {
+      setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId));
+    }
+  };
+
+  const handleBulkStatusChange = async (changeAll: boolean) => {
+    const nextStatus = getNextStatus(status);
+    if (!nextStatus) {
+      showToast("error", "No next status available for current status", "Error");
+      return;
+    }
+
+    const ordersToUpdate = changeAll
+      ? orders.map((order) => order.id)
+      : selectedOrderIds;
+
+    if (ordersToUpdate.length === 0) {
+      showToast("error", "No orders to update", "Error");
+      return;
+    }
+
+    setIsBulkUpdating(true);
+    const errors: string[] = [];
+    const successCount = { count: 0 };
+
+    // Use for loop to update each order
+    for (let i = 0; i < ordersToUpdate.length; i++) {
+      const orderId = ordersToUpdate[i];
+      try {
+        await updateStatusMutation.mutateAsync({
+          id: orderId,
+          status: nextStatus,
+          notes: `Bulk status update from ${formatStatusForDisplay(status)} to ${formatStatusForDisplay(nextStatus)}`,
+        });
+        successCount.count++;
+      } catch (error) {
+        const order = orders.find((o) => o.id === orderId);
+        errors.push(`Order #${order?.order_number || orderId}: ${error instanceof Error ? error.message : "Failed"}`);
+      }
+    }
+
+    setIsBulkUpdating(false);
+    setSelectedOrderIds([]);
+
+    if (successCount.count > 0) {
+      showToast("success", `Successfully updated ${successCount.count} order(s) to ${formatStatusForDisplay(nextStatus)}`, "Success");
+    }
+    if (errors.length > 0) {
+      showToast("error", `Failed to update ${errors.length} order(s)`, "Error");
     }
   };
 
@@ -339,7 +415,7 @@ export function OrdersCardView(props: Props) {
           </div>
 
           {/* Status Tabs */}
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900 overflow-x-auto">
               {statusTabs.map((tab) => {
                 const isActive = status === tab.value;
@@ -359,7 +435,10 @@ export function OrdersCardView(props: Props) {
                 return (
                   <button
                     key={tab.value || "all"}
-                    onClick={() => setStatus(tab.value)}
+                    onClick={() => {
+                      setStatus(tab.value);
+                      setSelectedOrderIds([]);
+                    }}
                     className={`px-3 py-2 font-medium rounded-md text-sm whitespace-nowrap transition-all flex items-center gap-2 ${getTabColor()}`}
                   >
                     <span>{tab.label}</span>
@@ -371,6 +450,46 @@ export function OrdersCardView(props: Props) {
               })}
             </div>
           </div>
+
+          {/* Bulk Actions - Only show when status is selected and not "All", "delivered", or "cancelled" */}
+          {status && status !== undefined && status !== "delivered" && status !== "cancelled" && (
+            <div className="mb-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all-orders"
+                  checked={orders.length > 0 && selectedOrderIds.length === orders.length}
+                  onChange={handleSelectAll}
+                  label={`Select All (${selectedOrderIds.length} selected)`}
+                />
+              </div>
+              {(() => {
+                const nextStatus = getNextStatus(status);
+                if (!nextStatus) return null;
+                return (
+                  <>
+                    <div className="flex-1 text-sm text-gray-600 dark:text-gray-400">
+                      Next status: <span className="font-medium text-gray-800 dark:text-white/90">{formatStatusForDisplay(nextStatus)}</span>
+                    </div>
+                    <Button
+                      onClick={() => handleBulkStatusChange(false)}
+                      disabled={isBulkUpdating || selectedOrderIds.length === 0}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {isBulkUpdating ? "Updating..." : `Change Selected (${selectedOrderIds.length})`}
+                    </Button>
+                    <Button
+                      onClick={() => handleBulkStatusChange(true)}
+                      disabled={isBulkUpdating || orders.length === 0}
+                      size="sm"
+                    >
+                      {isBulkUpdating ? "Updating..." : `Change All (${orders.length})`}
+                    </Button>
+                  </>
+                );
+              })()}
+            </div>
+          )}
 
           {/* Orders Grid */}
           {isLoading ? (
@@ -391,13 +510,24 @@ export function OrdersCardView(props: Props) {
                     className={`rounded-xl border p-4 hover:shadow-md transition-shadow ${getStatusCardColor(order.status)}`}
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                          {order.order_number || `#${order.id}`}
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {order.created_at ? new Date(order.created_at).toLocaleDateString() : "—"}
-                        </p>
+                      <div className="flex items-start gap-2 flex-1">
+                        {status && status !== "delivered" && status !== "cancelled" && (
+                          <div className="pt-1">
+                            <Checkbox
+                              id={`select-order-${order.id}`}
+                              checked={selectedOrderIds.includes(order.id)}
+                              onChange={(checked) => handleSelectOrder(order.id, checked)}
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                            {order.order_number || `#${order.id}`}
+                          </h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {order.created_at ? new Date(order.created_at).toLocaleDateString() : "—"}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Badge variant="light" color={getStatusBadgeColor(order.status)} size="sm">
@@ -478,7 +608,7 @@ export function OrdersCardView(props: Props) {
                     <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
                     <button
                       onClick={() => navigate(`/orders/${order.id}`)}
-                      className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06] transition-colors"
+                      className="inline-flex items-center justify-center rounded-md p-2 text-info-600 hover:text-info-700 hover:bg-info-50 dark:text-info-400 dark:hover:text-info-300 dark:hover:bg-info-900/20 transition-colors"
                       aria-label="View Order"
                       title="View Order Details"
                     >
@@ -486,7 +616,7 @@ export function OrdersCardView(props: Props) {
                     </button>
                     <button
                       onClick={() => openStatusModalForOrder(order)}
-                      className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06] transition-colors"
+                      className="inline-flex items-center justify-center rounded-md p-2 text-warning-600 hover:text-warning-700 hover:bg-warning-50 dark:text-warning-400 dark:hover:text-warning-300 dark:hover:bg-warning-900/20 transition-colors"
                       aria-label="Change Status"
                       title="Change Order Status"
                     >
@@ -494,7 +624,7 @@ export function OrdersCardView(props: Props) {
                     </button>
                     <button
                       onClick={() => openAssignModalForOrder(order)}
-                      className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06] transition-colors"
+                      className="inline-flex items-center justify-center rounded-md p-2 text-success-600 hover:text-success-700 hover:bg-success-50 dark:text-success-400 dark:hover:text-success-300 dark:hover:bg-success-900/20 transition-colors"
                       aria-label="Assign Delivery Boy"
                       title="Assign Delivery Boy"
                     >
