@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Order, UpdateOrderInput, CreateManualOrderInput } from "../../types/order";
-import { 
-  listOrdersPaginated, 
-  getOrder, 
-  updateOrder, 
-  deleteOrder, 
+import {
+  listOrdersPaginated,
+  getOrder,
+  updateOrder,
+  deleteOrder,
   generateOrderInvoice,
   downloadOrderInvoice,
   createManualOrder,
@@ -15,8 +15,12 @@ import {
   updateOrderStatus,
   assignDeliveryBoy,
   updateOrderItems,
+  returnOrder,
+  getOrderReturns,
+  cancelOrderReturn,
+  processOrderReturn,
   type OrderListParams,
-  type UpdateOrderItemsInput 
+  type UpdateOrderItemsInput
 } from "../../services/orders";
 import type { PaginatedResponse } from "../../types/pagination";
 import { useToast } from "../../context/ToastContext";
@@ -246,3 +250,59 @@ export function useUpdateOrderItemsMutation() {
   });
 }
 
+export function useReturnOrderMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  return useMutation<Order, Error, { id: number; data: import("../../types/order").ReturnOrderInput }>({
+    mutationFn: ({ id, data }) => returnOrder(id, data),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: ordersKey });
+      qc.invalidateQueries({ queryKey: [...ordersKey, id] });
+      showToast("success", "Items returned successfully", "Success");
+    },
+    onError: (error) => {
+      const message = error.message || "Failed to return items";
+      showToast("error", message, "Error");
+    },
+  });
+}
+
+export function useOrderReturnsQuery(id: number) {
+  return useQuery({
+    queryKey: [...ordersKey, id, "returns"],
+    queryFn: () => getOrderReturns(id),
+    enabled: !!id,
+  });
+}
+
+export function useCancelOrderReturnMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  return useMutation<void, Error, { id: number; orderId: number }>({
+    mutationFn: ({ id }) => cancelOrderReturn(id),
+    onSuccess: (_, { orderId }) => {
+      qc.invalidateQueries({ queryKey: [...ordersKey, orderId, "returns"] });
+      showToast("success", "Return cancelled successfully", "Success");
+    },
+    onError: (error) => {
+      const message = error.message || "Failed to cancel return";
+      showToast("error", message, "Error");
+    },
+  });
+}
+
+export function useProcessOrderReturnMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  return useMutation<void, Error, { id: number; orderId: number }>({
+    mutationFn: ({ id }) => processOrderReturn(id),
+    onSuccess: (_, { orderId }) => {
+      qc.invalidateQueries({ queryKey: [...ordersKey, orderId, "returns"] });
+      showToast("success", "Return processed successfully", "Success");
+    },
+    onError: (error) => {
+      const message = error.message || "Failed to process return";
+      showToast("error", message, "Error");
+    },
+  });
+}

@@ -1,7 +1,6 @@
-import * as http from "./http";
-import { CreateTransactionSchema, UpdateTransactionSchema, CreateStoreTransactionSchema } from "../types/transaction";
-import type { CreateTransactionInput, UpdateTransactionInput, CreateStoreTransactionInput } from "../types/transaction";
+import { type CreateTransactionInput, type UpdateTransactionInput, type CreateStoreTransactionInput, CreateStoreTransactionSchema, UpdateTransactionSchema } from "../types/transaction";
 import type { PaginatedResponse } from "../types/pagination";
+import * as http from "./http";
 
 export interface TransactionUser {
   id: number;
@@ -27,9 +26,10 @@ export interface TransactionStore {
 
 export interface Transaction {
   id: number;
-  transactionable_type: string;
-  transactionable_id: number;
-  transactionable?: TransactionOrder | TransactionStore;
+  order_id: number | null;
+  order: TransactionOrder | null;
+  store_id: number | null;
+  store: TransactionStore | null;
   amount: number;
   payment_mode: string;
   payment_status?: string;
@@ -48,6 +48,7 @@ export interface TransactionListParams {
   page?: number;
   per_page?: number;
   type?: string;
+  store_id?: number;
   payment_mode?: string;
   payment_status?: string;
   collected_by?: number;
@@ -57,7 +58,7 @@ export interface TransactionListParams {
 }
 
 export async function createTransaction(input: CreateTransactionInput): Promise<Transaction> {
-  const validated = CreateTransactionSchema.safeParse(input);
+  const validated = CreateStoreTransactionSchema.safeParse(input);
   if (!validated.success) {
     throw new Error("Invalid transaction payload");
   }
@@ -65,17 +66,17 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
     "/transactions",
     validated.data
   );
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Transaction;
   }
-  
+
   // Handle transaction key wrapper
   if (response && typeof response === "object" && "transaction" in response && response.transaction) {
     return response.transaction as Transaction;
   }
-  
+
   // Direct response
   return response as Transaction;
 }
@@ -85,6 +86,7 @@ export async function listTransactionsPaginated(params?: TransactionListParams):
   if (params?.page !== undefined) qs.set("page", String(params.page));
   if (params?.per_page !== undefined) qs.set("per_page", String(params.per_page));
   if (params?.type) qs.set("type", params.type);
+  if (params?.store_id !== undefined) qs.set("store_id", String(params.store_id));
   if (params?.payment_mode) qs.set("payment_mode", params.payment_mode);
   if (params?.payment_status) qs.set("payment_status", params.payment_status);
   if (params?.collected_by !== undefined) qs.set("collected_by", String(params.collected_by));
@@ -94,31 +96,31 @@ export async function listTransactionsPaginated(params?: TransactionListParams):
   const query = qs.toString();
   const path = query ? `/transactions?${query}` : "/transactions";
   const response = await http.get<Transaction[] | PaginatedResponse<Transaction>>(path);
-  
+
   if (Array.isArray(response)) {
     return { data: response };
   }
-  
+
   if (response && typeof response === "object" && Array.isArray(response.data)) {
     return response;
   }
-  
+
   return { data: [] };
 }
 
 export async function getOrderTransactions(orderId: number): Promise<Transaction[]> {
   const response = await http.get<{ data?: Transaction[] } | Transaction[]>(`/orders/${orderId}/transactions`);
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
     return response.data;
   }
-  
+
   // Handle direct array
   if (Array.isArray(response)) {
     return response;
   }
-  
+
   return [];
 }
 
@@ -131,17 +133,17 @@ export async function updateTransaction(id: number, input: UpdateTransactionInpu
     `/transactions/${id}`,
     validated.data
   );
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Transaction;
   }
-  
+
   // Handle transaction key wrapper
   if (response && typeof response === "object" && "transaction" in response && response.transaction) {
     return response.transaction as Transaction;
   }
-  
+
   // Direct response
   return response as Transaction;
 }
@@ -155,17 +157,17 @@ export async function createStoreTransaction(input: CreateStoreTransactionInput)
     "/transactions",
     validated.data
   );
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Transaction;
   }
-  
+
   // Handle transaction key wrapper
   if (response && typeof response === "object" && "transaction" in response && response.transaction) {
     return response.transaction as Transaction;
   }
-  
+
   // Direct response
   return response as Transaction;
 }

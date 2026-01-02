@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useOrderQuery, useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation, useDeleteOrderMutation, useGenerateOrderInvoiceMutation, useDownloadOrderInvoiceMutation, useUpdateOrderItemsMutation } from "../../hooks/queries/orders";
+import { useOrderQuery, useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation, useDeleteOrderMutation, useGenerateOrderInvoiceMutation, useDownloadOrderInvoiceMutation, useUpdateOrderItemsMutation, useReturnOrderMutation } from "../../hooks/queries/orders";
 import { useProductsPaginatedQuery } from "../../hooks/queries/products";
 import { useDeliveryBoysListQuery } from "../../hooks/queries/deliveryBoys";
 import { useAdminUsersQuery } from "../../hooks/queries/adminUsers";
@@ -29,8 +29,14 @@ const UpdateOrderStatusSchema = z.object({
 });
 
 type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
-import { DownloadIcon, TrashBinIcon, FileIcon, DollarLineIcon, PencilIcon, PlusIcon } from "../../icons";
+import { DownloadIcon, TrashBinIcon, FileIcon, DollarLineIcon, PencilIcon, PlusIcon, EyeIcon } from "../../icons";
+import InvoiceModal from "./components/InvoiceModal";
+import OrderAuditLog from "./components/OrderAuditLog";
+import ReturnOrderModal from "./components/ReturnOrderModal";
+import OrderReturns from "./components/OrderReturns";
+
 import { useState } from "react";
+
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
@@ -93,7 +99,13 @@ export default function OrderDetails() {
   const { isOpen: isEditTransactionOpen, openModal: openEditTransactionModal, closeModal: closeEditTransactionModal } = useModal();
   const { isOpen: isDeleteTransactionOpen, openModal: openDeleteTransactionModal, closeModal: closeDeleteTransactionModal } = useModal();
   const { isOpen: isEditItemsOpen, openModal: openEditItemsModal, closeModal: closeEditItemsModal } = useModal();
+  const { isOpen: isInvoiceOpen, openModal: openInvoiceModal, closeModal: closeInvoiceModal } = useModal();
+  const { isOpen: isReturnOpen, openModal: openReturnModal, closeModal: closeReturnModal } = useModal();
   const [selectedTransaction, setSelectedTransaction] = useState<import("../../services/transactions").Transaction | null>(null);
+
+  const returnOrderMutation = useReturnOrderMutation();
+
+
   const [editingItems, setEditingItems] = useState<UpdateOrderItemsInput["items"]>([]);
   const [newItems, setNewItems] = useState<Array<{ product_id: number; quantity: number; product_name?: string }>>([]);
   const { data: productsData } = useProductsPaginatedQuery({ page: 1, per_page: 50 });
@@ -136,8 +148,7 @@ export default function OrderDetails() {
   } = useForm<CreateTransactionInput>({
     resolver: zodResolver(CreateTransactionSchema),
     defaultValues: {
-      transactionable_type: "order",
-      transactionable_id: id ? Number(id) : 0,
+      order_id: id ? Number(id) : 0,
       amount: 0,
       payment_mode: undefined,
       payment_note: "",
@@ -186,8 +197,7 @@ export default function OrderDetails() {
   useEffect(() => {
     if (order && isPaymentOpen) {
       resetPayment({
-        transactionable_type: "order",
-        transactionable_id: order.id,
+        order_id: order.id,
         amount: 0,
         payment_mode: undefined,
         payment_note: "",
@@ -240,11 +250,11 @@ export default function OrderDetails() {
 
   const onPaymentSubmit = (data: CreateTransactionInput) => {
     if (!order) return;
-    
+
     const orderAmount = parseFloat(order.total_amount) || 0;
     const amount = data.amount || 0;
     const discount = data.payment_discount || 0;
-    
+
     // Validate amount and discount don't exceed order amount
     if (amount > orderAmount) {
       return;
@@ -332,7 +342,7 @@ export default function OrderDetails() {
   };
 
   const updateItem = (index: number, field: keyof UpdateOrderItemsInput["items"][0], value: number) => {
-    setEditingItems(prev => prev.map((item, i) => 
+    setEditingItems(prev => prev.map((item, i) =>
       i === index ? { ...item, [field]: value } : item
     ));
   };
@@ -354,21 +364,21 @@ export default function OrderDetails() {
 
   const onSubmitItemsEdit = () => {
     if (!id) return;
-    
+
     // Filter existing items with valid quantity
-    const validExistingItems = editingItems.filter(item => 
+    const validExistingItems = editingItems.filter(item =>
       item.quantity > 0
     );
-    
+
     // Filter new items with valid product_id and quantity
-    const validNewItems = newItems.filter(item => 
+    const validNewItems = newItems.filter(item =>
       item.product_id > 0 && item.quantity > 0
     ).map(item => ({ product_id: item.product_id, quantity: item.quantity }));
-    
+
     const allItems = [...validExistingItems, ...validNewItems];
-    
+
     if (allItems.length === 0) return;
-    
+
     updateOrderItemsMutation.mutate({
       orderId: Number(id),
       items: { items: allItems }
@@ -420,9 +430,9 @@ export default function OrderDetails() {
         <div className="flex">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full sm:w-auto">
             {order.status?.toLowerCase() === "delivered" && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={openPaymentModal}
                 startIcon={<DollarLineIcon className="w-4 h-4" />}
                 className="w-full"
@@ -431,9 +441,9 @@ export default function OrderDetails() {
                 <span className="sm:hidden">Payment</span>
               </Button>
             )}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => id && generateInvoiceMutation.mutate(Number(id))}
               startIcon={<FileIcon className="w-4 h-4" />}
               disabled={generateInvoiceMutation.isPending}
@@ -442,9 +452,9 @@ export default function OrderDetails() {
               <span className="hidden sm:inline">{generateInvoiceMutation.isPending ? "Generating..." : "Generate Invoice"}</span>
               <span className="sm:hidden">{generateInvoiceMutation.isPending ? "Generating..." : "Invoice"}</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => id && downloadInvoiceMutation.mutate(Number(id))}
               startIcon={<DownloadIcon className="w-4 h-4" />}
               disabled={downloadInvoiceMutation.isPending}
@@ -453,9 +463,22 @@ export default function OrderDetails() {
               <span className="hidden sm:inline">{downloadInvoiceMutation.isPending ? "Downloading..." : "Download Invoice"}</span>
               <span className="sm:hidden">{downloadInvoiceMutation.isPending ? "Downloading..." : "Download"}</span>
             </Button>
-            <Button 
-              variant="primary" 
-              size="sm" 
+            {order.has_invoice && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openInvoiceModal}
+                startIcon={<EyeIcon className="w-4 h-4" />}
+                className="w-full"
+              >
+                <span className="hidden sm:inline">View Invoice</span>
+                <span className="sm:hidden">View</span>
+              </Button>
+            )}
+
+            <Button
+              variant="primary"
+              size="sm"
               onClick={openEditModal}
               startIcon={<PencilIcon className="w-4 h-4" />}
               className="w-full"
@@ -463,18 +486,18 @@ export default function OrderDetails() {
               <span className="hidden sm:inline">Update Status</span>
               <span className="sm:hidden">Status</span>
             </Button>
-            <Button 
-              variant="primary" 
-              size="sm" 
+            <Button
+              variant="primary"
+              size="sm"
               onClick={openAssignModal}
               className="w-full"
             >
               <span className="hidden sm:inline">Assign Delivery Boy</span>
               <span className="sm:hidden">Assign</span>
             </Button>
-            <Button 
-              variant="primary" 
-              size="sm" 
+            <Button
+              variant="primary"
+              size="sm"
               onClick={openDeleteModal}
               startIcon={<TrashBinIcon className="w-4 h-4" />}
               className="w-full"
@@ -482,6 +505,17 @@ export default function OrderDetails() {
               <span className="hidden sm:inline">Delete Order</span>
               <span className="sm:hidden">Delete</span>
             </Button>
+            {/* Show Return Items only for Out of Delivery or Delivered orders */}
+            {["out_of_delivery", "delivered"].includes(order.status?.toLowerCase() || "") && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openReturnModal}
+                className="w-full"
+              >
+                Return Items
+              </Button>
+            )}
           </div>
         </div>
 
@@ -517,8 +551,8 @@ export default function OrderDetails() {
                     {order.subtotal_amount && !isNaN(parseFloat(order.subtotal_amount))
                       ? `₹${parseFloat(order.subtotal_amount).toFixed(2)}`
                       : order.total_amount && !isNaN(parseFloat(order.total_amount))
-                      ? `₹${parseFloat(order.total_amount).toFixed(2)}`
-                      : "—"}
+                        ? `₹${parseFloat(order.total_amount).toFixed(2)}`
+                        : "—"}
                   </p>
                 </div>
                 {(order.total_gst_amount && parseFloat(order.total_gst_amount) > 0) && (
@@ -549,12 +583,12 @@ export default function OrderDetails() {
                   <div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">Payment Status:</span>
                     <div className="mt-1">
-                      <Badge 
-                        variant="light" 
+                      <Badge
+                        variant="light"
                         color={
                           order.payment_status === "fully_paid" ? "success" :
-                          order.payment_status === "partially_paid" ? "warning" : "error"
-                        } 
+                            order.payment_status === "partially_paid" ? "warning" : "error"
+                        }
                         size="sm"
                       >
                         {order.payment_status.replace("_", " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
@@ -681,265 +715,240 @@ export default function OrderDetails() {
         )}
 
         {/* Order Items */}
+        {/* Order Items */}
         <ComponentCard title="">
           <div className="flex items-center justify-between mb-4">
+
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Order Items</h3>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={openEditItems}
               startIcon={<PencilIcon className="w-4 h-4" />}
             >
               <span className="hidden sm:inline">Edit Items</span>
               <span className="sm:hidden">Edit</span>
             </Button>
-          </div>
-          {order.order_items && order.order_items.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-              <div className="max-w-full overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b border-gray-100 dark:border-white/[0.05]">
-                    <tr>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Product</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Price</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Quantity</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">GST %</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">GST Amount</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                    {order.order_items.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-3 py-4 sm:px-5">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            {item.product?.main_image_url && (
-                              <img
-                                src={item.product.main_image_url}
-                                alt={item.product.name || "Product"}
-                                className="h-10 w-10 rounded-lg object-cover sm:h-12 sm:w-12"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <button
-                                onClick={() => item.product?.id && navigate(`/products/${item.product.id}`)}
-                                className="text-left hover:text-brand-600 dark:hover:text-brand-400 transition-colors w-full"
-                              >
-                                <p className="text-sm font-medium text-gray-800 dark:text-white/90 hover:underline truncate">
-                                  {item.product?.name || "—"}
-                                </p>
-                              </button>
-                              {item.product?.description && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 hidden sm:block">
-                                  {item.product.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.price && !isNaN(parseFloat(item.price))
-                              ? `₹${parseFloat(item.price).toFixed(2)}`
+          </div >
+          {
+            order.order_items && order.order_items.length > 0 ? (
+              <>
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                  <div className="max-w-full overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-gray-50 dark:bg-gray-700 dark:text-gray-400 text-gray-500">
+                        <tr>
+                          <th className="px-4 py-3 font-medium">Product</th>
+                          <th className="px-4 py-3 font-medium text-center">Unit Price</th>
+                          <th className="px-4 py-3 font-medium text-center">Quantity</th>
+                          <th className="px-4 py-3 font-medium text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {order.order_items.map((item) => (
+                          <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                {item.product?.main_image_url ? (
+                                  <img src={item.product.main_image_url} alt={item.product.name} className="w-10 h-10 rounded object-cover" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                    <span className="text-xs text-gray-400">No Img</span>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-medium text-gray-800 dark:text-white/90">
+                                    {item.product?.name || `Item #${item.id}`}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
+                              ₹{parseFloat(item.price).toFixed(2)}
+                            </td>
+                            <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
+                              {item.quantity}
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium text-gray-800 dark:text-white/90">
+                              ₹{(parseFloat(item.price) * item.quantity).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="border-t border-gray-100 dark:border-white/[0.05]">
+                        {order.subtotal_amount && parseFloat(order.subtotal_amount) > 0 && (
+                          <tr>
+                            <td colSpan={3} className="px-4 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Subtotal:
+                            </td>
+                            <td className="px-4 py-2 text-right text-sm text-gray-800 dark:text-white/90">
+                              ₹{parseFloat(order.subtotal_amount).toFixed(2)}
+                            </td>
+                          </tr>
+                        )}
+                        {order.total_gst_amount && parseFloat(order.total_gst_amount) > 0 ? (
+                          <tr>
+                            <td colSpan={3} className="px-4 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Total GST:
+                            </td>
+                            <td className="px-4 py-2 text-right text-sm text-gray-800 dark:text-white/90">
+                              ₹{parseFloat(order.total_gst_amount).toFixed(2)}
+                            </td>
+                          </tr>
+                        ) : null}
+                        <tr>
+                          <td colSpan={3} className="px-4 py-4 text-right text-sm font-semibold text-gray-800 dark:text-white/90">
+                            Total:
+                          </td>
+                          <td className="px-4 py-4 text-right text-sm font-semibold text-gray-800 dark:text-white/90">
+                            {order.total_amount && !isNaN(parseFloat(order.total_amount))
+                              ? `₹${parseFloat(order.total_amount).toFixed(2)}`
                               : "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">{item.quantity}</span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.gst_percentage !== null && item.gst_percentage !== undefined && item.gst_percentage > 0
-                              ? `${item.gst_percentage}%`
-                              : "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.gst_amount !== null && item.gst_amount !== undefined && !isNaN(item.gst_amount) && item.gst_amount > 0
-                              ? `₹${item.gst_amount.toFixed(2)}`
-                              : "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5 text-right">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-800 dark:text-white/90">
-                              {item.subtotal_with_gst && !isNaN(item.subtotal_with_gst)
-                                ? `₹${item.subtotal_with_gst.toFixed(2)}`
-                                : item.subtotal && !isNaN(item.subtotal)
-                                ? `₹${item.subtotal.toFixed(2)}`
-                                : "—"}
-                            </span>
-                            {item.subtotal_with_gst && item.subtotal && item.subtotal_with_gst !== item.subtotal && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                (Base: ₹{item.subtotal.toFixed(2)})
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="border-t border-gray-100 dark:border-white/[0.05]">
-                    {order.subtotal_amount && parseFloat(order.subtotal_amount) > 0 && (
-                      <tr>
-                        <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 3 : 5} className="px-3 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300 sm:px-5">
-                          Subtotal:
-                        </td>
-                        <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 2 : 0} className="hidden md:table-cell"></td>
-                        <td className="px-3 py-2 text-sm text-gray-800 dark:text-white/90 sm:px-5">
-                          ₹{parseFloat(order.subtotal_amount).toFixed(2)}
-                        </td>
-                      </tr>
-                    )}
-                    {order.total_gst_amount && parseFloat(order.total_gst_amount) > 0 ? (
-                      <tr>
-                        <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 3 : 5} className="px-3 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-300 sm:px-5">
-                          Total GST:
-                        </td>
-                        <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 2 : 0} className="hidden md:table-cell"></td>
-                        <td className="px-3 py-2 text-sm text-gray-800 dark:text-white/90 sm:px-5">
-                          ₹{parseFloat(order.total_gst_amount).toFixed(2)}
-                        </td>
-                      </tr>
-                    ): null}
-                    <tr>
-                      <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 3 : 5} className="px-3 py-4 text-right text-sm font-semibold text-gray-800 dark:text-white/90 sm:px-5">
-                        Total:
-                      </td>
-                      <td colSpan={order.order_items.some(item => item.gst_percentage !== null && item.gst_percentage !== undefined) ? 2 : 0} className="hidden md:table-cell"></td>
-                      <td className="px-3 py-4 text-sm font-semibold text-gray-800 dark:text-white/90 sm:px-5">
-                        {order.total_amount && !isNaN(parseFloat(order.total_amount))
-                          ? `₹${parseFloat(order.total_amount).toFixed(2)}`
-                          : "—"}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+                <OrderReturns orderId={Number(id)} />
+              </>
+            ) : (
+              <div className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
+                No items in this order
               </div>
-            </div>
-          ) : (
-            <div className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
-              No items in this order
-            </div>
-          )}
-        </ComponentCard>
+            )
+          }
+        </ComponentCard >
 
         {/* Order Transactions */}
-        <ComponentCard title="Order Transactions">
-          {isLoadingTransactions ? (
-            <div className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">Loading transactions...</div>
-          ) : orderTransactions.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-              <div className="max-w-full overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b border-gray-100 dark:border-white/[0.05]">
-                    <tr>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">ID</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Amount</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Payment Mode</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Status</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden sm:table-cell">Collected By</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">Added By</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">Date</th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                    {orderTransactions.map((transaction) => (
-                      <tr key={transaction.id}>
-                        <td className="px-3 py-4 sm:px-5">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">#{transaction.id}</span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5">
-                          <span className="text-sm font-medium text-gray-800 dark:text-white/90">
-                            ₹{transaction.amount.toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5">
-                          <Badge variant="light" color="info" size="sm">
-                            {transaction.payment_mode?.charAt(0).toUpperCase() + transaction.payment_mode?.slice(1) || "—"}
-                          </Badge>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5">
-                          {transaction.payment_status && (
-                            <Badge 
-                              variant="light" 
-                              color={
-                                transaction.payment_status === "fully_paid" ? "success" :
-                                transaction.payment_status === "partially_paid" ? "warning" : "error"
-                              } 
-                              size="sm"
-                            >
-                              {transaction.payment_status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="px-3 py-4 sm:px-5 hidden sm:table-cell">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {transaction.collected_by_user?.name || "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {transaction.added_by_user?.name || "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-4 sm:px-5">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => openEditTransaction(transaction)}
-                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
-                              aria-label="Edit"
-                              title="Edit Transaction"
-                            >
-                              <PencilIcon className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => openDeleteTransaction(transaction)}
-                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-error-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
-                              aria-label="Delete"
-                              title="Delete Transaction"
-                            >
-                              <TrashBinIcon className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+        < ComponentCard title="Order Transactions" >
+          {
+            isLoadingTransactions ? (
+              <div className="px-5 py-4 text-center text-gray-500 dark:text-gray-400" > Loading transactions...</div>
+            ) : orderTransactions.length > 0 ? (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                <div className="max-w-full overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+                      <tr>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">ID</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Amount</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Payment Mode</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Status</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden sm:table-cell">Collected By</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">Added By</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5 hidden md:table-cell">Date</th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 sm:px-5">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="border-t border-gray-100 dark:border-white/[0.05]">
-                    <tr>
-                      <td colSpan={4} className="px-3 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-300 sm:px-5">
-                        Total Paid:
-                      </td>
-                      <td className="px-3 py-4 text-sm font-semibold text-gray-800 dark:text-white/90 sm:px-5">
-                        ₹{orderTransactions.reduce((sum, t) => sum + (t.amount || 0), 0).toFixed(2)}
-                      </td>
-                      <td colSpan={2} className="hidden sm:table-cell"></td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                      {orderTransactions.map((transaction) => (
+                        <tr key={transaction.id}>
+                          <td className="px-3 py-4 sm:px-5">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">#{transaction.id}</span>
+                          </td>
+                          <td className="px-3 py-4 sm:px-5">
+                            <span className="text-sm font-medium text-gray-800 dark:text-white/90">
+                              ₹{transaction.amount.toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 sm:px-5">
+                            <Badge variant="light" color="info" size="sm">
+                              {transaction.payment_mode?.charAt(0).toUpperCase() + transaction.payment_mode?.slice(1) || "—"}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-4 sm:px-5">
+                            {transaction.payment_status && (
+                              <Badge
+                                variant="light"
+                                color={
+                                  transaction.payment_status === "fully_paid" ? "success" :
+                                    transaction.payment_status === "partially_paid" ? "warning" : "error"
+                                }
+                                size="sm"
+                              >
+                                {transaction.payment_status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-3 py-4 sm:px-5 hidden sm:table-cell">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {transaction.collected_by_user?.name || "—"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {transaction.added_by_user?.name || "—"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 sm:px-5 hidden md:table-cell">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {transaction.transaction_date ? new Date(transaction.transaction_date).toLocaleDateString() : "—"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 sm:px-5">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => openEditTransaction(transaction)}
+                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                                aria-label="Edit"
+                                title="Edit Transaction"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => openDeleteTransaction(transaction)}
+                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-error-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                                aria-label="Delete"
+                                title="Delete Transaction"
+                              >
+                                <TrashBinIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="border-t border-gray-100 dark:border-white/[0.05]">
+                      <tr>
+                        <td colSpan={4} className="px-3 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-300 sm:px-5">
+                          Total Paid:
+                        </td>
+                        <td className="px-3 py-4 text-sm font-semibold text-gray-800 dark:text-white/90 sm:px-5">
+                          ₹{orderTransactions.reduce((sum, t) => sum + (t.amount || 0), 0).toFixed(2)}
+                        </td>
+                        <td colSpan={2} className="hidden sm:table-cell"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
-              No transactions found for this order
-            </div>
-          )}
+            ) : (
+              <div className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
+                No transactions found for this order
+              </div>
+            )
+          }
         </ComponentCard>
 
+        {/* Order Audit Log */}
+        <OrderAuditLog audits={order.audits} />
+
+        {/* Invoice Modal */}
+        <InvoiceModal
+          isOpen={isInvoiceOpen}
+          closeModal={closeInvoiceModal}
+          invoice={order.invoice}
+          orderId={order.id}
+        />
+
+
         {/* Edit Order Modal */}
-        <Modal isOpen={isEditOpen} onClose={closeEditModal} className="w-full max-w-md mx-4 sm:mx-6">
+        < Modal isOpen={isEditOpen} onClose={closeEditModal} className="w-full max-w-md mx-4 sm:mx-6" >
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Update Order Status</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="status">
@@ -999,14 +1008,14 @@ export default function OrderDetails() {
               </div>
             </div>
           </form>
-        </Modal>
+        </Modal >
 
         {/* Assign Delivery Boy Modal */}
-        <Modal isOpen={isAssignOpen} onClose={closeAssignModal} className="w-full max-w-md mx-4 sm:mx-6">
+        < Modal isOpen={isAssignOpen} onClose={closeAssignModal} className="w-full max-w-md mx-4 sm:mx-6" >
           <form onSubmit={handleAssignSubmit(onAssignSubmit)}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Assign Delivery Boy</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="delivery_boy_id">
@@ -1084,14 +1093,34 @@ export default function OrderDetails() {
               </div>
             </div>
           </form>
-        </Modal>
+        </Modal >
+
+        {/* Return Order Modal */}
+        {order && (
+          <ReturnOrderModal
+            isOpen={isReturnOpen}
+            onClose={closeReturnModal}
+            order={order}
+            isLoading={returnOrderMutation.isPending}
+            onSubmit={(data) => {
+              if (id) {
+                returnOrderMutation.mutate({ id: Number(id), data }, {
+                  onSuccess: () => {
+                    closeReturnModal();
+                  }
+                });
+              }
+            }}
+          />
+        )}
+
 
         {/* Add Payment Modal */}
-        <Modal isOpen={isPaymentOpen} onClose={closePaymentModal} className="w-full max-w-lg mx-4 sm:mx-6">
+        < Modal isOpen={isPaymentOpen} onClose={closePaymentModal} className="w-full max-w-lg mx-4 sm:mx-6" >
           <form onSubmit={handlePaymentSubmit(onPaymentSubmit)}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Add Payment Details</h3>
-              
+
               {order && (
                 <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Order Amount</p>
@@ -1263,14 +1292,14 @@ export default function OrderDetails() {
                 <Button variant="outline" onClick={closePaymentModal} disabled={createTransactionMutation.isPending} type="button" className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   disabled={
                     createTransactionMutation.isPending ||
-                    (order && (paymentAmount > parseFloat(order.total_amount || "0") || 
-                               paymentDiscount > parseFloat(order.total_amount || "0") ||
-                               paymentAmount + paymentDiscount > parseFloat(order.total_amount || "0")))
-                  } 
+                    (order && (paymentAmount > parseFloat(order.total_amount || "0") ||
+                      paymentDiscount > parseFloat(order.total_amount || "0") ||
+                      paymentAmount + paymentDiscount > parseFloat(order.total_amount || "0")))
+                  }
                   type="submit"
                   className="w-full sm:w-auto"
                 >
@@ -1279,10 +1308,10 @@ export default function OrderDetails() {
               </div>
             </div>
           </form>
-        </Modal>
+        </Modal >
 
         {/* Delete Order Confirmation Modal */}
-        <Modal isOpen={isDeleteOpen} onClose={closeDeleteModal} className="w-full max-w-md mx-4 sm:mx-6">
+        < Modal isOpen={isDeleteOpen} onClose={closeDeleteModal} className="w-full max-w-md mx-4 sm:mx-6" >
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Confirm Delete</h3>
             <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
@@ -1297,14 +1326,14 @@ export default function OrderDetails() {
               </Button>
             </div>
           </div>
-        </Modal>
+        </Modal >
 
         {/* Edit Transaction Modal */}
-        <Modal isOpen={isEditTransactionOpen} onClose={closeEditTransactionModal} className="w-full max-w-md mx-4 sm:mx-6">
+        < Modal isOpen={isEditTransactionOpen} onClose={closeEditTransactionModal} className="w-full max-w-md mx-4 sm:mx-6" >
           <form onSubmit={handleUpdateTransactionSubmit(onUpdateTransactionSubmit)}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Transaction</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="update_amount">
@@ -1454,10 +1483,10 @@ export default function OrderDetails() {
               </div>
             </div>
           </form>
-        </Modal>
+        </Modal >
 
         {/* Delete Transaction Confirmation Modal */}
-        <Modal isOpen={isDeleteTransactionOpen} onClose={closeDeleteTransactionModal} className="w-full max-w-md mx-4 sm:mx-6">
+        < Modal isOpen={isDeleteTransactionOpen} onClose={closeDeleteTransactionModal} className="w-full max-w-md mx-4 sm:mx-6" >
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Confirm Delete</h3>
             <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
@@ -1472,13 +1501,13 @@ export default function OrderDetails() {
               </Button>
             </div>
           </div>
-        </Modal>
+        </Modal >
 
         {/* Edit Order Items Modal */}
-        <Modal isOpen={isEditItemsOpen} onClose={closeEditItemsModal} className="w-full max-w-4xl mx-4 sm:mx-6">
+        < Modal isOpen={isEditItemsOpen} onClose={closeEditItemsModal} className="w-full max-w-4xl mx-4 sm:mx-6" >
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Order Items</h3>
-            
+
             <div className="space-y-6">
               {/* Existing Items */}
               {editingItems.length > 0 && (
@@ -1570,7 +1599,7 @@ export default function OrderDetails() {
                       </div>
                     </div>
                   ))}
-                  
+
                   <div className="flex justify-center pt-2">
                     <Button
                       variant="outline"
@@ -1589,9 +1618,9 @@ export default function OrderDetails() {
               <Button variant="outline" onClick={closeEditItemsModal} disabled={updateOrderItemsMutation.isPending} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button 
-                variant="primary" 
-                onClick={onSubmitItemsEdit} 
+              <Button
+                variant="primary"
+                onClick={onSubmitItemsEdit}
                 disabled={updateOrderItemsMutation.isPending || (editingItems.length === 0 && newItems.length === 0)}
                 className="w-full sm:w-auto"
               >
@@ -1599,8 +1628,8 @@ export default function OrderDetails() {
               </Button>
             </div>
           </div>
-        </Modal>
-      </div>
+        </Modal >
+      </div >
     </>
   );
 }

@@ -11,7 +11,7 @@ import type { Store } from "../../../types/store";
 
 export function useOrdersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Initialize state from URL params
   const [page, setPage] = useState<number>(Number(searchParams.get("page")) || 1);
   const [perPage, setPerPage] = useState<number>(Number(searchParams.get("per_page")) || 15);
@@ -43,7 +43,7 @@ export function useOrdersPage() {
     if (deliveryBoyId) params.set("delivery_boy_id", String(deliveryBoyId));
     if (dateFrom) params.set("date_from", dateFrom);
     if (dateTo) params.set("date_to", dateTo);
-    
+
     setSearchParams(params, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, perPage, status, userId, storeId, locationId, deliveryBoyId, dateFrom, dateTo]);
@@ -53,8 +53,8 @@ export function useOrdersPage() {
     setPage(1);
   }, [status, userId, storeId, locationId, deliveryBoyId, dateFrom, dateTo]);
 
-  const { data: ordersRes, isLoading } = useOrdersPaginatedQuery({ 
-    page, 
+  const { data: ordersRes, isLoading } = useOrdersPaginatedQuery({
+    page,
     per_page: perPage,
     status,
     user_id: userId,
@@ -64,12 +64,12 @@ export function useOrdersPage() {
     date_from: dateFrom,
     date_to: dateTo,
   });
-  
+
   const orders: Order[] = ordersRes?.data ?? [];
   const meta: PaginationMeta | undefined = ordersRes?.meta;
 
   // Fetch stores, users, locations, and delivery boys for filters
-  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
+  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 200 });
   const stores: Store[] = storesRes?.data ?? [];
   const { data: users = [] } = useAdminUsersQuery();
   const { data: locations = [] } = useLocationsQuery();

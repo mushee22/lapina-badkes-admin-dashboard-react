@@ -36,6 +36,8 @@ type Props = {
   meta: PaginationMeta | undefined;
   type: string | undefined;
   setType: (type: string | undefined) => void;
+  storeId: number | undefined;
+  setStoreId: (id: number | undefined) => void;
   paymentMode: string | undefined;
   setPaymentMode: (mode: string | undefined) => void;
   paymentStatus: string | undefined;
@@ -64,8 +66,9 @@ export function TransactionsView(props: Props) {
   const { isOpen: isEditOpen, openModal: openEditModal, closeModal: closeEditModal } = useModal();
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
   const { isOpen: isCreateOpen, openModal: openCreateModal, closeModal: closeCreateModal } = useModal();
+  const { isOpen: isViewOpen, openModal: openViewModal, closeModal: closeViewModal } = useModal();
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  
+
   const {
     transactions,
     isLoading,
@@ -73,6 +76,8 @@ export function TransactionsView(props: Props) {
     meta,
     type,
     setType,
+    storeId,
+    setStoreId,
     paymentMode,
     setPaymentMode,
     paymentStatus,
@@ -143,6 +148,11 @@ export function TransactionsView(props: Props) {
     openDeleteModal();
   };
 
+  const openView = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    openViewModal();
+  };
+
   const onSubmit = (data: UpdateTransactionInput) => {
     if (!selectedTransaction) return;
     updateMutation.mutate(
@@ -202,17 +212,18 @@ export function TransactionsView(props: Props) {
           {/* Filters */}
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Type</label>
-              <Select
+              <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Outlet</label>
+              <Autocomplete
                 options={[
-                  { value: "order", label: "Order" },
-                  { value: "store", label: "Store" },
+                  { value: "", label: "All Outlets" },
+                  ...stores.map((store) => ({ value: String(store.id), label: store.name }))
                 ]}
-                placeholder="All Types"
-                value={type || ""}
-                onChange={(value) => setType(value || undefined)}
+                placeholder="All Outlets"
+                value={storeId ? String(storeId) : ""}
+                onChange={(value) => setStoreId(value ? Number(value) : undefined)}
               />
             </div>
+
             <div>
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Payment Mode</label>
               <Select
@@ -305,6 +316,9 @@ export function TransactionsView(props: Props) {
                       ID / Related To
                     </TableCell>
                     <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
+                      Outlet
+                    </TableCell>
+                    <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
                       Amount
                     </TableCell>
                     <TableCell isHeader className="px-3 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 sm:px-5">
@@ -327,13 +341,13 @@ export function TransactionsView(props: Props) {
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                      <TableCell colSpan={8} className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                         Loading transactions...
                       </TableCell>
                     </TableRow>
                   ) : transactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                      <TableCell colSpan={8} className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                         No transactions found
                       </TableCell>
                     </TableRow>
@@ -343,28 +357,31 @@ export function TransactionsView(props: Props) {
                         <TableCell className="px-3 py-4 sm:px-5">
                           <div className="flex flex-col gap-1">
                             <span className="text-sm text-gray-700 dark:text-gray-300">#{transaction.id}</span>
-                            {(transaction.transactionable_type === "order" || transaction.transactionable_type === "App\\Models\\Order") && transaction.transactionable && "order_number" in transaction.transactionable ? (
+                            {/* {(transaction.order_id || transaction.order) ? (
                               <button
-                                onClick={() => navigate(`/orders/${transaction.transactionable_id}`)}
+                                onClick={() => navigate(`/orders/${transaction.order_id || transaction.order?.id}`)}
                                 className="text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline text-left"
                               >
-                                {transaction.transactionable.order_number || `Order #${transaction.transactionable.id}`}
+                                {transaction.order?.order_number || `Order #${transaction.order_id}`}
                               </button>
-                            ) : (transaction.transactionable_type === "store" || transaction.transactionable_type === "App\\Models\\Store") && transaction.transactionable && "name" in transaction.transactionable ? (
+                            ) : (transaction.store_id || transaction.store) ? (
                               <button
-                                onClick={() => navigate(`/stores/${transaction.transactionable_id}`)}
+                                onClick={() => navigate(`/stores/${transaction.store_id || transaction.store?.id}`)}
                                 className="text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline text-left"
                               >
-                                {transaction.transactionable.name || `Store #${transaction.transactionable.id}`}
+                                {transaction.store?.name || `Outlet #${transaction.store_id}`}
                               </button>
                             ) : (
                               <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {transaction.transactionable_type === "order" || transaction.transactionable_type === "App\\Models\\Order" ? "Order" : 
-                                 transaction.transactionable_type === "store" || transaction.transactionable_type === "App\\Models\\Store" ? "Store" : 
-                                 transaction.transactionable_type}
+                                —
                               </span>
-                            )}
+                            )} */}
                           </div>
+                        </TableCell>
+                        <TableCell className="px-3 py-4 sm:px-5">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {transaction.store?.name || "—"}
+                          </span>
                         </TableCell>
                         <TableCell className="px-3 py-4 sm:px-5">
                           <span className="text-sm font-medium text-gray-800 dark:text-white/90">
@@ -378,12 +395,12 @@ export function TransactionsView(props: Props) {
                         </TableCell>
                         <TableCell className="px-3 py-4 sm:px-5">
                           {transaction.payment_status && (
-                            <Badge 
-                              variant="light" 
+                            <Badge
+                              variant="light"
                               color={
                                 transaction.payment_status === "fully_paid" ? "success" :
-                                transaction.payment_status === "partially_paid" ? "warning" : "error"
-                              } 
+                                  transaction.payment_status === "partially_paid" ? "warning" : "error"
+                              }
                               size="sm"
                             >
                               {transaction.payment_status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
@@ -416,26 +433,34 @@ export function TransactionsView(props: Props) {
                         </TableCell>
                         <TableCell className="px-3 py-4 sm:px-5">
                           <div className="flex items-center gap-2">
-                            {(transaction.transactionable_type === "order" || transaction.transactionable_type === "App\\Models\\Order") && (
+                            {/* {transaction.order_id && (
                               <button
-                                onClick={() => navigate(`/orders/${transaction.transactionable_id}`)}
+                                onClick={() => navigate(`/orders/${transaction.order_id}`)}
                                 className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
                                 aria-label="View Order"
                                 title="View Order"
                               >
                                 <EyeIcon className="w-4 h-4" />
                               </button>
-                            )}
-                            {(transaction.transactionable_type === "store" || transaction.transactionable_type === "App\\Models\\Store") && (
+                            )} */}
+                            <button
+                              onClick={() => openView(transaction)}
+                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              aria-label="View Details"
+                              title="View Details"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                            </button>
+                            {/* {transaction.store_id && !transaction.order_id && (
                               <button
-                                onClick={() => navigate(`/stores/${transaction.transactionable_id}`)}
+                                onClick={() => navigate(`/stores/${transaction.store_id}`)}
                                 className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
-                                aria-label="View Store"
-                                title="View Store"
+                                aria-label="View Outlet"
+                                title="View Outlet"
                               >
                                 <EyeIcon className="w-4 h-4" />
                               </button>
-                            )}
+                            )} */}
                             <button
                               onClick={() => openEdit(transaction)}
                               className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-brand-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
@@ -483,7 +508,7 @@ export function TransactionsView(props: Props) {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Transaction</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="amount">
@@ -652,22 +677,22 @@ export function TransactionsView(props: Props) {
       <Modal isOpen={isCreateOpen} onClose={closeCreateModal} className="w-full max-w-2xl mx-4 sm:mx-6">
         <div className="p-6">
           <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
-            Add Store Transaction
+            Add Outlet Transaction
           </h3>
           <form noValidate onSubmit={handleCreateSubmit(onCreateSubmit)}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="store_id">Store <span className="text-error-500">*</span></Label>
+                <Label htmlFor="store_id">Outlet <span className="text-error-500">*</span></Label>
                 <Controller
                   name="store_id"
                   control={createControl}
                   render={({ field }) => (
                     <Autocomplete
                       options={[
-                        { value: "", label: "Select Store" },
+                        { value: "", label: "Select Outlet" },
                         ...stores.map((store) => ({ value: String(store.id), label: store.name }))
                       ]}
-                      placeholder="Select Store"
+                      placeholder="Select Outlet"
                       value={field.value ? String(field.value) : ""}
                       onChange={(value) => field.onChange(value ? Number(value) : undefined)}
                     />
@@ -797,7 +822,119 @@ export function TransactionsView(props: Props) {
           </form>
         </div>
       </Modal>
+
+      {/* View Transaction Details Modal */}
+      <Modal isOpen={isViewOpen} onClose={closeViewModal} className="w-full max-w-lg mx-4 sm:mx-6">
+        <div className="p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+              Transaction Details
+            </h3>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              #{selectedTransaction?.id}
+            </span>
+          </div>
+
+          {selectedTransaction && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Amount</p>
+                  <p className="text-base font-medium text-gray-800 dark:text-white/90">
+                    ₹{selectedTransaction.amount.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Date</p>
+                  <p className="text-sm text-gray-800 dark:text-white/90">
+                    {selectedTransaction.transaction_date ? new Date(selectedTransaction.transaction_date).toLocaleDateString() : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Payment Mode</p>
+                  <div className="mt-1">
+                    <Badge variant="light" color="info" size="sm">
+                      {selectedTransaction.payment_mode?.charAt(0).toUpperCase() + selectedTransaction.payment_mode?.slice(1) || "—"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Payment Status</p>
+                  {selectedTransaction.payment_status ? (
+                    <div className="mt-1">
+                      <Badge
+                        variant="light"
+                        color={
+                          selectedTransaction.payment_status === "fully_paid" ? "success" :
+                            selectedTransaction.payment_status === "partially_paid" ? "warning" : "error"
+                        }
+                        size="sm"
+                      >
+                        {selectedTransaction.payment_status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                      </Badge>
+                    </div>
+                  ) : "—"}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Collected By</p>
+                  <p className="text-sm text-gray-800 dark:text-white/90">
+                    {selectedTransaction.collected_by_user?.name || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Added By</p>
+                  <p className="text-sm text-gray-800 dark:text-white/90">
+                    {selectedTransaction.added_by_user?.name || "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Related To</p>
+                <div className="mt-1">
+                  {selectedTransaction.order ? (
+                    <p className="text-sm text-gray-800 dark:text-white/90">
+                      Order: {selectedTransaction.order.order_number}
+                      {selectedTransaction.store && (
+                        <span className="block text-xs text-gray-500">Outlet: {selectedTransaction.store.name}</span>
+                      )}
+                    </p>
+                  ) : selectedTransaction.store ? (
+                    <p className="text-sm text-gray-800 dark:text-white/90">
+                      Outlet: {selectedTransaction.store.name}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-800 dark:text-white/90">
+                      —
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {selectedTransaction.payment_note && (
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Payment Note</p>
+                  <p className="text-sm text-gray-800 dark:text-white/90 mt-1 p-2 bg-gray-50 dark:bg-white/[0.03] rounded-md">
+                    {selectedTransaction.payment_note}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-end">
+            <Button variant="outline" onClick={closeViewModal}>
+              Close
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
-

@@ -7,6 +7,7 @@ interface ModalProps {
   children: React.ReactNode;
   showCloseButton?: boolean;
   isFullscreen?: boolean;
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,6 +17,7 @@ export const Modal: React.FC<ModalProps> = ({
   className,
   showCloseButton = true,
   isFullscreen = false,
+  size = "md", // Default size
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -49,21 +51,33 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const sizeClasses = {
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-2xl",
+    "3xl": "max-w-3xl",
+    "4xl": "max-w-4xl",
+    "5xl": "max-w-5xl",
+    full: "max-w-full m-4",
+  };
+
   const contentClasses = isFullscreen
     ? "w-full h-full"
-    : "relative w-full rounded-3xl bg-white  dark:bg-gray-900";
+    : `relative w-full ${sizeClasses[size] || "max-w-md"} rounded-3xl bg-white dark:bg-gray-900 shadow-xl transition-all`;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999 p-4 sm:p-6">
       {!isFullscreen && (
         <div
-          className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+          className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px] transition-opacity"
           onClick={onClose}
         ></div>
       )}
       <div
         ref={modalRef}
-        className={`${contentClasses}  ${className}`}
+        className={`${contentClasses} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {showCloseButton && (

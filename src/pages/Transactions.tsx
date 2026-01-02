@@ -12,6 +12,8 @@ export default function Transactions() {
     meta,
     type,
     setType,
+    storeId,
+    setStoreId,
     paymentMode,
     setPaymentMode,
     paymentStatus,
@@ -39,6 +41,8 @@ export default function Transactions() {
       meta={meta}
       type={type}
       setType={setType}
+      storeId={storeId}
+      setStoreId={setStoreId}
       paymentMode={paymentMode}
       setPaymentMode={setPaymentMode}
       paymentStatus={paymentStatus}

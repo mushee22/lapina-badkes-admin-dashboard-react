@@ -64,11 +64,11 @@ export default function StoreDetails() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { data: store, isLoading } = useStoreQuery(id ? Number(id) : null);
-  
+
   // Orders pagination state
   const [ordersPage, setOrdersPage] = useState<number>(1);
   const [ordersStatus, setOrdersStatus] = useState<string | undefined>(undefined);
-  
+
   // Fetch orders for this store
   const { data: ordersRes, isLoading: isLoadingOrders } = useOrdersPaginatedQuery({
     page: ordersPage,
@@ -76,10 +76,10 @@ export default function StoreDetails() {
     store_id: id ? Number(id) : undefined,
     status: ordersStatus,
   });
-  
+
   const orders = ordersRes?.data ?? [];
   const ordersMeta = ordersRes?.meta;
-  
+
   const { isOpen: isDiscountOpen, openModal: openDiscountModal, closeModal: closeDiscountModal } = useModal();
   const { isOpen: isDeactivateDiscountOpen, openModal: openDeactivateDiscountModal, closeModal: closeDeactivateDiscountModal } = useModal();
   const { isOpen: isActivateDiscountOpen, openModal: openActivateDiscountModal, closeModal: closeActivateDiscountModal } = useModal();
@@ -184,7 +184,7 @@ export default function StoreDetails() {
         discount_end_date: store.discount.end_date ? (store.discount.end_date.includes('T') ? store.discount.end_date.split('T')[0] : store.discount.end_date) : "",
         discount_description: store.discount.description || "",
       };
-      
+
       setDiscountMutation.mutate(
         { id: Number(id), data: discountData },
         {
@@ -221,11 +221,11 @@ export default function StoreDetails() {
   if (isLoading) {
     return (
       <>
-        <PageMeta title="Store Details | Lapina Bakes Admin" description="Store details" />
-        <PageBreadcrumb pageTitle="Store Details" />
+        <PageMeta title="Outlet Details | Lapina Bakes Admin" description="Outlet details" />
+        <PageBreadcrumb pageTitle="Outlet Details" />
         <div className="space-y-6">
           <ComponentCard title="">
-            <div className="px-5 py-4 text-center text-gray-500">Loading store details...</div>
+            <div className="px-5 py-4 text-center text-gray-500">Loading outlet details...</div>
           </ComponentCard>
         </div>
       </>
@@ -235,11 +235,11 @@ export default function StoreDetails() {
   if (!store) {
     return (
       <>
-        <PageMeta title="Store Details | Lapina Bakes Admin" description="Store details" />
-        <PageBreadcrumb pageTitle="Store Details" />
+        <PageMeta title="Outlet Details | Lapina Bakes Admin" description="Outlet details" />
+        <PageBreadcrumb pageTitle="Outlet Details" />
         <div className="space-y-6">
           <ComponentCard title="">
-            <div className="px-5 py-4 text-center text-gray-500">Store not found</div>
+            <div className="px-5 py-4 text-center text-gray-500">Outlet not found</div>
           </ComponentCard>
         </div>
       </>
@@ -248,51 +248,51 @@ export default function StoreDetails() {
 
   return (
     <>
-      <PageMeta title={`${store.name} | Lapina Bakes Admin`} description="Store details" />
-      <PageBreadcrumb pageTitle="Store Details" />
+      <PageMeta title={`${store.name} | Lapina Bakes Admin`} description="Outlet details" />
+      <PageBreadcrumb pageTitle="Outlet Details" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={() => navigate("/stores")} startIcon={<ChevronLeftIcon className="w-4 h-4" />}>
-            Back to Stores
+            Back to Outlets
           </Button>
           <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <Button
+              size="sm"
+              variant="outline"
               onClick={openStorePaymentModal}
               startIcon={<DollarLineIcon className="w-4 h-4" />}
             >
-              Add Store Payment
+              Add Outlet Payment
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => navigate(`/overview/store/${id}`)}
               startIcon={<BoxIcon className="w-4 h-4" />}
             >
               View Overview
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => navigate(`/stores/${id}/edit`)}
               startIcon={<PencilIcon className="w-4 h-4" />}
             >
-              Edit Store
+              Edit Outlet
             </Button>
-            <Button 
-              size="sm" 
-              variant="primary" 
+            <Button
+              size="sm"
+              variant="primary"
               onClick={openDeleteModal}
               startIcon={<TrashBinIcon className="w-4 h-4" />}
             >
-              Delete Store
+              Delete Outlet
             </Button>
           </div>
         </div>
 
         {/* Store Information */}
-        <ComponentCard title="Store Information">
+        <ComponentCard title="Outlet Information">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <h3 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Basic Information</h3>
@@ -309,6 +309,12 @@ export default function StoreDetails() {
                   <span className="text-xs text-gray-500 dark:text-gray-400">Location:</span>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     {store.location ? `${store.location.name} (${store.location.code || store.location.id})` : "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Route:</span>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {store.route ? `${store.route.name} (${store.route.code})` : "—"}
                   </p>
                 </div>
                 <div>
@@ -399,7 +405,7 @@ export default function StoreDetails() {
         </ComponentCard>
 
         {/* Store Discount */}
-        <ComponentCard title="Store Discount">
+        <ComponentCard title="Outlet Discount">
           <div className="space-y-4">
             {store.discount?.has_active_discount && (store.discount?.percentage || store.discount?.current_percentage) ? (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
@@ -695,7 +701,7 @@ export default function StoreDetails() {
                   name="discount_start_date"
                   control={discountControl}
                   render={({ field }) => {
-                    const dateValue = field.value 
+                    const dateValue = field.value
                       ? (field.value.includes('T') ? field.value.split('T')[0] : field.value)
                       : "";
                     return (
@@ -728,7 +734,7 @@ export default function StoreDetails() {
                   name="discount_end_date"
                   control={discountControl}
                   render={({ field }) => {
-                    const dateValue = field.value 
+                    const dateValue = field.value
                       ? (field.value.includes('T') ? field.value.split('T')[0] : field.value)
                       : "";
                     return (
@@ -807,7 +813,7 @@ export default function StoreDetails() {
         <form onSubmit={onStorePaymentSubmit}>
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Add Store Payment</h3>
-            
+
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <p className="text-xs text-gray-500 dark:text-gray-400">Store</p>
               <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
@@ -940,9 +946,9 @@ export default function StoreDetails() {
               <Button variant="outline" onClick={closeStorePaymentModal} disabled={createStoreTransactionMutation.isPending} type="button" className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button 
-                variant="primary" 
-                disabled={createStoreTransactionMutation.isPending} 
+              <Button
+                variant="primary"
+                disabled={createStoreTransactionMutation.isPending}
                 type="submit"
                 className="w-full sm:w-auto"
               >

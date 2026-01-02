@@ -5,7 +5,8 @@ import ComponentCard from "../../components/common/ComponentCard";
 import StoreForm from "./components/StoreForm";
 import { useStoreQuery, useUpdateStoreMutation } from "../../hooks/queries/stores";
 import { useLocationsQuery } from "../../hooks/queries/locations";
-import type { CreateStoreInput } from "../../types/store";
+import { useRoutesQuery } from "../../services/routes";
+import type { CreateStoreInput, UpdateStoreInput } from "../../types/store";
 
 export default function StoreEdit() {
   const { id } = useParams<{ id: string }>();
@@ -13,25 +14,26 @@ export default function StoreEdit() {
   const { data: store, isLoading: isLoadingStore } = useStoreQuery(id ? Number(id) : null);
   const updateMutation = useUpdateStoreMutation();
   const { data: locations = [] } = useLocationsQuery();
+  const { data: routes = [] } = useRoutesQuery();
 
-  const handleSubmit = async (values: CreateStoreInput) => {
+  const handleSubmit = async (values: CreateStoreInput | UpdateStoreInput) => {
     if (!id) return;
     try {
       await updateMutation.mutateAsync({ id: Number(id), data: values });
       navigate("/stores");
     } catch (error) {
-      console.error("Failed to update store", error);
+      console.error("Failed to update Outlet", error);
     }
   };
 
   if (isLoadingStore) {
     return (
       <>
-        <PageMeta title="Edit Store | Lapina Bakes Admin" description="Edit store details" />
-        <PageBreadcrumb pageTitle="Edit Store" />
+        <PageMeta title="Edit Outlet | Lapina Bakes Admin" description="Edit Outlet details" />
+        <PageBreadcrumb pageTitle="Edit Outlet" />
         <div className="space-y-6">
-          <ComponentCard title="Edit Store">
-            <div className="px-5 py-4 text-center text-gray-500">Loading store details...</div>
+          <ComponentCard title="Edit Outlet">
+            <div className="px-5 py-4 text-center text-gray-500">Loading Outlet details...</div>
           </ComponentCard>
         </div>
       </>
@@ -41,11 +43,11 @@ export default function StoreEdit() {
   if (!store) {
     return (
       <>
-        <PageMeta title="Edit Store | Lapina Bakes Admin" description="Edit store details" />
-        <PageBreadcrumb pageTitle="Edit Store" />
+        <PageMeta title="Edit Outlet | Lapina Bakes Admin" description="Edit Outlet details" />
+        <PageBreadcrumb pageTitle="Edit Outlet" />
         <div className="space-y-6">
-          <ComponentCard title="Edit Store">
-            <div className="px-5 py-4 text-center text-gray-500">Store not found</div>
+          <ComponentCard title="Edit Outlet">
+            <div className="px-5 py-4 text-center text-gray-500">Outlet not found</div>
           </ComponentCard>
         </div>
       </>
@@ -60,6 +62,7 @@ export default function StoreEdit() {
     store_email: store.email ?? "",
     store_website: store.website ?? "",
     location_id: store.location?.id ?? undefined,
+    route_id: store.route?.id ?? undefined,
     owner_name: store.owner?.name ?? "",
     owner_email: store.owner?.email ?? "",
     owner_phone: store.owner?.phone ?? "",
@@ -78,16 +81,18 @@ export default function StoreEdit() {
 
   return (
     <>
-      <PageMeta title={`Edit Store | Lapina Bakes Admin`} description="Edit store details" />
-      <PageBreadcrumb pageTitle="Edit Store" />
+      <PageMeta title={`Edit Outlet | Lapina Bakes Admin`} description="Edit Outlet details" />
+      <PageBreadcrumb pageTitle="Edit Outlet" />
       <div className="space-y-6">
-        <ComponentCard title={`Edit Store: ${store.name}`}>
+        <ComponentCard title={`Edit Outlet: ${store.name}`}>
           <StoreForm
             initialValues={initialValues}
             onSubmit={handleSubmit}
             submitLabel="Save Changes"
             locations={locations}
+            routes={routes}
             isLoading={updateMutation.isPending}
+            isEdit={true}
           />
         </ComponentCard>
       </div>

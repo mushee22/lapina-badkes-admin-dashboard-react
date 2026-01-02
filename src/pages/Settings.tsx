@@ -19,7 +19,8 @@ export default function Settings() {
   const paymentScannerSetting = settings.find((s) => s.key === "payment_scanner");
   const supportNumberSetting = settings.find((s) => s.key === "support_number");
   const supportEmailSetting = settings.find((s) => s.key === "support_email");
-  
+  const gstNumberSetting = settings.find((s) => s.key === "gst_number");
+
   // Debug settings
   console.log("All settings:", settings);
   console.log("Payment scanner setting:", paymentScannerSetting);
@@ -28,6 +29,7 @@ export default function Settings() {
   // Form state
   const [supportNumber, setSupportNumber] = useState("");
   const [supportEmail, setSupportEmail] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -42,6 +44,9 @@ export default function Settings() {
     if (paymentScannerSetting?.value) {
       setImagePreview(paymentScannerSetting.value);
     }
+    if (gstNumberSetting) {
+      setGstNumber(gstNumberSetting.value || "");
+    }
   }, [supportNumberSetting, supportEmailSetting, paymentScannerSetting]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +58,7 @@ export default function Settings() {
         size: file.size,
         type: file.type
       });
-      
+
       // Validate image file
       if (!file.type.startsWith("image/")) {
         showToast("error", "Please select a valid image file", "Error");
@@ -61,7 +66,7 @@ export default function Settings() {
       }
       setSelectedImage(file);
       console.log("Image set in state:", file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -77,14 +82,14 @@ export default function Settings() {
       showToast("error", "Please select an image", "Error");
       return;
     }
-    
+
     const settingData = {
       key: "payment_scanner",
       value: selectedImage,
       type: "image" as const,
       description: paymentScannerSetting?.description || null,
     };
-    
+
     // If setting exists, update it. Otherwise, create it.
     if (paymentScannerSetting?.id) {
       updateMutation.mutate(
@@ -111,9 +116,24 @@ export default function Settings() {
       type: "text" as const,
       description: supportNumberSetting?.description || null,
     };
-    
+
     if (supportNumberSetting?.id) {
       updateMutation.mutate({ ...settingData, id: supportNumberSetting.id });
+    } else {
+      createMutation.mutate(settingData);
+    }
+  };
+
+  const handleSubmitGstNumber = async () => {
+    const settingData = {
+      key: "gst_number",
+      value: gstNumber,
+      type: "text" as const,
+      description: gstNumberSetting?.description || null,
+    };
+
+    if (gstNumberSetting?.id) {
+      updateMutation.mutate({ ...settingData, id: gstNumberSetting.id });
     } else {
       createMutation.mutate(settingData);
     }
@@ -126,7 +146,7 @@ export default function Settings() {
       type: "text" as const,
       description: supportEmailSetting?.description || null,
     };
-    
+
     if (supportEmailSetting?.id) {
       updateMutation.mutate({ ...settingData, id: supportEmailSetting.id });
     } else {
@@ -195,6 +215,34 @@ export default function Settings() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div>
+                <Label htmlFor="support_email" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Company GST Number
+                </Label>
+                {supportEmailSetting?.description && (
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {supportEmailSetting.description}
+                  </p>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <InputField
+                    id="gst_number"
+                    type="text"
+                    placeholder="Enter company GST number"
+                    value={gstNumber}
+                    onChange={(e) => setGstNumber(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleSubmitGstNumber}
+                    disabled={updateMutation.isPending || createMutation.isPending}
+                    className="px-4 py-2 shrink-0 h-11"
+                  >
+                    {(updateMutation.isPending || createMutation.isPending) ? "Saving..." : "Update"}
+                  </Button>
+                </div>
               </div>
 
               {/* Support Number */}

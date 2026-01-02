@@ -87,7 +87,7 @@ export function OrdersView(props: Props) {
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
   const [bulkStatus, setBulkStatus] = useState<string>("");
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  
+
   const {
     orders,
     isLoading,
@@ -259,10 +259,10 @@ export function OrdersView(props: Props) {
             <div>
               <Autocomplete
                 options={[
-                  { value: "", label: "All Stores" },
+                  { value: "", label: "All Outlets" },
                   ...stores.map((store) => ({ value: String(store.id), label: store.name }))
                 ]}
-                placeholder="Filter by Store"
+                placeholder="Filter by Outlet"
                 value={storeId ? String(storeId) : ""}
                 onChange={(value) => setStoreId(value ? Number(value) : undefined)}
               />

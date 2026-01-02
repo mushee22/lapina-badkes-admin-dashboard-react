@@ -31,6 +31,10 @@ import OrderDetails from "./pages/OrderManagement/OrderDetails.tsx";
 import ManualOrderCreate from "./pages/OrderManagement/ManualOrderCreate.tsx";
 import DeliveryBoyDetails from "./pages/UserManagement/DeliveryBoyDetails.tsx";
 import Overview from "./pages/Dashboard/Overview.tsx";
+import RoutesPage from "./pages/RouteManagement/Routes.tsx";
+import Roles from "./pages/UserManagement/Roles.tsx";
+import RoleCreate from "./pages/UserManagement/RoleCreate.tsx";
+import RoleEdit from "./pages/UserManagement/RoleEdit.tsx";
 
 export default function App() {
   return (
@@ -40,37 +44,41 @@ export default function App() {
           <Router>
             <ScrollToTop />
             <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}> 
-              <Route index path="/" element={<Home />} />
-              <Route path="/users/admin" element={<AdminUsers />} />
-              <Route path="/users/delivery-boys/:id" element={<DeliveryBoyDetails />} />
-              <Route path="/users/delivery-boys" element={<DeliveryBoys />} />
-              <Route path="/orders/manual-create" element={<ManualOrderCreate />} />
-              <Route path="/orders/:id" element={<OrderDetails />} />
-              <Route path="/orders/all" element={<AllOrders />} />
-              <Route path="/orders/pending" element={<PendingOrders />} />
-              <Route path="/products/categories" element={<Categories />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/new" element={<ProductCreate />} />
-              <Route path="/products/:id" element={<ProductDetails />} />
-              <Route path="/products/:id/edit" element={<ProductEdit />} />
-              <Route path="/stores/locations" element={<Locations />} />
-              <Route path="/stores/new" element={<StoreCreate />} />
-              <Route path="/stores/:id/edit" element={<StoreEdit />} />
-              <Route path="/stores/:id" element={<StoreDetails />} />
-              <Route path="/stores" element={<Stores />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/reports/invoices" element={<OrdersInvoice />} />
-              <Route path="/reports/users" element={<UserReport />} />
-              <Route path="/reports/stores" element={<StoreWiseReport />} />
-              <Route path="/overview/store/:storeId" element={<Overview />} />
-              <Route path="/overview/delivery-boy/:deliveryBoyId" element={<Overview />} />
-            </Route>
-          </Route>
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="*" element={<NotFound />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route index path="/" element={<Home />} />
+                  <Route path="/users/admin" element={<AdminUsers />} />
+                  <Route path="/users/roles" element={<Roles />} />
+                  <Route path="/users/roles/new" element={<RoleCreate />} />
+                  <Route path="/users/roles/:id/edit" element={<RoleEdit />} />
+                  <Route path="/users/delivery-boys/:id" element={<DeliveryBoyDetails />} />
+                  <Route path="/users/delivery-boys" element={<DeliveryBoys />} />
+                  <Route path="/orders/manual-create" element={<ManualOrderCreate />} />
+                  <Route path="/orders/:id" element={<OrderDetails />} />
+                  <Route path="/orders/all" element={<AllOrders />} />
+                  <Route path="/orders/pending" element={<PendingOrders />} />
+                  <Route path="/products/categories" element={<Categories />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/new" element={<ProductCreate />} />
+                  <Route path="/products/:id" element={<ProductDetails />} />
+                  <Route path="/products/:id/edit" element={<ProductEdit />} />
+                  <Route path="/stores/locations" element={<Locations />} />
+                  <Route path="/stores/new" element={<StoreCreate />} />
+                  <Route path="/stores/:id/edit" element={<StoreEdit />} />
+                  <Route path="/stores/:id" element={<StoreDetails />} />
+                  <Route path="/stores" element={<Stores />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/transactions" element={<Transactions />} />
+                  <Route path="/reports/invoices" element={<OrdersInvoice />} />
+                  <Route path="/reports/users" element={<UserReport />} />
+                  <Route path="/reports/stores" element={<StoreWiseReport />} />
+                  <Route path="/overview/store/:storeId" element={<Overview />} />
+                  <Route path="/overview/delivery-boy/:deliveryBoyId" element={<Overview />} />
+                  <Route path="/routes" element={<RoutesPage />} />
+                </Route>
+              </Route>
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
         </AuthGate>

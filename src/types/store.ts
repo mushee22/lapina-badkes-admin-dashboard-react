@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RouteSchema } from "./route";
 
 export const StoreLocationSchema = z.object({
   id: z.number(),
@@ -38,12 +39,14 @@ export const StoreSchema = z.object({
   email: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
   is_active: z.boolean(),
+  gst_number: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
   status_label: z.string().optional(),
   discount: StoreDiscountSchema.nullable().optional(),
   logo: z.string().nullable().optional(),
   settings: StoreSettingsSchema.nullable().optional(),
   location: StoreLocationSchema.nullable().optional(),
+  route: RouteSchema.nullable().optional(),
   owner: StoreOwnerSchema.nullable().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
@@ -56,8 +59,10 @@ export const CreateStoreSchema = z.object({
   store_phone: z.string().nullable().optional(),
   store_address: z.string().nullable().optional(),
   store_email: z.string().nullable().optional(),
+  gst_number: z.string().nullable().optional(),
   store_website: z.string().nullable().optional(),
   location_id: z.number().nullable().optional(),
+  route_id: z.number().nullable().optional(),
   owner_name: z.string().nullable().optional(),
   owner_email: z.string().nullable().optional(),
   owner_phone: z.string().nullable().optional(),

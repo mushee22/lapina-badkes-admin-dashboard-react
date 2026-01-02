@@ -29,15 +29,15 @@ export async function listOrdersPaginated(params?: OrderListParams): Promise<Pag
   const query = qs.toString();
   const path = query ? `/orders?${query}` : "/orders";
   const response = await http.get<Order[] | PaginatedResponse<Order>>(path);
-  
+
   if (Array.isArray(response)) {
     return { data: response };
   }
-  
+
   if (response && typeof response === "object" && Array.isArray(response.data)) {
     return response;
   }
-  
+
   return { data: [] };
 }
 
@@ -82,7 +82,7 @@ export async function generateOrderInvoice(id: number): Promise<void> {
 export async function downloadOrderInvoice(id: number): Promise<Blob> {
   const headers = new Headers();
   const token = getAuthToken();
-  
+
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -143,22 +143,22 @@ export async function getOrderCustomers(search?: string): Promise<OrderCustomer[
   const query = qs.toString();
   const path = query ? `/orders/customers?${query}` : "/orders/customers?role=customer";
   const response = await http.get<{ customers: { data: OrderCustomer[] } } | OrderCustomer[] | { data: OrderCustomer[] }>(path);
-  
+
   // Handle customers key wrapper with nested data
   if (response && typeof response === "object" && "customers" in response && response.customers && typeof response.customers === "object" && "data" in response.customers && Array.isArray(response.customers.data)) {
     return response.customers.data;
   }
-  
+
   // Handle data key wrapper
   if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
     return response.data;
   }
-  
+
   // Handle direct array
   if (Array.isArray(response)) {
     return response;
   }
-  
+
   return [];
 }
 
@@ -181,64 +181,64 @@ export async function getOrderStoreOwners(search?: string): Promise<OrderStoreOw
   const query = qs.toString();
   const path = query ? `/orders/customers?${query}` : "/orders/customers?role=store_owner";
   const response = await http.get<{ customers: { data: OrderStoreOwner[] } } | OrderStoreOwner[] | { data: OrderStoreOwner[] }>(path);
-  
+
   // Handle customers key wrapper with nested data
   if (response && typeof response === "object" && "customers" in response && response.customers && typeof response.customers === "object" && "data" in response.customers && Array.isArray(response.customers.data)) {
     return response.customers.data;
   }
-  
+
   // Handle data key wrapper
   if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
     return response.data;
   }
-  
+
   // Handle direct array
   if (Array.isArray(response)) {
     return response;
   }
-  
+
   return [];
 }
 
 export async function getOrderStores(): Promise<OrderStore[]> {
   const response = await http.get<{ stores: OrderStore[] } | OrderStore[] | { data: OrderStore[] }>("/orders/stores");
-  
+
   // Handle stores key wrapper
   if (response && typeof response === "object" && "stores" in response && Array.isArray(response.stores)) {
     return response.stores;
   }
-  
+
   // Handle data key wrapper
   if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
     return response.data;
   }
-  
+
   // Handle direct array
   if (Array.isArray(response)) {
     return response;
   }
-  
+
   return [];
 }
 
 export async function getOrderDeliveryBoys(): Promise<OrderDeliveryBoy[]> {
   const response = await http.get<{ delivery_boys: OrderDeliveryBoy[] } | OrderDeliveryBoy[] | { data: OrderDeliveryBoy[] }>("/orders/delivery-boys");
-  
+
   // Handle delivery_boys key wrapper
   if (response && typeof response === "object" && "delivery_boys" in response && Array.isArray(response.delivery_boys)) {
     return response.delivery_boys;
   }
-  
+
   // Handle data key wrapper
   if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
     return response.data;
   }
-  
+
   // Handle direct array
   if (Array.isArray(response)) {
     return response;
   }
-  
+
   return [];
 }
 
@@ -330,5 +330,35 @@ export async function updateOrderItems(orderId: number, input: UpdateOrderItemsI
 
   // Direct response
   return response as Order;
+}
+
+export async function returnOrder(id: number, input: import("../types/order").ReturnOrderInput): Promise<Order> {
+  const response = await http.post<{ data?: Order; order?: Order } | Order>(`/orders/${id}/returns`, input);
+
+  // Handle wrapped response
+  if (response && typeof response === "object" && "data" in response && response.data) {
+    return response.data as Order;
+  }
+
+  // Handle order key wrapper
+  if (response && typeof response === "object" && "order" in response && response.order) {
+    return response.order as Order;
+  }
+
+  // Direct response
+  return response as Order;
+}
+
+export async function getOrderReturns(id: number): Promise<import("../types/order").OrderReturnsResponse> {
+  const response = await http.get<import("../types/order").OrderReturnsResponse>(`/orders/${id}/returns`);
+  return response;
+}
+
+export async function cancelOrderReturn(id: number): Promise<void> {
+  await http.post(`/order-returns/${id}/cancel`, {});
+}
+
+export async function processOrderReturn(id: number): Promise<void> {
+  await http.post(`/order-returns/${id}/process`, {});
 }
 

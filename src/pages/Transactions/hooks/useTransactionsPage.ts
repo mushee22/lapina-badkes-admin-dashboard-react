@@ -7,11 +7,14 @@ import type { PaginationMeta } from "../../../types/pagination";
 
 export function useTransactionsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Initialize state from URL params
   const [page, setPage] = useState<number>(Number(searchParams.get("page")) || 1);
   const [perPage, setPerPage] = useState<number>(Number(searchParams.get("per_page")) || 15);
   const [type, setType] = useState<string | undefined>(searchParams.get("type") || undefined);
+  const [storeId, setStoreId] = useState<number | undefined>(
+    searchParams.get("store_id") ? Number(searchParams.get("store_id")) : undefined
+  );
   const [paymentMode, setPaymentMode] = useState<string | undefined>(searchParams.get("payment_mode") || undefined);
   const [paymentStatus, setPaymentStatus] = useState<string | undefined>(searchParams.get("payment_status") || undefined);
   const [collectedBy, setCollectedBy] = useState<number | undefined>(
@@ -29,26 +32,28 @@ export function useTransactionsPage() {
     if (page > 1) params.set("page", String(page));
     if (perPage !== 15) params.set("per_page", String(perPage));
     if (type) params.set("type", type);
+    if (storeId) params.set("store_id", String(storeId));
     if (paymentMode) params.set("payment_mode", paymentMode);
     if (paymentStatus) params.set("payment_status", paymentStatus);
     if (collectedBy !== undefined) params.set("collected_by", String(collectedBy));
     if (addedBy !== undefined) params.set("added_by", String(addedBy));
     if (dateFrom) params.set("date_from", dateFrom);
     if (dateTo) params.set("date_to", dateTo);
-    
+
     setSearchParams(params, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, perPage, type, paymentMode, paymentStatus, collectedBy, addedBy, dateFrom, dateTo]);
+  }, [page, perPage, type, storeId, paymentMode, paymentStatus, collectedBy, addedBy, dateFrom, dateTo]);
 
   // Reset to page 1 when filters change (except page itself)
   useEffect(() => {
     setPage(1);
-  }, [type, paymentMode, paymentStatus, collectedBy, addedBy, dateFrom, dateTo]);
+  }, [type, storeId, paymentMode, paymentStatus, collectedBy, addedBy, dateFrom, dateTo]);
 
   const params: TransactionListParams = {
     page,
     per_page: perPage,
     type,
+    store_id: storeId,
     payment_mode: paymentMode,
     payment_status: paymentStatus,
     collected_by: collectedBy,
@@ -58,12 +63,13 @@ export function useTransactionsPage() {
   };
 
   const { data: transactionsRes, isLoading } = useTransactionsPaginatedQuery(params);
-  
+
   const transactions: Transaction[] = transactionsRes?.data ?? [];
   const meta: PaginationMeta | undefined = transactionsRes?.meta;
 
   const clearFilters = () => {
     setType(undefined);
+    setStoreId(undefined);
     setPaymentMode(undefined);
     setPaymentStatus(undefined);
     setCollectedBy(undefined);
@@ -75,6 +81,7 @@ export function useTransactionsPage() {
 
   const hasActiveFilters = !!(
     type ||
+    storeId ||
     paymentMode ||
     paymentStatus ||
     collectedBy !== undefined ||
@@ -93,6 +100,8 @@ export function useTransactionsPage() {
     meta,
     type,
     setType,
+    storeId,
+    setStoreId,
     paymentMode,
     setPaymentMode,
     paymentStatus,

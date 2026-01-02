@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 export const CreateTransactionSchema = z.object({
-  transactionable_type: z.enum(["order", "store"]),
-  transactionable_id: z.number().min(1, "ID is required"),
+  order_id: z.number().min(1, "ID is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   payment_mode: z.enum(["cash", "card", "online", "upi", "bank_transfer", "other"]).optional(),
   payment_note: z.string().nullable().optional(),

@@ -5,12 +5,12 @@ import ComponentCard from "../../components/common/ComponentCard";
 export default function StoreWiseReport() {
   return (
     <>
-      <PageMeta title="Store Wise Report | Lapina Bakes Admin" description="Report aggregated by store" />
-      <PageBreadcrumb pageTitle="Store Wise Report" />
+      <PageMeta title="Outlet Wise Report | Lapina Bakes Admin" description="Report aggregated by outlet" />
+      <PageBreadcrumb pageTitle="Outlet Wise Report" />
       <div className="space-y-6">
-        <ComponentCard title="Store Wise Report">
+        <ComponentCard title="Outlet Wise Report">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Analyze performance and metrics per store.
+            Analyze performance and metrics per outlet.
           </p>
         </ComponentCard>
       </div>

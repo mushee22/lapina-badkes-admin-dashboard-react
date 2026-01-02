@@ -71,14 +71,14 @@ export function StoresView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Stores | Lapina Bakes Admin" description="Manage stores" />
-      <PageBreadcrumb pageTitle="Stores" />
+      <PageMeta title="Outlets | Lapina Bakes Admin" description="Manage Outlets" />
+      <PageBreadcrumb pageTitle="Outlets" />
       <div className="space-y-6">
         <ComponentCard title="">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">Create, edit, and configure store information here.</p>
             <Button size="sm" onClick={() => navigate("/stores/new")} startIcon={<PlusIcon className="w-4 h-4" />}>
-              Add Store
+              Add Outlet
             </Button>
           </div>
 
@@ -87,7 +87,7 @@ export function StoresView(props: Props) {
             <div>
               <InputField
                 id="search"
-                placeholder="Search stores..."
+                placeholder="Search outlets..."
                 value={search}
                 onChange={(e) => onSearchChange(e.currentTarget.value)}
               />
@@ -192,7 +192,7 @@ export function StoresView(props: Props) {
                             label="Active"
                             defaultChecked={true}
                             checked={store.is_active}
-                            onChange={() => {}}
+                            onChange={() => { }}
                           />
                         </TableCell>
                         <TableCell className="px-5 py-4">

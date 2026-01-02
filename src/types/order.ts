@@ -69,6 +69,71 @@ export const OrderDeliveryBoySchema = z.object({
   }).nullable().optional(),
 });
 
+// Order Audit User Schema
+export const OrderAuditUserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string(),
+  roles: z.array(z.string()),
+  phone: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  user_type: z.string().optional(), // 'admin', 'delivery_boy', 'store_owner' etc. - helpful for UI
+});
+
+// Order Audit Schema
+export const OrderAuditSchema = z.object({
+  id: z.number(),
+  order_id: z.number(),
+  user_id: z.number(),
+  action: z.string(),
+  field: z.string().nullable().optional(),
+  old_value: z.string().nullable().optional(),
+  new_value: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  metadata: z.any().nullable().optional(),
+  user: OrderAuditUserSchema.optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  time_ago: z.string().optional(),
+});
+
+// Invoice Item Schema
+export const InvoiceItemSchema = z.object({
+  quantity: z.number(),
+  unit_price: z.string(),
+  total_price: z.number(),
+  product_name: z.string(),
+});
+
+// Invoice Billing Details Schema
+export const InvoiceBillingDetailsSchema = z.object({
+  phone: z.string().nullable().optional(),
+  customer_name: z.string().nullable().optional(),
+  customer_email: z.string().nullable().optional(),
+  customer_phone: z.string().nullable().optional(),
+  delivery_address: z.string().nullable().optional(),
+});
+
+// Invoice Schema
+export const InvoiceSchema = z.object({
+  id: z.number(),
+  invoice_number: z.string(),
+  invoice_date: z.string(),
+  due_date: z.string().nullable().optional(),
+  subtotal: z.number(),
+  discount_amount: z.number(),
+  tax_amount: z.number(),
+  total_amount: z.number(),
+  status: z.string(),
+  notes: z.string().nullable().optional(),
+  billing_details: InvoiceBillingDetailsSchema.nullable().optional(),
+  items: z.array(InvoiceItemSchema),
+  pdf_path: z.string().nullable().optional(),
+  is_overdue: z.boolean().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+});
+
 // Order Schema
 export const OrderSchema = z.object({
   id: z.number(),
@@ -97,6 +162,8 @@ export const OrderSchema = z.object({
   order_items: z.array(OrderItemSchema),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  audits: z.array(OrderAuditSchema).optional(),
+  invoice: InvoiceSchema.nullable().optional(),
 });
 
 export const UpdateOrderSchema = z.object({
@@ -121,8 +188,61 @@ export const CreateManualOrderSchema = z.object({
 export type Order = z.infer<typeof OrderSchema>;
 export type OrderUser = z.infer<typeof OrderUserSchema>;
 export type OrderItem = z.infer<typeof OrderItemSchema>;
+export type OrderAudit = z.infer<typeof OrderAuditSchema>;
+export type OrderAuditUser = z.infer<typeof OrderAuditUserSchema>;
+export type Invoice = z.infer<typeof InvoiceSchema>;
+export type InvoiceItem = z.infer<typeof InvoiceItemSchema>;
 export type OrderItemProduct = z.infer<typeof OrderItemProductSchema>;
 export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>;
 export type ManualOrderItem = z.infer<typeof ManualOrderItemSchema>;
 export type CreateManualOrderInput = z.infer<typeof CreateManualOrderSchema>;
+
+export const ReturnOrderItemSchema = z.object({
+  order_item_id: z.number(),
+  returned_quantity: z.number(),
+  defective_quantity: z.number(),
+  restocking_quantity: z.number(),
+  reason: z.string(),
+});
+
+export const ReturnOrderSchema = z.object({
+  items: z.array(ReturnOrderItemSchema),
+  reason: z.string().optional(),
+});
+
+export type ReturnOrderItem = z.infer<typeof ReturnOrderItemSchema>;
+export type ReturnOrderInput = z.infer<typeof ReturnOrderSchema>;
+
+export const ReturnOrderDetailsSchema = z.object({
+  id: z.number(),
+  order_id: z.number(),
+  order_item_id: z.number(),
+  product_id: z.number(),
+  returned_quantity: z.number(),
+  defective_quantity: z.number(),
+  restocking_quantity: z.number(),
+  reason: z.string().nullable(),
+  status: z.string(),
+  processed_by: z.number().nullable(),
+  processed_at: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  order_item: OrderItemSchema.optional(),
+});
+
+export const OrderReturnsResponseSchema = z.object({
+  order: OrderSchema,
+  returns: z.array(ReturnOrderDetailsSchema),
+  summary: z.object({
+    total_returns: z.number(),
+    pending: z.number(),
+    processed: z.number(),
+    cancelled: z.number(),
+  }),
+});
+
+export type ReturnOrderDetails = z.infer<typeof ReturnOrderDetailsSchema>;
+export type OrderReturnsResponse = z.infer<typeof OrderReturnsResponseSchema>;
+
+
 

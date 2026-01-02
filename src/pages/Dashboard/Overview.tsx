@@ -25,21 +25,21 @@ export default function Overview() {
   const storeId = params.storeId;
   const deliveryBoyId = params.deliveryBoyId;
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Initialize filters from URL params
   const [locationId, setLocationId] = useState<number | undefined>(
     searchParams.get("location_id") ? Number(searchParams.get("location_id")) : undefined
   );
   const [dateFrom, setDateFrom] = useState<string | undefined>(searchParams.get("date_from") || undefined);
   const [dateTo, setDateTo] = useState<string | undefined>(searchParams.get("date_to") || undefined);
-  
+
   // Get store or delivery boy info for title
   const { data: store } = useStoreQuery(storeId ? Number(storeId) : null);
   const { data: deliveryBoy } = useDeliveryBoyQuery(deliveryBoyId ? Number(deliveryBoyId) : null);
-  
+
   // Fetch locations for filter
   const { data: locations = [] } = useLocationsQuery();
-  
+
   // Fetch overview data
   const { data: overview, isLoading } = useOverviewQuery({
     location_id: locationId,
@@ -48,14 +48,14 @@ export default function Overview() {
     store_id: storeId ? Number(storeId) : undefined,
     delivery_boy_id: deliveryBoyId ? Number(deliveryBoyId) : undefined,
   });
-  
+
   // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
     if (locationId) params.set("location_id", String(locationId));
     if (dateFrom) params.set("date_from", dateFrom);
     if (dateTo) params.set("date_to", dateTo);
-    
+
     setSearchParams(params, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId, dateFrom, dateTo]);
@@ -76,11 +76,11 @@ export default function Overview() {
     <>
       <PageMeta title={`${getPageTitle()} | Lapina Bakes Admin`} description="Overview statistics" />
       <PageBreadcrumb pageTitle={getPageTitle()} />
-      
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={() => navigate(getBackUrl())} startIcon={<ChevronLeftIcon className="w-4 h-4" />}>
-            {storeId ? "Back to Store" : deliveryBoyId ? "Back to Delivery Boy" : "Back to Dashboard"}
+            {storeId ? "Back to Outlet" : deliveryBoyId ? "Back to Delivery Boy" : "Back to Dashboard"}
           </Button>
         </div>
 
@@ -211,7 +211,7 @@ export default function Overview() {
               )}
 
               {!storeId && (
-                <ComponentCard title="Total Stores" className="p-5">
+                <ComponentCard title="Total Outlets" className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-3xl font-bold text-gray-800 dark:text-white/90">
@@ -445,7 +445,7 @@ export default function Overview() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Store Owners</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Outlet Owners</span>
                       <span className="font-semibold text-gray-800 dark:text-white/90">
                         {overview.users.store_owners || 0}
                       </span>
@@ -467,7 +467,7 @@ export default function Overview() {
               )}
 
               {!storeId && (
-                <ComponentCard title="Stores" className="p-5">
+                <ComponentCard title="Outlets" className="p-5">
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
@@ -580,9 +580,9 @@ export default function Overview() {
               </ComponentCard>
             )}
 
-            {/* Top Stores */}
+            {/* Top Outlets */}
             {overview?.top_stores && overview.top_stores.length > 0 && (
-              <ComponentCard title="Top Stores">
+              <ComponentCard title="Top Outlets">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {overview.top_stores.map((store) => (
                     <div
