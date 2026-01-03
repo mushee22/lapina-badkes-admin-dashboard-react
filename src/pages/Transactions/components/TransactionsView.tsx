@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import ComponentCard from "../../../components/common/ComponentCard";
@@ -55,7 +54,6 @@ type Props = {
 };
 
 export function TransactionsView(props: Props) {
-  const navigate = useNavigate();
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
   const { data: adminUsers = [] } = useAdminUsersQuery();
   const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
@@ -74,8 +72,6 @@ export function TransactionsView(props: Props) {
     isLoading,
     setPage,
     meta,
-    type,
-    setType,
     storeId,
     setStoreId,
     paymentMode,

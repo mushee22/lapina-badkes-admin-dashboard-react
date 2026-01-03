@@ -17,9 +17,8 @@ export async function createRole(data: RoleCreateInput): Promise<Role> {
 }
 
 export async function getRole(id: number): Promise<Role> {
-    // Assuming GET /roles/:id returns the Role object directly or wrapped.
-    // Based on other API endpoints in this project, often the resource is returned directly.
-    return http.get<Role>(`/roles/${id}`);
+    const response = await http.get<{ role: Role }>(`/roles/${id}`);
+    return response.role;
 }
 
 export async function updateRole(id: number, data: RoleUpdateInput): Promise<Role> {

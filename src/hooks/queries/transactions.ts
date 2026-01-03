@@ -16,7 +16,7 @@ export function useCreateTransactionMutation() {
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: transactionsKey });
       qc.invalidateQueries({ queryKey: ["orders"] }); // Invalidate orders to refresh order data
-      qc.invalidateQueries({ queryKey: [...transactionsKey, "order", variables.transactionable_id] }); // Invalidate order transactions
+      qc.invalidateQueries({ queryKey: [...transactionsKey, "order", variables.order_id] }); // Invalidate order transactions
       showToast("success", "Payment recorded successfully", "Success");
     },
     onError: (error: Error) => {

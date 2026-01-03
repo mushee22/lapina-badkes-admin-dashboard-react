@@ -47,7 +47,6 @@ export function RolesView(props: Props) {
         confirmDelete,
         pendingDelete,
         meta,
-        page,
         setPage,
     } = props;
 
