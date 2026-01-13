@@ -362,3 +362,41 @@ export async function processOrderReturn(id: number): Promise<void> {
   await http.post(`/order-returns/${id}/process`, {});
 }
 
+export interface ExportOrdersParams {
+  status?: string;
+}
+
+export async function exportOrders(params?: ExportOrdersParams): Promise<Blob> {
+  const headers = new Headers();
+  const token = getAuthToken();
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const qs = new URLSearchParams();
+  if (params?.status) {
+    qs.set("status", params.status);
+  }
+  const query = qs.toString();
+  const path = query ? `/orders-export/xlsx?${query}` : "/orders-export/xlsx";
+
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "GET",
+    headers,
+  });
+
+  if (!res.ok) {
+    const contentType = res.headers.get("content-type") || "";
+    const isJson = contentType.includes("application/json");
+    const payload: unknown = isJson ? await res.json() : await res.text();
+    const message =
+      isJson && typeof payload === "object" && payload !== null && "message" in payload && typeof payload.message === "string"
+        ? payload.message
+        : res.statusText;
+    throw new Error(message || `HTTP ${res.status}`);
+  }
+
+  return await res.blob();
+}
+

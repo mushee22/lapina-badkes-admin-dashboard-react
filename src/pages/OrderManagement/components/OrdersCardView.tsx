@@ -11,7 +11,7 @@ import Select from "../../../components/form/Select";
 import Autocomplete from "../../../components/form/Autocomplete";
 import TextArea from "../../../components/form/input/TextArea";
 import Checkbox from "../../../components/form/input/Checkbox";
-import { EyeIcon, PlusIcon, PencilIcon } from "../../../icons";
+import { EyeIcon, PlusIcon, PencilIcon, DownloadIcon } from "../../../icons";
 import type { Order } from "../../../types/order";
 import type { PaginationMeta } from "../../../types/pagination";
 import type { Store } from "../../../types/store";
@@ -26,6 +26,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useModal } from "../../../hooks/useModal";
 import { useToast } from "../../../context/ToastContext";
+import { exportOrders } from "../../../services/orders";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
@@ -362,6 +363,24 @@ export function OrdersCardView(props: Props) {
     );
   };
 
+  const handleExport = async () => {
+    try {
+      // For pending orders, pass status: "pending" as specified
+      const blob = await exportOrders({ status: "pending" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `pending-orders-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showToast("success", "Orders exported successfully", "Success");
+    } catch (error) {
+      showToast("error", error instanceof Error ? error.message : "Failed to export orders", "Error");
+    }
+  };
+
   return (
     <>
       <PageMeta title="Pending Orders | Lapina Bakes Admin" description="View and manage pending orders" />
@@ -370,9 +389,14 @@ export function OrdersCardView(props: Props) {
         <ComponentCard title="">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">View and manage orders by status.</p>
-            <Button size="sm" onClick={() => navigate("/orders/manual-create")} startIcon={<PlusIcon className="w-4 h-4" />}>
-              Create Manual Order
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleExport} startIcon={<DownloadIcon className="w-4 h-4" />} variant="outline">
+                Export
+              </Button>
+              <Button size="sm" onClick={() => navigate("/orders/manual-create")} startIcon={<PlusIcon className="w-4 h-4" />}>
+                Create Manual Order
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}

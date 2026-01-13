@@ -10,7 +10,7 @@ import Autocomplete from "../../../components/form/Autocomplete";
 import DatePicker from "../../../components/form/date-picker";
 import Badge from "../../../components/ui/badge/Badge";
 import Checkbox from "../../../components/form/input/Checkbox";
-import { EyeIcon, PlusIcon } from "../../../icons";
+import { EyeIcon, PlusIcon, DownloadIcon } from "../../../icons";
 import type { Order } from "../../../types/order";
 import type { PaginationMeta } from "../../../types/pagination";
 import type { Store } from "../../../types/store";
@@ -19,6 +19,7 @@ import type { Location } from "../../../types/location";
 import Pagination from "../../../components/common/Pagination";
 import { useUpdateOrderStatusMutation } from "../../../hooks/queries/orders";
 import { useToast } from "../../../context/ToastContext";
+import { exportOrders } from "../../../services/orders";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
@@ -175,6 +176,23 @@ export function OrdersView(props: Props) {
 
   const allSelected = orders.length > 0 && selectedOrderIds.length === orders.length;
 
+  const handleExport = async () => {
+    try {
+      const blob = await exportOrders();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orders-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showToast("success", "Orders exported successfully", "Success");
+    } catch (error) {
+      showToast("error", error instanceof Error ? error.message : "Failed to export orders", "Error");
+    }
+  };
+
   return (
     <>
       <PageMeta title="All Orders | Lapina Bakes Admin" description="View all orders" />
@@ -183,9 +201,14 @@ export function OrdersView(props: Props) {
         <ComponentCard title="">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">View and manage all orders here.</p>
-            <Button size="sm" onClick={() => navigate("/orders/manual-create")} startIcon={<PlusIcon className="w-4 h-4" />}>
-              Create Manual Order
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleExport} startIcon={<DownloadIcon className="w-4 h-4" />} variant="outline">
+                Export
+              </Button>
+              <Button size="sm" onClick={() => navigate("/orders/manual-create")} startIcon={<PlusIcon className="w-4 h-4" />}>
+                Create Manual Order
+              </Button>
+            </div>
           </div>
 
           {/* Bulk Actions - Only show when status filter is selected */}
