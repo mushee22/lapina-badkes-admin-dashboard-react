@@ -455,9 +455,9 @@ export default function OrderDetails() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => id && downloadInvoiceMutation.mutate(Number(id))}
+              onClick={() => order?.invoice?.id != null && downloadInvoiceMutation.mutate(order.invoice.id)}
               startIcon={<DownloadIcon className="w-4 h-4" />}
-              disabled={downloadInvoiceMutation.isPending}
+              disabled={downloadInvoiceMutation.isPending || !order?.invoice?.id}
               className="w-full"
             >
               <span className="hidden sm:inline">{downloadInvoiceMutation.isPending ? "Downloading..." : "Download Invoice"}</span>

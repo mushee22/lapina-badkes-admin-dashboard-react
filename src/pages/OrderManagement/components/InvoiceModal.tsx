@@ -18,9 +18,7 @@ export default function InvoiceModal({ isOpen, closeModal, invoice, orderId }: I
     if (!invoice) return null;
 
     const handleDownload = () => {
-        if (orderId) {
-            downloadInvoiceMutation.mutate(orderId);
-        }
+        downloadInvoiceMutation.mutate(invoice.id);
     };
 
     return (

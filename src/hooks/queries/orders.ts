@@ -106,13 +106,13 @@ export function useGenerateOrderInvoiceMutation() {
 export function useDownloadOrderInvoiceMutation() {
   const { showToast } = useToast();
   return useMutation<Blob, Error, number>({
-    mutationFn: (id) => downloadOrderInvoice(id),
-    onSuccess: (blob, id) => {
+    mutationFn: (invoiceId) => downloadOrderInvoice(invoiceId),
+    onSuccess: (blob, invoiceId) => {
       // Create a download link and trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `invoice-${id}.pdf`;
+      link.download = `invoice-${invoiceId}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

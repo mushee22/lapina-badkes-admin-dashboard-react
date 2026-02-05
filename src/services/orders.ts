@@ -79,7 +79,7 @@ export async function generateOrderInvoice(id: number): Promise<void> {
   await http.post(`/orders/${id}/generate-invoice`, {});
 }
 
-export async function downloadOrderInvoice(id: number): Promise<Blob> {
+export async function downloadOrderInvoice(invoiceId: number): Promise<Blob> {
   const headers = new Headers();
   const token = getAuthToken();
 
@@ -87,7 +87,7 @@ export async function downloadOrderInvoice(id: number): Promise<Blob> {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_BASE_URL}/invoices/${id}/download-pdf`, {
+  const res = await fetch(`${API_BASE_URL}/invoices/${invoiceId}/download-pdf`, {
     method: "GET",
     headers,
   });
@@ -379,9 +379,7 @@ export async function exportOrders(params?: ExportOrdersParams): Promise<Blob> {
     qs.set("status", params.status);
   }
   const query = qs.toString();
-  const path = query ? `/orders-export/xlsx?${query}` : "/orders-export/xlsx";
-
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const path = query ? `/orders-export/xlsx?${query}` : "/orders-export/xlsx";  const res = await fetch(`${API_BASE_URL}${path}`, {
     method: "GET",
     headers,
   });
@@ -399,4 +397,3 @@ export async function exportOrders(params?: ExportOrdersParams): Promise<Blob> {
 
   return await res.blob();
 }
-
