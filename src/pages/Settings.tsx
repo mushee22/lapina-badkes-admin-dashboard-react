@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";``
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import PageMeta from "../components/common/PageMeta";
 import ComponentCard from "../components/common/ComponentCard";
@@ -8,6 +8,11 @@ import FileInput from "../components/form/input/FileInput";
 import Button from "../components/ui/button/Button";
 import { useSettingsQuery, useUpdateSettingMutation, useCreateSettingMutation } from "../hooks/queries/settings";
 import { useToast } from "../context/ToastContext";
+import type { Setting } from "../types/setting";
+
+function getLabelFromKey(key: string): string {
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function Settings() {
   const { data: settings = [], isLoading } = useSettingsQuery();
@@ -15,144 +20,100 @@ export default function Settings() {
   const createMutation = useCreateSettingMutation();
   const { showToast } = useToast();
 
-  // Find settings by key
-  const paymentScannerSetting = settings.find((s) => s.key === "payment_scanner");
-  const supportNumberSetting = settings.find((s) => s.key === "support_number");
-  const supportEmailSetting = settings.find((s) => s.key === "support_email");
-  const gstNumberSetting = settings.find((s) => s.key === "gst_number");
+  // Dynamic form state: one entry per setting key
+  const [textValues, setTextValues] = useState<Record<string, string>>({});
+  const [imageFiles, setImageFiles] = useState<Record<string, File | null>>({});
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string | null>>({});
 
-  // Debug settings
-  console.log("All settings:", settings);
-  console.log("Payment scanner setting:", paymentScannerSetting);
-  console.log("Available setting keys:", settings.map(s => s.key));
-
-  // Form state
-  const [supportNumber, setSupportNumber] = useState("");
-  const [supportEmail, setSupportEmail] = useState("");
-  const [gstNumber, setGstNumber] = useState("");
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // Initialize form values when settings load
+  // Initialize all form values from API settings
   useEffect(() => {
-    if (supportNumberSetting) {
-      setSupportNumber(supportNumberSetting.value || "");
+    const initialText: Record<string, string> = {};
+    const initialPreviews: Record<string, string | null> = {};
+    for (const s of settings) {
+      if (s.type === "text") {
+        initialText[s.key] = s.value ?? "";
+      }
+      if (s.type === "image" && s.value) {
+        initialPreviews[s.key] = s.value;
+      }
     }
-    if (supportEmailSetting) {
-      setSupportEmail(supportEmailSetting.value || "");
-    }
-    if (paymentScannerSetting?.value) {
-      setImagePreview(paymentScannerSetting.value);
-    }
-    if (gstNumberSetting) {
-      setGstNumber(gstNumberSetting.value || "");
-    }
-  }, [supportNumberSetting, supportEmailSetting, paymentScannerSetting]);
+    setTextValues(initialText);
+    setImagePreviews(initialPreviews);
+  }, [settings]);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("File input changed:", event.target.files);
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log("File selected:", {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
+  const handleTextChange = useCallback((key: string, value: string) => {
+    setTextValues((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
-      // Validate image file
-      if (!file.type.startsWith("image/")) {
-        showToast("error", "Please select a valid image file", "Error");
+  const handleImageChange = useCallback(
+    (key: string, event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        if (!file.type.startsWith("image/")) {
+          showToast("error", "Please select a valid image file", "Error");
+          return;
+        }
+        setImageFiles((prev) => ({ ...prev, [key]: file }));
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews((prev) => ({ ...prev, [key]: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    [showToast]
+  );
+
+  const submitTextSetting = useCallback(
+    (setting: Setting) => {
+      const value = textValues[setting.key] ?? setting.value ?? "";
+      const settingData = {
+        key: setting.key,
+        value,
+        type: "text" as const,
+        description: setting.description ?? null,
+      };
+      if (setting.id) {
+        updateMutation.mutate({ ...settingData, id: setting.id });
+      } else {
+        createMutation.mutate(settingData);
+      }
+    },
+    [textValues, updateMutation, createMutation]
+  );
+
+  const submitImageSetting = useCallback(
+    (setting: Setting) => {
+      const file = imageFiles[setting.key];
+      if (!file) {
+        showToast("error", "Please select an image", "Error");
         return;
       }
-      setSelectedImage(file);
-      console.log("Image set in state:", file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        console.log("Preview created");
+      const settingData = {
+        key: setting.key,
+        value: file,
+        type: "image" as const,
+        description: setting.description ?? null,
       };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmitPaymentScanner = async () => {
-    if (!selectedImage) {
-      showToast("error", "Please select an image", "Error");
-      return;
-    }
-
-    const settingData = {
-      key: "payment_scanner",
-      value: selectedImage,
-      type: "image" as const,
-      description: paymentScannerSetting?.description || null,
-    };
-
-    // If setting exists, update it. Otherwise, create it.
-    if (paymentScannerSetting?.id) {
-      updateMutation.mutate(
-        { ...settingData, id: paymentScannerSetting.id },
-        {
+      if (setting.id) {
+        updateMutation.mutate(
+          { ...settingData, id: setting.id },
+          {
+            onSuccess: () => {
+              setImageFiles((prev) => ({ ...prev, [setting.key]: null }));
+            },
+          }
+        );
+      } else {
+        createMutation.mutate(settingData, {
           onSuccess: () => {
-            setSelectedImage(null);
+            setImageFiles((prev) => ({ ...prev, [setting.key]: null }));
           },
-        }
-      );
-    } else {
-      createMutation.mutate(settingData, {
-        onSuccess: () => {
-          setSelectedImage(null);
-        },
-      });
-    }
-  };
-
-  const handleSubmitSupportNumber = async () => {
-    const settingData = {
-      key: "support_number",
-      value: supportNumber,
-      type: "text" as const,
-      description: supportNumberSetting?.description || null,
-    };
-
-    if (supportNumberSetting?.id) {
-      updateMutation.mutate({ ...settingData, id: supportNumberSetting.id });
-    } else {
-      createMutation.mutate(settingData);
-    }
-  };
-
-  const handleSubmitGstNumber = async () => {
-    const settingData = {
-      key: "gst_number",
-      value: gstNumber,
-      type: "text" as const,
-      description: gstNumberSetting?.description || null,
-    };
-
-    if (gstNumberSetting?.id) {
-      updateMutation.mutate({ ...settingData, id: gstNumberSetting.id });
-    } else {
-      createMutation.mutate(settingData);
-    }
-  };
-
-  const handleSubmitSupportEmail = async () => {
-    const settingData = {
-      key: "support_email",
-      value: supportEmail,
-      type: "text" as const,
-      description: supportEmailSetting?.description || null,
-    };
-
-    if (supportEmailSetting?.id) {
-      updateMutation.mutate({ ...settingData, id: supportEmailSetting.id });
-    } else {
-      createMutation.mutate(settingData);
-    }
-  };
+        });
+      }
+    },
+    [imageFiles, showToast, updateMutation, createMutation]
+  );
 
   if (isLoading) {
     return (
@@ -175,134 +136,85 @@ export default function Settings() {
       <div className="space-y-8">
         <ComponentCard title="Settings">
           <div className="p-6">
-            <div className="space-y-6">
-              {/* Payment Scanner Image */}
-              <div>
-                <Label htmlFor="payment_scanner" className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Payment Scanner Image
-                </Label>
-                {paymentScannerSetting?.description && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {paymentScannerSetting.description}
-                  </p>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <FileInput
-                    id="payment_scanner"
-                    onChange={handleImageChange}
-                    accept="image/*"
-                    className="flex-1 h-11"
-                  />
-                  <Button
-                    onClick={handleSubmitPaymentScanner}
-                    disabled={(updateMutation.isPending || createMutation.isPending) || !selectedImage}
-                    className="px-4 py-2 shrink-0 h-11"
-                  >
-                    {(updateMutation.isPending || createMutation.isPending) ? "Uploading..." : "Update"}
-                  </Button>
-                </div>
-                {imagePreview && (
-                  <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 mt-4">
-                    <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Current Image:</p>
-                    <div className="flex justify-center">
-                      <div className="relative inline-block">
-                        <img
-                          src={imagePreview}
-                          alt="Payment scanner preview"
-                          className="max-w-full h-auto max-h-48 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600"
+            {settings.length === 0 ? (
+              <div className="px-5 py-8 text-center text-gray-500 dark:text-gray-400">
+                No settings found. Settings will appear here when returned by the API.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {settings.map((setting) => (
+                  <div key={setting.key}>
+                    <Label
+                      htmlFor={setting.key}
+                      className="text-sm font-medium text-gray-900 dark:text-gray-100"
+                    >
+                      {getLabelFromKey(setting.key)}
+                    </Label>
+                    {setting.description && (
+                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {setting.description}
+                      </p>
+                    )}
+
+                    {setting.type === "text" && (
+                      <div className="flex gap-2 mt-2">
+                        <InputField
+                          id={setting.key}
+                          type={setting.key.includes("email") ? "email" : setting.key.includes("number") ? "tel" : "text"}
+                          placeholder={`Enter ${getLabelFromKey(setting.key).toLowerCase()}`}
+                          value={textValues[setting.key] ?? setting.value ?? ""}
+                          onChange={(e) => handleTextChange(setting.key, e.target.value)}
+                          className="flex-1"
                         />
+                        <Button
+                          onClick={() => submitTextSetting(setting)}
+                          disabled={updateMutation.isPending || createMutation.isPending}
+                          className="px-4 py-2 shrink-0 h-11"
+                        >
+                          {updateMutation.isPending || createMutation.isPending ? "Saving..." : "Update"}
+                        </Button>
                       </div>
-                    </div>
+                    )}
+
+                    {setting.type === "image" && (
+                      <>
+                        <div className="flex gap-2 mt-2">
+                          <FileInput
+                            id={setting.key}
+                            onChange={(e) => handleImageChange(setting.key, e)}
+                            accept="image/*"
+                            className="flex-1 h-11"
+                          />
+                          <Button
+                            onClick={() => submitImageSetting(setting)}
+                            disabled={
+                              (updateMutation.isPending || createMutation.isPending) || !imageFiles[setting.key]
+                            }
+                            className="px-4 py-2 shrink-0 h-11"
+                          >
+                            {updateMutation.isPending || createMutation.isPending ? "Uploading..." : "Update"}
+                          </Button>
+                        </div>
+                        {imagePreviews[setting.key] && (
+                          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 mt-4">
+                            <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Current Image:
+                            </p>
+                            <div className="flex justify-center">
+                              <img
+                                src={imagePreviews[setting.key]!}
+                                alt={`${getLabelFromKey(setting.key)} preview`}
+                                className="max-w-full h-auto max-h-48 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-
-              <div>
-                <Label htmlFor="support_email" className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Company GST Number
-                </Label>
-                {supportEmailSetting?.description && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {supportEmailSetting.description}
-                  </p>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <InputField
-                    id="gst_number"
-                    type="text"
-                    placeholder="Enter company GST number"
-                    value={gstNumber}
-                    onChange={(e) => setGstNumber(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSubmitGstNumber}
-                    disabled={updateMutation.isPending || createMutation.isPending}
-                    className="px-4 py-2 shrink-0 h-11"
-                  >
-                    {(updateMutation.isPending || createMutation.isPending) ? "Saving..." : "Update"}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Support Number */}
-              <div>
-                <Label htmlFor="support_number" className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Support Number
-                </Label>
-                {supportNumberSetting?.description && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {supportNumberSetting.description}
-                  </p>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <InputField
-                    id="support_number"
-                    type="tel"
-                    placeholder="Enter support number"
-                    value={supportNumber}
-                    onChange={(e) => setSupportNumber(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSubmitSupportNumber}
-                    disabled={updateMutation.isPending || createMutation.isPending}
-                    className="px-4 py-2 shrink-0 h-11"
-                  >
-                    {(updateMutation.isPending || createMutation.isPending) ? "Saving..." : "Update"}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Support Email */}
-              <div>
-                <Label htmlFor="support_email" className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Support Email
-                </Label>
-                {supportEmailSetting?.description && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {supportEmailSetting.description}
-                  </p>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <InputField
-                    id="support_email"
-                    type="email"
-                    placeholder="Enter support email"
-                    value={supportEmail}
-                    onChange={(e) => setSupportEmail(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSubmitSupportEmail}
-                    disabled={updateMutation.isPending || createMutation.isPending}
-                    className="px-4 py-2 shrink-0 h-11"
-                  >
-                    {(updateMutation.isPending || createMutation.isPending) ? "Saving..." : "Update"}
-                  </Button>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </ComponentCard>
       </div>
