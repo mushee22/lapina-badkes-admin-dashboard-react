@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useOrderQuery, useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation, useDeleteOrderMutation, useGenerateOrderInvoiceMutation, useDownloadOrderInvoiceMutation, useUpdateOrderItemsMutation, useReturnOrderMutation } from "../../hooks/queries/orders";
+import { useOrderQuery, useUpdateOrderMutation, useAssignDeliveryBoyMutation, useDeleteOrderMutation, useGenerateOrderInvoiceMutation, useDownloadOrderInvoiceMutation, useUpdateOrderItemsMutation, useReturnOrderMutation } from "../../hooks/queries/orders";
 import { useProductsPaginatedQuery } from "../../hooks/queries/products";
 import { useDeliveryBoysListQuery } from "../../hooks/queries/deliveryBoys";
 import { useAdminUsersQuery } from "../../hooks/queries/adminUsers";
@@ -22,13 +22,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CreateTransactionSchema, type CreateTransactionInput, UpdateTransactionSchema, type UpdateTransactionInput } from "../../types/transaction";
+import { type UpdateOrderInput, UpdateOrderSchema } from "../../types/order";
 import type { UpdateOrderItemsInput } from "../../services/orders";
-const UpdateOrderStatusSchema = z.object({
-  status: z.string().min(1, "Status is required"),
-  notes: z.string().optional(),
-});
 
-type UpdateOrderStatusInput = z.infer<typeof UpdateOrderStatusSchema>;
 import { DownloadIcon, TrashBinIcon, FileIcon, DollarLineIcon, PencilIcon, PlusIcon, EyeIcon } from "../../icons";
 import InvoiceModal from "./components/InvoiceModal";
 import OrderAuditLog from "./components/OrderAuditLog";
@@ -81,7 +77,7 @@ export default function OrderDetails() {
   const navigate = useNavigate();
   const { data: order, isLoading } = useOrderQuery(id ? Number(id) : null);
   const { data: orderTransactions = [], isLoading: isLoadingTransactions } = useOrderTransactionsQuery(id ? Number(id) : null);
-  const updateOrderStatusMutation = useUpdateOrderStatusMutation();
+  const updateOrderMutation = useUpdateOrderMutation();
   const assignDeliveryBoyMutation = useAssignDeliveryBoyMutation();
   const deleteMutation = useDeleteOrderMutation();
   const generateInvoiceMutation = useGenerateOrderInvoiceMutation();
@@ -92,7 +88,8 @@ export default function OrderDetails() {
   const createTransactionMutation = useCreateTransactionMutation();
   const updateTransactionMutation = useUpdateTransactionMutation();
   const deleteTransactionMutation = useDeleteTransactionMutation();
-  const { isOpen: isEditOpen, openModal: openEditModal, closeModal: closeEditModal } = useModal();
+  const { isOpen: isUpdateStatusOpen, openModal: openUpdateStatusModal, closeModal: closeUpdateStatusModal } = useModal();
+  const { isOpen: isUpdateDetailsOpen, openModal: openUpdateDetailsModal, closeModal: closeUpdateDetailsModal } = useModal();
   const { isOpen: isAssignOpen, openModal: openAssignModal, closeModal: closeAssignModal } = useModal();
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
   const { isOpen: isPaymentOpen, openModal: openPaymentModal, closeModal: closePaymentModal } = useModal();
@@ -112,15 +109,30 @@ export default function OrderDetails() {
   const products = productsData?.data || [];
 
   const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<UpdateOrderStatusInput>({
-    resolver: zodResolver(UpdateOrderStatusSchema),
+    control: statusControl,
+    handleSubmit: handleStatusSubmit,
+    reset: resetStatus,
+    formState: { errors: statusErrors },
+  } = useForm<{ status: string; notes?: string }>({
     defaultValues: {
       status: order?.status || "",
-      notes: "",
+      notes: order?.notes || "",
+    },
+  });
+
+  const {
+    control: detailsControl,
+    handleSubmit: handleDetailsSubmit,
+    reset: resetDetails,
+    formState: { },
+  } = useForm<UpdateOrderInput>({
+    resolver: zodResolver(UpdateOrderSchema),
+    defaultValues: {
+      delivery_address: order?.delivery_address || "",
+      phone: order?.phone || "",
+      discount_amount: order?.discount_amount || undefined,
+      discount_description: order?.discount_description || "",
+      notes: order?.notes || "",
     },
   });
 
@@ -182,9 +194,16 @@ export default function OrderDetails() {
 
   useEffect(() => {
     if (order) {
-      reset({
+      resetStatus({
         status: order.status || "",
-        notes: "",
+        notes: order.notes || "",
+      });
+      resetDetails({
+        delivery_address: order.delivery_address || "",
+        phone: order.phone || "",
+        discount_amount: order.discount_amount || undefined,
+        discount_description: order.discount_description || "",
+        notes: order.notes || "",
       });
       resetAssign({
         delivery_boy_id: undefined,
@@ -192,7 +211,7 @@ export default function OrderDetails() {
         notes: "",
       });
     }
-  }, [order, reset, resetAssign]);
+  }, [order, resetStatus, resetDetails, resetAssign]);
 
   useEffect(() => {
     if (order && isPaymentOpen) {
@@ -209,13 +228,33 @@ export default function OrderDetails() {
   }, [order, isPaymentOpen, resetPayment]);
 
 
-  const onSubmit = (data: UpdateOrderStatusInput) => {
+  const onStatusSubmit = (data: { status: string; notes?: string }) => {
     if (!id) return;
-    updateOrderStatusMutation.mutate(
-      { id: Number(id), status: data.status, notes: data.notes || "" },
+    updateOrderMutation.mutate(
+      { id: Number(id), data: { status: data.status, notes: data.notes } },
       {
         onSuccess: () => {
-          closeEditModal();
+          closeUpdateStatusModal();
+        },
+      }
+    );
+  };
+
+  const onDetailsSubmit = (data: UpdateOrderInput) => {
+    if (!id) return;
+    updateOrderMutation.mutate(
+      {
+        id: Number(id), data: {
+          delivery_address: data.delivery_address,
+          phone: data.phone,
+          discount_amount: data.discount_amount,
+          discount_description: data.discount_description,
+          notes: data.notes,
+        }
+      },
+      {
+        onSuccess: () => {
+          closeUpdateDetailsModal();
         },
       }
     );
@@ -429,6 +468,26 @@ export default function OrderDetails() {
       <div className="space-y-6">
         <div className="flex">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full sm:w-auto">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={openUpdateStatusModal}
+              startIcon={<PencilIcon className="w-4 h-4" />}
+              className="w-full"
+            >
+              <span className="hidden sm:inline">Update Status</span>
+              <span className="sm:hidden">Status</span>
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={openUpdateDetailsModal}
+              startIcon={<PencilIcon className="w-4 h-4" />}
+              className="w-full"
+            >
+              <span className="hidden sm:inline">Edit Details</span>
+              <span className="sm:hidden">Edit</span>
+            </Button>
             {order.status?.toLowerCase() === "delivered" && (
               <Button
                 variant="outline"
@@ -476,16 +535,7 @@ export default function OrderDetails() {
               </Button>
             )}
 
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={openEditModal}
-              startIcon={<PencilIcon className="w-4 h-4" />}
-              className="w-full"
-            >
-              <span className="hidden sm:inline">Update Status</span>
-              <span className="sm:hidden">Status</span>
-            </Button>
+
             <Button
               variant="primary"
               size="sm"
@@ -943,20 +993,17 @@ export default function OrderDetails() {
         />
 
 
-        {/* Edit Order Modal */}
-        < Modal isOpen={isEditOpen} onClose={closeEditModal} className="w-full max-w-md mx-4 sm:mx-6" >
-          <form onSubmit={handleSubmit(onSubmit)}>
+        {/* Update Status Modal */}
+        <Modal isOpen={isUpdateStatusOpen} onClose={closeUpdateStatusModal} className="w-full max-w-md mx-4 sm:mx-6">
+          <form onSubmit={handleStatusSubmit(onStatusSubmit)}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Update Order Status</h3>
-
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="status">
-                    Status
-                  </Label>
+                  <Label htmlFor="status">Status</Label>
                   <Controller
                     name="status"
-                    control={control}
+                    control={statusControl}
                     render={({ field }) => (
                       <Select
                         options={[
@@ -972,43 +1019,116 @@ export default function OrderDetails() {
                       />
                     )}
                   />
-                  {errors.status && (
-                    <p className="mt-1.5 text-xs text-error-500">{errors.status.message}</p>
+                  {statusErrors.status && (
+                    <p className="mt-1.5 text-xs text-error-500">{statusErrors.status.message}</p>
                   )}
                 </div>
-
                 <div>
-                  <Label htmlFor="notes">
-                    Notes
-                  </Label>
+                  <Label htmlFor="notes">Notes</Label>
                   <Controller
                     name="notes"
-                    control={control}
+                    control={statusControl}
                     render={({ field }) => (
                       <TextArea
                         placeholder="Enter order notes..."
                         rows={4}
                         value={field.value || ""}
                         onChange={(value) => field.onChange(value)}
-                        error={!!errors.notes}
-                        hint={errors.notes?.message}
                       />
                     )}
                   />
                 </div>
               </div>
-
               <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
-                <Button variant="outline" onClick={closeEditModal} disabled={updateOrderStatusMutation.isPending} type="button" className="w-full sm:w-auto">
+                <Button variant="outline" onClick={closeUpdateStatusModal} disabled={updateOrderMutation.isPending} type="button" className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button variant="primary" disabled={updateOrderStatusMutation.isPending} type="submit" className="w-full sm:w-auto">
-                  {updateOrderStatusMutation.isPending ? "Updating..." : "Update Status"}
+                <Button variant="primary" disabled={updateOrderMutation.isPending} type="submit" className="w-full sm:w-auto">
+                  {updateOrderMutation.isPending ? "Updating..." : "Update Status"}
                 </Button>
               </div>
             </div>
           </form>
-        </Modal >
+        </Modal>
+
+        {/* Update Details Modal */}
+        <Modal isOpen={isUpdateDetailsOpen} onClose={closeUpdateDetailsModal} className="w-full max-w-2xl mx-4 sm:mx-6">
+          <form onSubmit={handleDetailsSubmit(onDetailsSubmit)}>
+            <div className="p-6">
+              <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Update Order Details</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <InputField
+                      id="phone"
+                      placeholder="Customer Phone"
+                      {...detailsControl.register("phone")}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="delivery_address">Delivery Address</Label>
+                    <InputField
+                      id="delivery_address"
+                      placeholder="Delivery Address"
+                      {...detailsControl.register("delivery_address")}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="discount_amount">Discount Amount</Label>
+                    <Controller
+                      name="discount_amount"
+                      control={detailsControl}
+                      render={({ field }) => (
+                        <InputField
+                          id="discount_amount"
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="discount_description">Discount Description</Label>
+                    <InputField
+                      id="discount_description"
+                      placeholder="Reason for discount"
+                      {...detailsControl.register("discount_description")}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Controller
+                    name="notes"
+                    control={detailsControl}
+                    render={({ field }) => (
+                      <TextArea
+                        placeholder="Enter order notes..."
+                        rows={4}
+                        value={field.value || ""}
+                        onChange={(value) => field.onChange(value)}
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex flex-col-reverse sm:flex-row items-center gap-3">
+                <Button variant="outline" onClick={closeUpdateDetailsModal} disabled={updateOrderMutation.isPending} type="button" className="w-full sm:w-auto">
+                  Cancel
+                </Button>
+                <Button variant="primary" disabled={updateOrderMutation.isPending} type="submit" className="w-full sm:w-auto">
+                  {updateOrderMutation.isPending ? "Updating..." : "Update Details"}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </Modal>
 
         {/* Assign Delivery Boy Modal */}
         < Modal isOpen={isAssignOpen} onClose={closeAssignModal} className="w-full max-w-md mx-4 sm:mx-6" >
@@ -1504,7 +1624,7 @@ export default function OrderDetails() {
         </Modal >
 
         {/* Edit Order Items Modal */}
-        < Modal isOpen={isEditItemsOpen} onClose={closeEditItemsModal} className="w-full max-w-4xl mx-4 sm:mx-6" >
+        <Modal isOpen={isEditItemsOpen} size="2xl" onClose={closeEditItemsModal} className="w-full max-w-xl mx-4 sm:mx-6" >
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Order Items</h3>
 
@@ -1534,12 +1654,12 @@ export default function OrderDetails() {
                               onChange={(e) => updateItem(index, "quantity", parseInt(e.currentTarget.value) || 0)}
                             />
                           </div>
-                          <div>
+                          {/* <div>
                             <Label>Item ID</Label>
                             <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-md">
                               #{item.id}
                             </div>
-                          </div>
+                          </div> */}
                           <div className="flex items-end">
                             <Button
                               variant="outline"
@@ -1548,7 +1668,7 @@ export default function OrderDetails() {
                               startIcon={<TrashBinIcon className="w-4 h-4" />}
                               className="text-error-600 hover:text-error-700"
                             >
-                              Remove
+                              {""}
                             </Button>
                           </div>
                         </div>

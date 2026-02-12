@@ -12,7 +12,6 @@ import {
   ChevronDownIcon,
   HorizontaLDots,
   BoxIcon,
-  PaperPlaneIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -46,11 +45,7 @@ const navItems: NavItem[] = [
       { name: "Pending Orders", path: "/orders/pending" },
     ],
   },
-  {
-    icon: <PaperPlaneIcon />,
-    name: "Routes",
-    path: "/routes",
-  },
+
   {
     icon: <BoxIcon />,
     name: "Product Management",

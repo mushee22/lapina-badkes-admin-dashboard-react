@@ -311,12 +311,7 @@ export default function StoreDetails() {
                     {store.location ? `${store.location.name} (${store.location.code || store.location.id})` : "—"}
                   </p>
                 </div>
-                <div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Route:</span>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {store.route ? `${store.route.name} (${store.route.code})` : "—"}
-                  </p>
-                </div>
+
                 <div>
                   <span className="text-xs text-gray-500 dark:text-gray-400">Phone:</span>
                   <p className="text-sm text-gray-700 dark:text-gray-300">{store.phone || "—"}</p>

@@ -169,7 +169,11 @@ export const OrderSchema = z.object({
 export const UpdateOrderSchema = z.object({
   status: z.string().min(1, "Status is required").optional(),
   delivery_boy_id: z.number().optional(),
+  delivery_address: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  discount_amount: z.number().nullable().optional(),
+  discount_description: z.string().nullable().optional(),
 });
 
 export const ManualOrderItemSchema = z.object({

@@ -5,7 +5,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import StoreForm from "./components/StoreForm";
 import { useStoreQuery, useUpdateStoreMutation } from "../../hooks/queries/stores";
 import { useLocationsQuery } from "../../hooks/queries/locations";
-import { useRoutesQuery } from "../../services/routes";
+
 import type { CreateStoreInput, UpdateStoreInput } from "../../types/store";
 
 export default function StoreEdit() {
@@ -14,7 +14,7 @@ export default function StoreEdit() {
   const { data: store, isLoading: isLoadingStore } = useStoreQuery(id ? Number(id) : null);
   const updateMutation = useUpdateStoreMutation();
   const { data: locations = [] } = useLocationsQuery();
-  const { data: routes = [] } = useRoutesQuery();
+
 
   const handleSubmit = async (values: CreateStoreInput | UpdateStoreInput) => {
     if (!id) return;
@@ -62,7 +62,7 @@ export default function StoreEdit() {
     store_email: store.email ?? "",
     store_website: store.website ?? "",
     location_id: store.location?.id ?? undefined,
-    route_id: store.route?.id ?? undefined,
+
     owner_name: store.owner?.name ?? "",
     owner_email: store.owner?.email ?? "",
     owner_phone: store.owner?.phone ?? "",
@@ -90,7 +90,7 @@ export default function StoreEdit() {
             onSubmit={handleSubmit}
             submitLabel="Save Changes"
             locations={locations}
-            routes={routes}
+
             isLoading={updateMutation.isPending}
             isEdit={true}
           />

@@ -13,7 +13,7 @@ import Button from "../../../components/ui/button/Button";
 import { CreateStoreSchema, UpdateStoreSchema } from "../../../types/store";
 import type { CreateStoreInput, UpdateStoreInput } from "../../../types/store";
 import type { Location } from "../../../types/location";
-import type { Route } from "../../../types/route";
+
 import { ChevronLeftIcon } from "../../../icons";
 import { useToast } from "../../../context/ToastContext";
 
@@ -22,7 +22,7 @@ interface StoreFormProps {
   onSubmit: (values: CreateStoreInput | UpdateStoreInput) => void | Promise<void>;
   submitLabel?: string;
   locations: Location[];
-  routes: Route[];
+
   isLoading?: boolean;
   isEdit?: boolean;
 }
@@ -32,7 +32,7 @@ export default function StoreForm({
   onSubmit,
   submitLabel = "Save",
   locations,
-  routes,
+
   isLoading = false,
   isEdit = false,
 }: StoreFormProps) {
@@ -208,21 +208,7 @@ export default function StoreForm({
               )}
             />
           </div>
-          <div>
-            <Label htmlFor="route_id">Route</Label>
-            <Controller
-              name="route_id"
-              control={control}
-              render={({ field }) => (
-                <Autocomplete
-                  options={routes.map((route) => ({ value: String(route.id), label: route.name }))}
-                  placeholder="Select Route"
-                  value={field.value ? String(field.value) : ""}
-                  onChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                />
-              )}
-            />
-          </div>
+
         </div>
 
         <div>

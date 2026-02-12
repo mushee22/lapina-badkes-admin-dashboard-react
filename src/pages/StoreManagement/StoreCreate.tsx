@@ -5,14 +5,14 @@ import ComponentCard from "../../components/common/ComponentCard";
 import StoreForm from "./components/StoreForm";
 import { useCreateStoreMutation } from "../../hooks/queries/stores";
 import { useLocationsQuery } from "../../hooks/queries/locations";
-import { useRoutesQuery } from "../../services/routes";
+
 import type { CreateStoreInput, UpdateStoreInput } from "../../types/store";
 
 export default function StoreCreate() {
   const navigate = useNavigate();
   const createMutation = useCreateStoreMutation();
   const { data: locations = [] } = useLocationsQuery();
-  const { data: routes = [] } = useRoutesQuery();
+
 
   const handleSubmit = async (values: CreateStoreInput | UpdateStoreInput) => {
     try {
@@ -33,7 +33,7 @@ export default function StoreCreate() {
             onSubmit={handleSubmit}
             submitLabel="Create Outlet"
             locations={locations}
-            routes={routes}
+
             isLoading={createMutation.isPending}
           />
         </ComponentCard>
