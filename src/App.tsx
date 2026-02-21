@@ -35,6 +35,9 @@ import RoutesPage from "./pages/RouteManagement/Routes.tsx";
 import Roles from "./pages/UserManagement/Roles.tsx";
 import RoleCreate from "./pages/UserManagement/RoleCreate.tsx";
 import RoleEdit from "./pages/UserManagement/RoleEdit.tsx";
+import PrivacyPolicy from "./pages/PublicPages/PrivacyPolicy.tsx";
+import TermsAndConditions from "./pages/PublicPages/TermsAndConditions.tsx";
+import Support from "./pages/PublicPages/Support.tsx";
 
 export default function App() {
   return (
@@ -78,6 +81,9 @@ export default function App() {
                 </Route>
               </Route>
               <Route path="/signin" element={<SignIn />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+              <Route path="/support" element={<Support />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
