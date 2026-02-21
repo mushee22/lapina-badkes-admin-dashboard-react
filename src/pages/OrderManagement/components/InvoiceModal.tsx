@@ -12,7 +12,7 @@ interface InvoiceModalProps {
     orderId?: number;
 }
 
-export default function InvoiceModal({ isOpen, closeModal, invoice, orderId }: InvoiceModalProps) {
+export default function InvoiceModal({ isOpen, closeModal, invoice }: InvoiceModalProps) {
     const downloadInvoiceMutation = useDownloadOrderInvoiceMutation();
 
     if (!invoice) return null;
