@@ -259,6 +259,30 @@ export async function createManualOrder(input: import("../types/order").CreateMa
   return response as Order;
 }
 
+export interface BulkStatusUpdateItem {
+  order_id: number;
+  status: string;
+}
+
+export interface BulkStatusUpdateError {
+  index: number;
+  order_id: number;
+  message: string;
+}
+
+export interface BulkStatusUpdateResponse {
+  message: string;
+  updated_count: number;
+  error_count: number;
+  updated: { order_id: number }[];
+  errors: BulkStatusUpdateError[];
+}
+
+export async function bulkUpdateOrderStatus(items: BulkStatusUpdateItem[]): Promise<BulkStatusUpdateResponse> {
+  const response = await http.patch<BulkStatusUpdateResponse>("/orders/status/bulk", { items });
+  return response;
+}
+
 export async function updateOrderStatus(id: number, status: string, notes: string): Promise<Order> {
   const response = await http.patch<{ data?: Order; order?: Order } | Order>(`/orders/${id}/status`, {
     status,
@@ -379,7 +403,7 @@ export async function exportOrders(params?: ExportOrdersParams): Promise<Blob> {
     qs.set("status", params.status);
   }
   const query = qs.toString();
-  const path = query ? `/orders-export/xlsx?${query}` : "/orders-export/xlsx";  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const path = query ? `/orders-export/xlsx?${query}` : "/orders-export/xlsx"; const res = await fetch(`${API_BASE_URL}${path}`, {
     method: "GET",
     headers,
   });

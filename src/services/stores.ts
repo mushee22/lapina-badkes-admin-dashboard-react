@@ -23,31 +23,31 @@ export async function listStoresPaginated(params?: StoreListParams): Promise<Pag
   const query = qs.toString();
   const path = query ? `/stores?${query}` : "/stores";
   const response = await http.get<Store[] | PaginatedResponse<Store>>(path);
-  
+
   if (Array.isArray(response)) {
     return { data: response };
   }
-  
+
   if (response && typeof response === "object" && Array.isArray(response.data)) {
     return response;
   }
-  
+
   return { data: [] };
 }
 
 export async function getStore(id: number): Promise<Store> {
   const response = await http.get<{ data?: Store; store?: Store } | Store>(`/stores/${id}`);
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Store;
   }
-  
+
   // Handle store key wrapper
   if (response && typeof response === "object" && "store" in response && response.store) {
     return response.store as Store;
   }
-  
+
   // Direct response
   return response as Store;
 }
@@ -58,17 +58,17 @@ export async function createStore(input: CreateStoreInput): Promise<Store> {
     throw new Error("Invalid store create payload");
   }
   const response = await http.post<{ data?: Store; store?: Store } | Store>("/stores", validated.data);
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Store;
   }
-  
+
   // Handle store key wrapper
   if (response && typeof response === "object" && "store" in response && response.store) {
     return response.store as Store;
   }
-  
+
   // Direct response
   return response as Store;
 }
@@ -79,17 +79,17 @@ export async function updateStore(id: number, input: UpdateStoreInput): Promise<
     throw new Error("Invalid store update payload");
   }
   const response = await http.put<{ data?: Store; store?: Store } | Store>(`/stores/${id}`, validated.data);
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Store;
   }
-  
+
   // Handle store key wrapper
   if (response && typeof response === "object" && "store" in response && response.store) {
     return response.store as Store;
   }
-  
+
   // Direct response
   return response as Store;
 }
@@ -104,17 +104,17 @@ export async function updateStoreStatus(id: number, input: UpdateStoreStatusInpu
     throw new Error("Invalid store status update payload");
   }
   const response = await http.patch<{ data?: Store; store?: Store } | Store>(`/stores/${id}/status`, validated.data);
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Store;
   }
-  
+
   // Handle store key wrapper
   if (response && typeof response === "object" && "store" in response && response.store) {
     return response.store as Store;
   }
-  
+
   // Direct response
   return response as Store;
 }
@@ -125,17 +125,17 @@ export async function setStoreDiscount(id: number, input: SetStoreDiscountInput)
     throw new Error("Invalid store discount payload");
   }
   const response = await http.post<{ data?: Store; store?: Store } | Store>(`/stores/${id}/discount`, validated.data);
-  
+
   // Handle wrapped response
   if (response && typeof response === "object" && "data" in response && response.data) {
     return response.data as Store;
   }
-  
+
   // Handle store key wrapper
   if (response && typeof response === "object" && "store" in response && response.store) {
     return response.store as Store;
   }
-  
+
   // Direct response
   return response as Store;
 }
@@ -144,3 +144,30 @@ export async function deactivateStoreDiscount(id: number): Promise<void> {
   await http.del(`/stores/${id}/discount`);
 }
 
+import type { Product } from "../types/product";
+
+export async function getStoreProducts(storeId: number): Promise<Product[]> {
+  const response = await http.get<Product[] | { data: Product[] }>(`/stores/${storeId}/products`);
+
+  if (Array.isArray(response)) {
+    return response;
+  }
+
+  if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
+    return response.data;
+  }
+
+  return [];
+}
+
+export interface StoreProductDiscountItem {
+  product_id: number;
+  discount_amount: number;
+}
+
+export async function setStoreProductDiscountsBulk(
+  storeId: number,
+  items: StoreProductDiscountItem[]
+): Promise<void> {
+  await http.post<unknown>(`/stores/${storeId}/products/discount/bulk`, { items });
+}

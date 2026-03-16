@@ -11,7 +11,7 @@ import Select from "../../../components/form/Select";
 import type { Store } from "../../../types/store";
 import type { Location } from "../../../types/location";
 import type { PaginationMeta } from "../../../types/pagination";
-import { EyeIcon, PencilIcon, TrashBinIcon, PlusIcon, BoxIcon } from "../../../icons";
+import { EyeIcon, PencilIcon, TrashBinIcon, PlusIcon, BoxIcon, DollarLineIcon } from "../../../icons";
 import Pagination from "../../../components/common/Pagination";
 
 type Props = {
@@ -218,6 +218,14 @@ export function StoresView(props: Props) {
                               title="View Orders for this Store"
                             >
                               <BoxIcon className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              to={`/stores/${store.id}/product-discounts`}
+                              className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-success-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"
+                              aria-label="Product Discounts"
+                              title="Set Product Discounts"
+                            >
+                              <DollarLineIcon className="w-4 h-4" />
                             </Link>
                             <button
                               className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-error-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.06]"

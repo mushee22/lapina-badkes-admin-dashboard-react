@@ -1,18 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Store, CreateStoreInput, UpdateStoreInput, UpdateStoreStatusInput, SetStoreDiscountInput } from "../../types/store";
-import { 
-  listStoresPaginated, 
-  getStore, 
-  createStore, 
-  updateStore, 
+import {
+  listStoresPaginated,
+  getStore,
+  createStore,
+  updateStore,
   deleteStore,
   updateStoreStatus,
   setStoreDiscount,
   deactivateStoreDiscount,
+  getStoreProducts,
+  setStoreProductDiscountsBulk,
+  type StoreProductDiscountItem,
 } from "../../services/stores";
 import type { StoreListParams } from "../../services/stores";
 import type { PaginatedResponse } from "../../types/pagination";
 import { useToast } from "../../context/ToastContext";
+import type { Product } from "../../types/product";
 
 export const storesKey = ["stores"] as const;
 
@@ -38,10 +42,10 @@ export function useStoresPaginatedQuery(params?: StoreListParams) {
 }
 
 export function useStoreQuery(id: number | null) {
-  return useQuery<Store>({ 
-    queryKey: [...storesKey, id], 
-    queryFn: () => getStore(Number(id)), 
-    enabled: !!id 
+  return useQuery<Store>({
+    queryKey: [...storesKey, id],
+    queryFn: () => getStore(Number(id)),
+    enabled: !!id
   });
 }
 
@@ -145,3 +149,38 @@ export function useDeactivateStoreDiscountMutation() {
   });
 }
 
+export function useStoreProductsQuery(storeId: number | null) {
+  const { showToast } = useToast();
+  return useQuery<Product[]>({
+    queryKey: [...storesKey, storeId, "products"],
+    queryFn: async () => {
+      try {
+        return await getStoreProducts(storeId!);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load store products";
+        showToast("error", message, "Error");
+        throw error;
+      }
+    },
+    enabled: storeId !== null,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+}
+
+export function useSetStoreProductDiscountsMutation() {
+  const { showToast } = useToast();
+  return useMutation({
+    mutationFn: ({ storeId, items }: { storeId: number; items: StoreProductDiscountItem[] }) =>
+      setStoreProductDiscountsBulk(storeId, items),
+    onSuccess: () => {
+      showToast("success", "Product discounts saved successfully", "Success");
+    },
+    onError: (error: Error) => {
+      const message = error.message || "Failed to save product discounts";
+      showToast("error", message, "Error");
+    },
+  });
+}

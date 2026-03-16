@@ -18,7 +18,7 @@ import type { Store } from "../../../types/store";
 import type { AdminUser } from "../../../types/userManagement";
 import type { Location } from "../../../types/location";
 import Pagination from "../../../components/common/Pagination";
-import { useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation } from "../../../hooks/queries/orders";
+import { useUpdateOrderStatusMutation, useAssignDeliveryBoyMutation, useBulkUpdateOrderStatusMutation } from "../../../hooks/queries/orders";
 import { useOverviewQuery } from "../../../hooks/queries/overview";
 import type { OverviewData } from "../../../services/overview";
 import { useForm, Controller } from "react-hook-form";
@@ -146,12 +146,12 @@ export function OrdersCardView(props: Props) {
   const navigate = useNavigate();
   const updateStatusMutation = useUpdateOrderStatusMutation();
   const assignDeliveryBoyMutation = useAssignDeliveryBoyMutation();
+  const bulkUpdateStatusMutation = useBulkUpdateOrderStatusMutation();
   const { showToast } = useToast();
   const { isOpen: isStatusOpen, openModal: openStatusModal, closeModal: closeStatusModal } = useModal();
   const { isOpen: isAssignOpen, openModal: openAssignModal, closeModal: closeAssignModal } = useModal();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
-  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const {
     orders,
@@ -170,7 +170,7 @@ export function OrdersCardView(props: Props) {
     setDeliveryBoyId,
     deliveryBoys,
   } = props;
-  
+
   // Fetch overview data for order counts with current filters
   const { data: overview, isLoading: isLoadingOverview } = useOverviewQuery({
     location_id: locationId,
@@ -242,35 +242,31 @@ export function OrdersCardView(props: Props) {
       return;
     }
 
-    setIsBulkUpdating(true);
-    const errors: string[] = [];
-    const successCount = { count: 0 };
+    const items = ordersToUpdate.map((id) => ({ order_id: id, status: nextStatus }));
 
-    // Use for loop to update each order
-    for (let i = 0; i < ordersToUpdate.length; i++) {
-      const orderId = ordersToUpdate[i];
-      try {
-        await updateStatusMutation.mutateAsync({
-          id: orderId,
-          status: nextStatus,
-          notes: `Bulk status update from ${formatStatusForDisplay(status)} to ${formatStatusForDisplay(nextStatus)}`,
-        });
-        successCount.count++;
-      } catch (error) {
-        const order = orders.find((o) => o.id === orderId);
-        errors.push(`Order #${order?.order_number || orderId}: ${error instanceof Error ? error.message : "Failed"}`);
-      }
-    }
-
-    setIsBulkUpdating(false);
-    setSelectedOrderIds([]);
-
-    if (successCount.count > 0) {
-      showToast("success", `Successfully updated ${successCount.count} order(s) to ${formatStatusForDisplay(nextStatus)}`, "Success");
-    }
-    if (errors.length > 0) {
-      showToast("error", `Failed to update ${errors.length} order(s)`, "Error");
-    }
+    bulkUpdateStatusMutation.mutate(items, {
+      onSuccess: (result) => {
+        setSelectedOrderIds([]);
+        if (result.updated_count > 0) {
+          showToast(
+            "success",
+            `Successfully updated ${result.updated_count} order(s) to ${formatStatusForDisplay(nextStatus)}`,
+            "Success"
+          );
+        }
+        if (result.error_count > 0) {
+          const details = result.errors.map((e) => `Order #${e.order_id}: ${e.message}`).join("\n");
+          showToast(
+            "error",
+            `${result.error_count} order(s) failed to update:\n${details}`,
+            "Error"
+          );
+        }
+        if (result.updated_count === 0 && result.error_count === 0) {
+          showToast("info", "No orders were updated", "Info");
+        }
+      },
+    });
   };
 
   // Quick status update function
@@ -496,18 +492,18 @@ export function OrdersCardView(props: Props) {
                     </div>
                     <Button
                       onClick={() => handleBulkStatusChange(false)}
-                      disabled={isBulkUpdating || selectedOrderIds.length === 0}
+                      disabled={bulkUpdateStatusMutation.isPending || selectedOrderIds.length === 0}
                       size="sm"
                       variant="outline"
                     >
-                      {isBulkUpdating ? "Updating..." : `Change Selected (${selectedOrderIds.length})`}
+                      {bulkUpdateStatusMutation.isPending ? "Updating..." : `Change Selected (${selectedOrderIds.length})`}
                     </Button>
                     <Button
                       onClick={() => handleBulkStatusChange(true)}
-                      disabled={isBulkUpdating || orders.length === 0}
+                      disabled={bulkUpdateStatusMutation.isPending || orders.length === 0}
                       size="sm"
                     >
-                      {isBulkUpdating ? "Updating..." : `Change All (${orders.length})`}
+                      {bulkUpdateStatusMutation.isPending ? "Updating..." : `Change All (${orders.length})`}
                     </Button>
                   </>
                 );
@@ -566,30 +562,30 @@ export function OrdersCardView(props: Props) {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Customer:</span>
-                      <span className="font-medium text-gray-800 dark:text-white/90">{order.user?.name || "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Amount:</span>
-                      <span className="font-semibold text-gray-800 dark:text-white/90">
-                        {order.total_amount && !isNaN(parseFloat(order.total_amount))
-                          ? `₹${parseFloat(order.total_amount).toFixed(2)}`
-                          : "—"}
-                      </span>
-                    </div>
-                    {order.delivery_boy && (
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Delivery Boy:</span>
-                        <span className="font-medium text-gray-800 dark:text-white/90">{order.delivery_boy.name || "—"}</span>
+                        <span className="text-gray-500 dark:text-gray-400">Customer:</span>
+                        <span className="font-medium text-gray-800 dark:text-white/90">{order.user?.name || "—"}</span>
                       </div>
-                    )}
-                    {order.store && (
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Store:</span>
-                        <span className="font-medium text-gray-800 dark:text-white/90">{order.store.name || "—"}</span>
+                        <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                        <span className="font-semibold text-gray-800 dark:text-white/90">
+                          {order.total_amount && !isNaN(parseFloat(order.total_amount))
+                            ? `₹${parseFloat(order.total_amount).toFixed(2)}`
+                            : "—"}
+                        </span>
                       </div>
-                    )}
+                      {order.delivery_boy && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">Delivery Boy:</span>
+                          <span className="font-medium text-gray-800 dark:text-white/90">{order.delivery_boy.name || "—"}</span>
+                        </div>
+                      )}
+                      {order.store && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">Store:</span>
+                          <span className="font-medium text-gray-800 dark:text-white/90">{order.store.name || "—"}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Status Transition Buttons */}
@@ -611,7 +607,7 @@ export function OrdersCardView(props: Props) {
                                 }
                                 return "bg-info-50 text-info-700 hover:bg-info-100 border-info-200 dark:bg-info-900/20 dark:text-info-300 dark:hover:bg-info-900/30 dark:border-info-800";
                               };
-                              
+
                               return (
                                 <button
                                   key={transition.value}
@@ -630,32 +626,32 @@ export function OrdersCardView(props: Props) {
                     })()}
 
                     <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-white/[0.05]">
-                    <button
-                      onClick={() => navigate(`/orders/${order.id}`)}
-                      className="inline-flex items-center justify-center rounded-md p-2 text-info-600 hover:text-info-700 hover:bg-info-50 dark:text-info-400 dark:hover:text-info-300 dark:hover:bg-info-900/20 transition-colors"
-                      aria-label="View Order"
-                      title="View Order Details"
-                    >
-                      <EyeIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => openStatusModalForOrder(order)}
-                      className="inline-flex items-center justify-center rounded-md p-2 text-warning-600 hover:text-warning-700 hover:bg-warning-50 dark:text-warning-400 dark:hover:text-warning-300 dark:hover:bg-warning-900/20 transition-colors"
-                      aria-label="Change Status"
-                      title="Change Order Status"
-                    >
-                      <PencilIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => openAssignModalForOrder(order)}
-                      className="inline-flex items-center justify-center rounded-md p-2 text-success-600 hover:text-success-700 hover:bg-success-50 dark:text-success-400 dark:hover:text-success-300 dark:hover:bg-success-900/20 transition-colors"
-                      aria-label="Assign Delivery Boy"
-                      title="Assign Delivery Boy"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </button>
+                      <button
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                        className="inline-flex items-center justify-center rounded-md p-2 text-info-600 hover:text-info-700 hover:bg-info-50 dark:text-info-400 dark:hover:text-info-300 dark:hover:bg-info-900/20 transition-colors"
+                        aria-label="View Order"
+                        title="View Order Details"
+                      >
+                        <EyeIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => openStatusModalForOrder(order)}
+                        className="inline-flex items-center justify-center rounded-md p-2 text-warning-600 hover:text-warning-700 hover:bg-warning-50 dark:text-warning-400 dark:hover:text-warning-300 dark:hover:bg-warning-900/20 transition-colors"
+                        aria-label="Change Status"
+                        title="Change Order Status"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => openAssignModalForOrder(order)}
+                        className="inline-flex items-center justify-center rounded-md p-2 text-success-600 hover:text-success-700 hover:bg-success-50 dark:text-success-400 dark:hover:text-success-300 dark:hover:bg-success-900/20 transition-colors"
+                        aria-label="Assign Delivery Boy"
+                        title="Assign Delivery Boy"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 );
@@ -684,7 +680,7 @@ export function OrdersCardView(props: Props) {
         <form onSubmit={handleStatusSubmit(onStatusSubmit)}>
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Update Order Status</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="status">
@@ -749,7 +745,7 @@ export function OrdersCardView(props: Props) {
         <form onSubmit={handleAssignSubmit(onAssignSubmit)}>
           <div className="p-6">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Assign Delivery Boy</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="delivery_boy_id">

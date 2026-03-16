@@ -13,6 +13,7 @@ import {
   getOrderStores,
   getOrderDeliveryBoys,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
   assignDeliveryBoy,
   updateOrderItems,
   returnOrder,
@@ -20,7 +21,9 @@ import {
   cancelOrderReturn,
   processOrderReturn,
   type OrderListParams,
-  type UpdateOrderItemsInput
+  type UpdateOrderItemsInput,
+  type BulkStatusUpdateItem,
+  type BulkStatusUpdateResponse
 } from "../../services/orders";
 import type { PaginatedResponse } from "../../types/pagination";
 import { useToast } from "../../context/ToastContext";
@@ -210,6 +213,21 @@ export function useUpdateOrderStatusMutation() {
     },
     onError: (error) => {
       const message = error.message || "Failed to update order status";
+      showToast("error", message, "Error");
+    },
+  });
+}
+
+export function useBulkUpdateOrderStatusMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  return useMutation<BulkStatusUpdateResponse, Error, BulkStatusUpdateItem[]>({
+    mutationFn: (items) => bulkUpdateOrderStatus(items),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ordersKey });
+    },
+    onError: (error) => {
+      const message = error.message || "Failed to bulk update order statuses";
       showToast("error", message, "Error");
     },
   });
