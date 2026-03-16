@@ -29,6 +29,15 @@ export const StoreDiscountSchema = z.object({
   current_percentage: z.number().optional(),
 });
 
+export const StoreProductSchema = z.object({
+  product_id: z.number(),
+  product_name: z.string(),
+  product_slug: z.string().optional(),
+  price: z.number(),
+  discount_percentage: z.number(),
+  selling_price: z.number(),
+});
+
 export const StoreSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -48,6 +57,7 @@ export const StoreSchema = z.object({
   location: StoreLocationSchema.nullable().optional(),
   route: RouteSchema.nullable().optional(),
   owner: StoreOwnerSchema.nullable().optional(),
+  store_products: z.array(StoreProductSchema).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
@@ -97,4 +107,5 @@ export type UpdateStoreStatusInput = z.infer<typeof UpdateStoreStatusSchema>;
 export type SetStoreDiscountInput = z.infer<typeof SetStoreDiscountSchema>;
 export type StoreSettings = z.infer<typeof StoreSettingsSchema>;
 export type StoreDiscount = z.infer<typeof StoreDiscountSchema>;
+export type StoreProduct = z.infer<typeof StoreProductSchema>;
 

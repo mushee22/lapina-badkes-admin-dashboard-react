@@ -499,6 +499,87 @@ export default function StoreDetails() {
           </div>
         </ComponentCard>
 
+        {/* Store Product Prices */}
+        <ComponentCard title="Product Prices">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Fixed prices and discounts set for each product in this outlet.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/stores/${id}/product-discounts`)}
+              startIcon={<PencilIcon className="w-4 h-4" />}
+            >
+              Edit Product Prices
+            </Button>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="max-w-full overflow-x-auto">
+              <Table>
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Product
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Base Price (₹)
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Discount %
+                    </TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                      Selling Price (₹)
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {!store.store_products || store.store_products.length === 0 ? (
+                    <TableRow>
+                      <TableCell className="px-5 py-4 text-center text-gray-500" colSpan={4}>
+                        No products found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    store.store_products.map((sp) => (
+                      <TableRow key={sp.product_id}>
+                        <TableCell className="px-5 py-4 text-start">
+                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                            {sp.product_name}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-start">
+                          <span className="text-gray-700 text-theme-sm dark:text-gray-300">
+                            ₹{sp.price.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-start">
+                          {sp.discount_percentage > 0 ? (
+                            <Badge variant="light" color="success" size="sm">
+                              {sp.discount_percentage}% off
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400 text-theme-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-start">
+                          <span className={`text-theme-sm font-medium ${sp.discount_percentage > 0
+                              ? "text-success-600 dark:text-success-400"
+                              : "text-gray-700 dark:text-gray-300"
+                            }`}>
+                            ₹{sp.selling_price.toFixed(2)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </ComponentCard>
+
         {/* Store Orders */}
         <ComponentCard title="Store Orders">
           <div className="mb-4 flex items-center justify-between">

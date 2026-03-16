@@ -6,11 +6,11 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Button from "../../components/ui/button/Button";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../components/ui/table";
 import { useStoreQuery, useSetStoreProductDiscountsMutation } from "../../hooks/queries/stores";
-import { useProductsPaginatedQuery } from "../../hooks/queries/products";
-import type { Product } from "../../types/product";
+import type { StoreProduct } from "../../types/store";
+import { ChevronLeftIcon } from "../../icons";
 
 interface DiscountRow {
-    product: Product;
+    storeProduct: StoreProduct;
     discountedPrice: string; // admin enters the final discounted price
 }
 
@@ -19,43 +19,38 @@ export default function StoreProductDiscounts() {
     const storeId = Number(id);
     const navigate = useNavigate();
 
-    const { data: store } = useStoreQuery(storeId || null);
-
-    const { data: productsData, isLoading } = useProductsPaginatedQuery({ per_page: 200 });
-    const products = productsData?.data ?? [];
+    const { data: store, isLoading } = useStoreQuery(storeId || null);
 
     const [rows, setRows] = useState<DiscountRow[]>([]);
 
-    // Initialise rows when products load
+    // Initialise rows from store_products when store data loads
     useEffect(() => {
-        if (products.length > 0) {
+        if (store?.store_products && store.store_products.length > 0) {
             setRows(
-                products.map((p) => ({
-                    product: p,
-                    // Pre-fill with base price so field is never empty
-                    discountedPrice: parseFloat(p.selling_price || p.price || "0").toFixed(2),
+                store.store_products.map((sp) => ({
+                    storeProduct: sp,
+                    // Pre-fill with already-set selling price (current discounted price)
+                    discountedPrice: sp.selling_price.toFixed(2),
                 }))
             );
         }
-    }, [products.length]);
+    }, [store?.store_products?.length]);
 
     const setDiscountsMutation = useSetStoreProductDiscountsMutation();
 
     const handlePriceChange = (productId: number, value: string) => {
         setRows((prev) =>
             prev.map((r) =>
-                r.product.id === productId ? { ...r, discountedPrice: value } : r
+                r.storeProduct.product_id === productId ? { ...r, discountedPrice: value } : r
             )
         );
     };
 
-    const getBasePrice = (product: Product): number => {
-        return parseFloat(product.selling_price || product.price || "0");
-    };
+    const getBasePrice = (sp: StoreProduct): number => sp.price;
 
     // Discount amount = base price − discounted price entered by admin
     const getDiscountAmount = (row: DiscountRow): number | null => {
-        const base = getBasePrice(row.product);
+        const base = getBasePrice(row.storeProduct);
         const discounted = parseFloat(row.discountedPrice);
         if (isNaN(discounted) || row.discountedPrice === "") return null;
         return Math.max(0, base - discounted);
@@ -64,7 +59,7 @@ export default function StoreProductDiscounts() {
     const handleSave = () => {
         if (!storeId) return;
         const items = rows.map((r) => ({
-            product_id: r.product.id,
+            product_id: r.storeProduct.product_id,
             discount_amount: getDiscountAmount(r) ?? 0,
         }));
         setDiscountsMutation.mutate({ storeId, items });
@@ -89,8 +84,13 @@ export default function StoreProductDiscounts() {
                             for each product. The discount amount (savings) is calculated automatically.
                         </p>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => navigate("/stores")}>
-                                Back to Stores
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/stores/${id}`)}
+                                startIcon={<ChevronLeftIcon className="w-4 h-4" />}
+                            >
+                                Back to Outlet
                             </Button>
                             <Button
                                 size="sm"
@@ -134,7 +134,7 @@ export default function StoreProductDiscounts() {
                                     ) : rows.length === 0 ? (
                                         <TableRow>
                                             <TableCell className="px-5 py-4 text-center text-gray-500 dark:text-gray-400">
-                                                No products found
+                                                No products found for this outlet
                                             </TableCell>
                                             <TableCell>{null}</TableCell>
                                             <TableCell>{null}</TableCell>
@@ -142,27 +142,18 @@ export default function StoreProductDiscounts() {
                                         </TableRow>
                                     ) : (
                                         rows.map((row) => {
-                                            const basePrice = getBasePrice(row.product);
+                                            const basePrice = getBasePrice(row.storeProduct);
                                             const discountAmount = getDiscountAmount(row);
 
                                             return (
-                                                <TableRow key={row.product.id}>
-                                                    {/* Product name + image */}
+                                                <TableRow key={row.storeProduct.product_id}>
+                                                    {/* Product name */}
                                                     <TableCell className="px-5 py-4 text-start">
-                                                        <div className="flex items-center gap-3">
-                                                            {row.product.main_image_url && (
-                                                                <img
-                                                                    src={row.product.main_image_url}
-                                                                    alt={row.product.name}
-                                                                    className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-gray-100 dark:border-white/[0.05]"
-                                                                />
-                                                            )}
-                                                            <div>
-                                                                <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                                                    {row.product.name}
-                                                                </span>
-                                                                <span className="text-xs text-gray-400">ID: {row.product.id}</span>
-                                                            </div>
+                                                        <div>
+                                                            <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                                                {row.storeProduct.product_name}
+                                                            </span>
+                                                            <span className="text-xs text-gray-400">ID: {row.storeProduct.product_id}</span>
                                                         </div>
                                                     </TableCell>
 
@@ -184,7 +175,7 @@ export default function StoreProductDiscounts() {
                                                                 step="0.01"
                                                                 placeholder={basePrice.toFixed(2)}
                                                                 value={row.discountedPrice}
-                                                                onChange={(e) => handlePriceChange(row.product.id, e.target.value)}
+                                                                onChange={(e) => handlePriceChange(row.storeProduct.product_id, e.target.value)}
                                                                 className="w-full pl-7 pr-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:border-white/[0.10] dark:bg-white/[0.04] dark:text-white/90"
                                                             />
                                                         </div>
