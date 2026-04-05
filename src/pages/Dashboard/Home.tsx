@@ -49,8 +49,8 @@ export default function Home() {
   return (
     <>
       <PageMeta
-        title="React.js Ecommerce Dashboard | Lapina Bakes Admin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for Lapina Bakes Admin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Lapina Bakes Admin - Dashboard"
+        description="This is Dashboard page for Lapina Bakes Admin"
       />
       
       {/* Filters */}
