@@ -109,3 +109,41 @@ export type StoreSettings = z.infer<typeof StoreSettingsSchema>;
 export type StoreDiscount = z.infer<typeof StoreDiscountSchema>;
 export type StoreProduct = z.infer<typeof StoreProductSchema>;
 
+export interface StoreUserOwner {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  roles: string[];
+  plain_password: string | null;
+}
+
+export interface StoreUser {
+  store_id: number;
+  store_name: string;
+  store_slug: string;
+  store_status: string;
+  store_is_active: boolean;
+  location: {
+    id: number;
+    name: string;
+    code: string;
+  } | null;
+  route: any | null;
+  owner: StoreUserOwner;
+}
+
+export interface StoreUsersResponse {
+  store_id: number;
+  store_name: string;
+  users: StoreUserOwner[];
+}
+
+export interface StoreUserListParams {
+  page?: number;
+  per_page?: number;
+  location_id?: number;
+  search?: string;
+}
+

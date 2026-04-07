@@ -11,12 +11,15 @@ import {
   deactivateStoreDiscount,
   getStoreProducts,
   setStoreProductDiscountsBulk,
+  listStoreUsers,
+  getStoreUsersDetails,
   type StoreProductDiscountItem,
 } from "../../services/stores";
-import type { StoreListParams } from "../../services/stores";
+import type { StoreListParams, StoreUserListParams } from "../../services/stores";
 import type { PaginatedResponse } from "../../types/pagination";
 import { useToast } from "../../context/ToastContext";
 import type { Product } from "../../types/product";
+import type { StoreUser, StoreUserOwner } from "../../types/store";
 
 export const storesKey = ["stores"] as const;
 
@@ -182,5 +185,47 @@ export function useSetStoreProductDiscountsMutation() {
       const message = error.message || "Failed to save product discounts";
       showToast("error", message, "Error");
     },
+  });
+}
+
+export function useStoreUsersPaginatedQuery(params?: StoreUserListParams) {
+  const { showToast } = useToast();
+  const effectiveParams = params ?? {};
+  return useQuery<PaginatedResponse<StoreUser>>({
+    queryKey: [...storesKey, "users", "paginated", effectiveParams],
+    queryFn: async () => {
+      try {
+        return await listStoreUsers(effectiveParams);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load store users";
+        showToast("error", message, "Error");
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+}
+
+export function useStoreUsersDetailsQuery(storeId: number | null) {
+  const { showToast } = useToast();
+  return useQuery<StoreUserOwner[]>({
+    queryKey: ["stores", storeId, "users-details"],
+    queryFn: async () => {
+      try {
+        return await getStoreUsersDetails(storeId!);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load store user details";
+        showToast("error", message, "Error");
+        throw error;
+      }
+    },
+    enabled: storeId !== null,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }

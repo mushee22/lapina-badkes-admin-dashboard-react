@@ -1,6 +1,17 @@
 import * as http from "./http";
 import { CreateStoreSchema, UpdateStoreSchema, UpdateStoreStatusSchema, SetStoreDiscountSchema } from "../types/store";
-import type { Store, CreateStoreInput, UpdateStoreInput, UpdateStoreStatusInput, SetStoreDiscountInput } from "../types/store";
+import type { 
+  Store, 
+  CreateStoreInput, 
+  UpdateStoreInput, 
+  UpdateStoreStatusInput, 
+  SetStoreDiscountInput, 
+  StoreUser, 
+  StoreUserListParams,
+  StoreUsersResponse,
+  StoreUserOwner
+} from "../types/store";
+export type { StoreUser, StoreUserListParams, StoreUsersResponse, StoreUserOwner };
 import type { PaginatedResponse } from "../types/pagination";
 
 export interface StoreListParams {
@@ -170,4 +181,26 @@ export async function setStoreProductDiscountsBulk(
   items: StoreProductDiscountItem[]
 ): Promise<void> {
   await http.post<unknown>(`/stores/${storeId}/products/discount/bulk`, { items });
+}
+
+export async function listStoreUsers(params?: StoreUserListParams): Promise<PaginatedResponse<StoreUser>> {
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set("page", String(params.page));
+  if (params?.per_page !== undefined) qs.set("per_page", String(params.per_page));
+  if (params?.location_id !== undefined) qs.set("location_id", String(params.location_id));
+  if (params?.search) qs.set("search", params.search);
+  const query = qs.toString();
+  const path = query ? `/store-users?${query}` : "/store-users";
+  return await http.get<PaginatedResponse<StoreUser>>(path);
+}
+
+export async function getStoreUsersDetails(storeId: number): Promise<StoreUserOwner[]> {
+  console.log("Fetching details for store:", storeId);
+  const response = await http.get<StoreUsersResponse>(`/stores/${storeId}/users`);
+  
+  if (response && response.users && Array.isArray(response.users)) {
+    return response.users;
+  }
+  
+  return [];
 }

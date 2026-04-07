@@ -28,6 +28,7 @@ import StoreDetails from "./pages/StoreManagement/StoreDetails.tsx";
 import StoreCreate from "./pages/StoreManagement/StoreCreate.tsx";
 import StoreEdit from "./pages/StoreManagement/StoreEdit.tsx";
 import StoreProductDiscounts from "./pages/StoreManagement/StoreProductDiscounts.tsx";
+import OutletUsers from "./pages/StoreManagement/OutletUsers.tsx";
 import OrderDetails from "./pages/OrderManagement/OrderDetails.tsx";
 import ManualOrderCreate from "./pages/OrderManagement/ManualOrderCreate.tsx";
 import DeliveryBoyDetails from "./pages/UserManagement/DeliveryBoyDetails.tsx";
@@ -71,6 +72,7 @@ export default function App() {
                   <Route path="/stores/:id/edit" element={<StoreEdit />} />
                   <Route path="/stores/:id/product-discounts" element={<StoreProductDiscounts />} />
                   <Route path="/stores/:id" element={<StoreDetails />} />
+                  <Route path="/stores/users" element={<OutletUsers />} />
                   <Route path="/stores" element={<Stores />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/transactions" element={<Transactions />} />
