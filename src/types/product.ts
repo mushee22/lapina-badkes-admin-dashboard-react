@@ -52,6 +52,7 @@ export const UpdateProductSchema = z.object({
   price: z.number().min(0, "Price must be greater than or equal to 0").optional(),
   selling_price: z.number().min(0, "Selling price must be greater than or equal to 0").optional(),
   market_price: z.number().min(0, "Market price must be greater than or equal to 0").optional(),
+  category_id: z.number().min(1, "Category is required").optional(),
   stock: z.number().min(0, "Stock must be greater than or equal to 0").optional(),
   is_available: z.boolean().optional(),
   gst: z.number().min(0).max(100).optional(),
