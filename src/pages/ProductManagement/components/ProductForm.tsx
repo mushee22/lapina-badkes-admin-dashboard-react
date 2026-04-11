@@ -209,7 +209,7 @@ export default function ProductForm({
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
         <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Stock & Availability</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
+          {/* <div>
             <Label htmlFor="stock">
               Stock <span className="text-error-500">*</span>
             </Label>
@@ -221,7 +221,7 @@ export default function ProductForm({
               error={!!errors.stock}
               hint={errors.stock?.message}
             />
-          </div>
+          </div> */}
           <div>
             <Label htmlFor="is_available">Availability</Label>
             <Controller

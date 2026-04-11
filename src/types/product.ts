@@ -36,7 +36,7 @@ export const CreateProductSchema = z.object({
   selling_price: z.number().min(0, "Selling price must be greater than or equal to 0"),
   market_price: z.number().min(0, "Market price must be greater than or equal to 0").optional(),
   category_id: z.number().min(1, "Category is required"),
-  stock: z.number().min(0, "Stock must be greater than or equal to 0"),
+  stock: z.number().optional(),
   is_available: z.boolean(),
   gst: z.number().min(0).max(100).optional(),
   primary_image_index: z.number().optional(),

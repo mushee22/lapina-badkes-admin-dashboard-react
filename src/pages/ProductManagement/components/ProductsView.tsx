@@ -171,9 +171,9 @@ export function ProductsView(props: Props) {
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                       Selling Price
                     </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                    {/* <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                       Stock
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                       Available
                     </TableCell>
@@ -189,7 +189,7 @@ export function ProductsView(props: Props) {
                       <TableCell>{null}</TableCell>
                       <TableCell>{null}</TableCell>
                       <TableCell>{null}</TableCell>
-                      <TableCell>{null}</TableCell>
+                      {/* <TableCell>{null}</TableCell> */}
                       <TableCell>{null}</TableCell>
                       <TableCell>{null}</TableCell>
                     </TableRow>
@@ -217,19 +217,19 @@ export function ProductsView(props: Props) {
                         </TableCell>
                         <TableCell className="px-5 py-4 text-start">
                           <span className="text-gray-700 text-theme-sm dark:text-gray-300">
-                            {product.price && !isNaN(parseFloat(product.price)) 
-                              ? `₹${parseFloat(product.price).toFixed(2)}` 
+                            {product.price && !isNaN(parseFloat(product.price))
+                              ? `₹${parseFloat(product.price).toFixed(2)}`
                               : "—"}
                           </span>
                         </TableCell>
                         <TableCell className="px-5 py-4 text-start">
                           <span className="text-gray-700 text-theme-sm dark:text-gray-300">
-                            {product.selling_price && !isNaN(parseFloat(product.selling_price)) 
-                              ? `₹${parseFloat(product.selling_price).toFixed(2)}` 
+                            {product.selling_price && !isNaN(parseFloat(product.selling_price))
+                              ? `₹${parseFloat(product.selling_price).toFixed(2)}`
                               : "—"}
                           </span>
                         </TableCell>
-                        <TableCell className="px-5 py-4 text-start">
+                        {/* <TableCell className="px-5 py-4 text-start">
                           <button
                             onClick={() => openUpdateStock(product)}
                             className="flex items-center gap-2 text-gray-700 text-theme-sm dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer group"
@@ -238,7 +238,7 @@ export function ProductsView(props: Props) {
                             <span>{product.stock}</span>
                             <PencilIcon className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
                           </button>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell className="px-5 py-4 text-start">
                           <Switch
                             label="Available"
@@ -282,7 +282,7 @@ export function ProductsView(props: Props) {
                       <TableCell>{null}</TableCell>
                       <TableCell>{null}</TableCell>
                       <TableCell>{null}</TableCell>
-                      <TableCell>{null}</TableCell>
+                      {/* <TableCell>{null}</TableCell> */}
                       <TableCell>{null}</TableCell>
                       <TableCell>{null}</TableCell>
                     </TableRow>
