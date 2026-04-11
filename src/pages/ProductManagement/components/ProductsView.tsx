@@ -89,7 +89,7 @@ export function ProductsView(props: Props) {
     isTogglePending,
     isStockOpen,
     closeStockModal,
-    openUpdateStock,
+    // openUpdateStock,
     confirmUpdateStock,
     stockValue,
     setStockValue,
