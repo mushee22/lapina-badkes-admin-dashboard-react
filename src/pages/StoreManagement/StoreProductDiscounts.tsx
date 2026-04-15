@@ -68,7 +68,7 @@ export default function StoreProductDiscounts() {
     return (
         <>
             <PageMeta
-                title={`Product Discounts — ${store?.name ?? "Store"} | Lapina Bakes Admin`}
+                title={`Product Discounts — ${store?.name ?? "Store"} | Lapina Bakers Admin`}
                 description="Set per-product discounted prices for this store"
             />
             <PageBreadcrumb

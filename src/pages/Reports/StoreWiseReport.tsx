@@ -5,7 +5,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 export default function StoreWiseReport() {
   return (
     <>
-      <PageMeta title="Outlet Wise Report | Lapina Bakes Admin" description="Report aggregated by outlet" />
+      <PageMeta title="Outlet Wise Report | Lapina Bakers Admin" description="Report aggregated by outlet" />
       <PageBreadcrumb pageTitle="Outlet Wise Report" />
       <div className="space-y-6">
         <ComponentCard title="Outlet Wise Report">

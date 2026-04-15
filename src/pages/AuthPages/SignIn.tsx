@@ -6,8 +6,8 @@ export default function SignIn() {
   return (
     <>
       <PageMeta
-        title="SignIn Page | Lapina Bakes Admin Dashboard"
-        description="This is SignIn Page for Lapina Bakes Admin"
+        title="SignIn Page | Lapina Bakers Admin Dashboard"
+        description="This is SignIn Page for Lapina Bakers Admin"
       />
       <AuthLayout>
         <SignInForm />

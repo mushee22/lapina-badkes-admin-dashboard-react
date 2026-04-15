@@ -52,7 +52,7 @@ export function RolesView(props: Props) {
 
     return (
         <>
-            <PageMeta title="Roles | Lapina Bakes Admin" description="Manage user roles" />
+            <PageMeta title="Roles | Lapina Bakers Admin" description="Manage user roles" />
             <PageBreadcrumb pageTitle="Roles" />
 
             <div className="space-y-6">

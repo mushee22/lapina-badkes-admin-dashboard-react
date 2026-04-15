@@ -71,7 +71,7 @@ export function StoresView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Outlets | Lapina Bakes Admin" description="Manage Outlets" />
+      <PageMeta title="Outlets | Lapina Bakers Admin" description="Manage Outlets" />
       <PageBreadcrumb pageTitle="Outlets" />
       <div className="space-y-6">
         <ComponentCard title="">

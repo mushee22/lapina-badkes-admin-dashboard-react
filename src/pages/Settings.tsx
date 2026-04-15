@@ -118,7 +118,7 @@ export default function Settings() {
   if (isLoading) {
     return (
       <>
-        <PageMeta title="Settings | Lapina Bakes Admin" description="Configure application settings" />
+        <PageMeta title="Settings | Lapina Bakers Admin" description="Configure application settings" />
         <PageBreadcrumb pageTitle="Settings" />
         <div className="space-y-6">
           <ComponentCard title="Settings">
@@ -131,7 +131,7 @@ export default function Settings() {
 
   return (
     <>
-      <PageMeta title="Settings | Lapina Bakes Admin" description="Configure application settings" />
+      <PageMeta title="Settings | Lapina Bakers Admin" description="Configure application settings" />
       <PageBreadcrumb pageTitle="Settings" />
       <div className="space-y-8">
         <ComponentCard title="Settings">

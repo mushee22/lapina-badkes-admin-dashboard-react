@@ -431,7 +431,7 @@ export default function OrderDetails() {
   if (isLoading) {
     return (
       <>
-        <PageMeta title="Order Details | Lapina Bakes Admin" description="Order details" />
+        <PageMeta title="Order Details | Lapina Bakers Admin" description="Order details" />
         <PageBreadcrumb pageTitle="Order Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -445,7 +445,7 @@ export default function OrderDetails() {
   if (!order) {
     return (
       <>
-        <PageMeta title="Order Details | Lapina Bakes Admin" description="Order details" />
+        <PageMeta title="Order Details | Lapina Bakers Admin" description="Order details" />
         <PageBreadcrumb pageTitle="Order Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -463,7 +463,7 @@ export default function OrderDetails() {
 
   return (
     <>
-      <PageMeta title={`Order ${order.order_number} | Lapina Bakes Admin`} description="Order details" />
+      <PageMeta title={`Order ${order.order_number} | Lapina Bakers Admin`} description="Order details" />
       <PageBreadcrumb pageTitle="Order Details" />
       <div className="space-y-6">
         <div className="flex">

@@ -5,7 +5,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 export default function OrdersInvoice() {
   return (
     <>
-      <PageMeta title="Orders Invoice | Lapina Bakes Admin" description="Generate and view order invoices" />
+      <PageMeta title="Orders Invoice | Lapina Bakers Admin" description="Generate and view order invoices" />
       <PageBreadcrumb pageTitle="Orders Invoice" />
       <div className="space-y-6">
         <ComponentCard title="Invoices">

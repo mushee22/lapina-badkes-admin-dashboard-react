@@ -194,7 +194,7 @@ export function TransactionsView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Transactions | Lapina Bakes Admin" description="View and manage transactions" />
+      <PageMeta title="Transactions | Lapina Bakers Admin" description="View and manage transactions" />
       <PageBreadcrumb pageTitle="Transactions" />
       <div className="space-y-6">
         <ComponentCard title="">

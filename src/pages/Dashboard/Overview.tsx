@@ -74,7 +74,7 @@ export default function Overview() {
 
   return (
     <>
-      <PageMeta title={`${getPageTitle()} | Lapina Bakes Admin`} description="Overview statistics" />
+      <PageMeta title={`${getPageTitle()} | Lapina Bakers Admin`} description="Overview statistics" />
       <PageBreadcrumb pageTitle={getPageTitle()} />
 
       <div className="space-y-6">

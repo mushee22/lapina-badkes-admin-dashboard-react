@@ -13,7 +13,7 @@ export default function PublicLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link to="/" className="text-xl font-bold text-gray-900 dark:text-white">
-              Lapina Bakes
+              Lapina Bakers
             </Link>
           </div>
           <div className="flex items-center gap-6">
@@ -36,7 +36,7 @@ export default function PublicLayout({
       <footer className="w-full bg-gray-50 dark:bg-gray-900 py-8 border-t border-gray-200 dark:border-gray-800 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            &copy; {new Date().getFullYear()} Lapina Bakes. All rights reserved.
+            &copy; {new Date().getFullYear()} Lapina Bakers. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <Link to="/privacy-policy" className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">

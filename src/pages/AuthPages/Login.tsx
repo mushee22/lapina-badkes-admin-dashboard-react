@@ -6,8 +6,8 @@ export default function Login() {
   return (
     <>
       <PageMeta
-        title="React.js Login | Lapina Bakes Admin - React Tailwind Admin Dashboard"
-        description="Login page using Lapina Bakes Admin React components"
+        title="React.js Login | Lapina Bakers Admin - React Tailwind Admin Dashboard"
+        description="Login page using Lapina Bakers Admin React components"
       />
       <AuthLayout>
         <SignInForm />

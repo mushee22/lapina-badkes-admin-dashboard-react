@@ -141,7 +141,7 @@ export function AdminUsersView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Admin Users | Lapina Bakes Admin" description="Manage admin users" />
+      <PageMeta title="Admin Users | Lapina Bakers Admin" description="Manage admin users" />
       <PageBreadcrumb pageTitle="Admin Users" />
 
       <div className="space-y-6">

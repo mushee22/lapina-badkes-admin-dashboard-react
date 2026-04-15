@@ -183,7 +183,7 @@ export default function DeliveryBoyDetails() {
   if (isLoading) {
     return (
       <>
-        <PageMeta title="Delivery Boy Details | Lapina Bakes Admin" description="Delivery boy details" />
+        <PageMeta title="Delivery Boy Details | Lapina Bakers Admin" description="Delivery boy details" />
         <PageBreadcrumb pageTitle="Delivery Boy Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -197,7 +197,7 @@ export default function DeliveryBoyDetails() {
   if (!deliveryBoy) {
     return (
       <>
-        <PageMeta title="Delivery Boy Details | Lapina Bakes Admin" description="Delivery boy details" />
+        <PageMeta title="Delivery Boy Details | Lapina Bakers Admin" description="Delivery boy details" />
         <PageBreadcrumb pageTitle="Delivery Boy Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -215,7 +215,7 @@ export default function DeliveryBoyDetails() {
 
   return (
     <>
-      <PageMeta title={`${deliveryBoy.name} | Lapina Bakes Admin`} description="Delivery boy details" />
+      <PageMeta title={`${deliveryBoy.name} | Lapina Bakers Admin`} description="Delivery boy details" />
       <PageBreadcrumb pageTitle="Delivery Boy Details" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">

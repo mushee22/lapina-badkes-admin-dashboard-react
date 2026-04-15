@@ -263,7 +263,7 @@ export function DeliveryBoysView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Delivery Boys | Lapina Bakes Admin" description="Manage delivery personnel" />
+      <PageMeta title="Delivery Boys | Lapina Bakers Admin" description="Manage delivery personnel" />
       <PageBreadcrumb pageTitle="Delivery Boys" />
 
       <div className="space-y-6">

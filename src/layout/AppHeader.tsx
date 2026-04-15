@@ -83,7 +83,7 @@ const AppHeader: React.FC = () => {
           
 
           <Link to="/" className="lg:hidden">
-            <h3>Lapina Bakes</h3>
+            <h3>Lapina Bakers</h3>
           </Link>
 
           <button

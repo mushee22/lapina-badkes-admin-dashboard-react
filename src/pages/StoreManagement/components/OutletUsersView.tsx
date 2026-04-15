@@ -65,7 +65,7 @@ export function OutletUsersView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Outlet Users | Lapina Bakes Admin" description="Manage Outlet Users" />
+      <PageMeta title="Outlet Users | Lapina Bakers Admin" description="Manage Outlet Users" />
       <PageBreadcrumb pageTitle="Outlet Users" />
       <div className="space-y-6">
         <ComponentCard title="">

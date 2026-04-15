@@ -22,7 +22,7 @@ export default function RoleCreate() {
 
     return (
         <>
-            <PageMeta title="Create Role | Lapina Bakes Admin" description="Create a new user role" />
+            <PageMeta title="Create Role | Lapina Bakers Admin" description="Create a new user role" />
             <PageBreadcrumb pageTitle="Create Role" />
             <RoleForm
                 title="Create New Role"

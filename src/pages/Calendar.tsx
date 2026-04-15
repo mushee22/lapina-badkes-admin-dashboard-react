@@ -116,8 +116,8 @@ const Calendar: React.FC = () => {
   return (
     <>
       <PageMeta
-        title="React.js Calendar Dashboard | Lapina Bakes Admin - Next.js Admin Dashboard Template"
-        description="This is React.js Calendar Dashboard page for Lapina Bakes Admin - React.js Tailwind CSS Admin Dashboard Template"
+        title="React.js Calendar Dashboard | Lapina Bakers Admin - Next.js Admin Dashboard Template"
+        description="This is React.js Calendar Dashboard page for Lapina Bakers Admin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <div className="rounded-2xl border  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="custom-calendar">

@@ -221,7 +221,7 @@ export default function StoreDetails() {
   if (isLoading) {
     return (
       <>
-        <PageMeta title="Outlet Details | Lapina Bakes Admin" description="Outlet details" />
+        <PageMeta title="Outlet Details | Lapina Bakers Admin" description="Outlet details" />
         <PageBreadcrumb pageTitle="Outlet Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -235,7 +235,7 @@ export default function StoreDetails() {
   if (!store) {
     return (
       <>
-        <PageMeta title="Outlet Details | Lapina Bakes Admin" description="Outlet details" />
+        <PageMeta title="Outlet Details | Lapina Bakers Admin" description="Outlet details" />
         <PageBreadcrumb pageTitle="Outlet Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -248,7 +248,7 @@ export default function StoreDetails() {
 
   return (
     <>
-      <PageMeta title={`${store.name} | Lapina Bakes Admin`} description="Outlet details" />
+      <PageMeta title={`${store.name} | Lapina Bakers Admin`} description="Outlet details" />
       <PageBreadcrumb pageTitle="Outlet Details" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">

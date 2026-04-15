@@ -99,7 +99,7 @@ export function ProductsView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Products | Lapina Bakes Admin" description="Manage products" />
+      <PageMeta title="Products | Lapina Bakers Admin" description="Manage products" />
       <PageBreadcrumb pageTitle="Products" />
       <div className="space-y-6">
         <ComponentCard title="">

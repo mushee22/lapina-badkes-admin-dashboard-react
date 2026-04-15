@@ -379,7 +379,7 @@ export function OrdersCardView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Pending Orders | Lapina Bakes Admin" description="View and manage pending orders" />
+      <PageMeta title="Pending Orders | Lapina Bakers Admin" description="View and manage pending orders" />
       <PageBreadcrumb pageTitle="Pending Orders" />
       <div className="space-y-6">
         <ComponentCard title="">

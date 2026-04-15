@@ -85,7 +85,7 @@ export function LocationsView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Store Locations | Lapina Bakes Admin" description="Manage store locations" />
+      <PageMeta title="Store Locations | Lapina Bakers Admin" description="Manage store locations" />
       <PageBreadcrumb pageTitle="Store Locations" />
       <div className="space-y-6">
         <ComponentCard title="Locations">

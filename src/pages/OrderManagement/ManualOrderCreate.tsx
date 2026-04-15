@@ -106,7 +106,7 @@ export default function ManualOrderCreate() {
 
   return (
     <>
-      <PageMeta title="Create Manual Order | Lapina Bakes Admin" description="Create a manual order" />
+      <PageMeta title="Create Manual Order | Lapina Bakers Admin" description="Create a manual order" />
       <PageBreadcrumb pageTitle="Create Manual Order" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">

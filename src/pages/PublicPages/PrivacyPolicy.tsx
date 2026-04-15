@@ -6,8 +6,8 @@ export default function PrivacyPolicy() {
     return (
         <>
             <PageMeta
-                title="Privacy Policy | Lapina Bakes"
-                description="Privacy Policy for Lapina Bakes"
+                title="Privacy Policy | Lapina Bakers"
+                description="Privacy Policy for Lapina Bakers"
             />
             <PublicLayout>
                 <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
@@ -21,7 +21,7 @@ export default function PrivacyPolicy() {
                         <section>
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">1. Introduction</h2>
                             <p>
-                                Welcome to Lapina Bakes. We respect your privacy and are committed to protecting your personal data.
+                                Welcome to Lapina Bakers. We respect your privacy and are committed to protecting your personal data.
                                 This privacy policy will inform you as to how we look after your personal data when you visit our
                                 website and tell you about your privacy rights and how the law protects you.
                             </p>

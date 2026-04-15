@@ -37,8 +37,8 @@ export default function Support() {
     return (
         <>
             <PageMeta
-                title="Support | Lapina Bakes"
-                description="Get support from Lapina Bakes team"
+                title="Support | Lapina Bakers"
+                description="Get support from Lapina Bakers team"
             />
             <PublicLayout>
                 <div className="max-w-2xl mx-auto">

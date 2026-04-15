@@ -23,7 +23,7 @@ export default function ProductCreate() {
 
   return (
     <>
-      <PageMeta title="Add Product | Lapina Bakes Admin" description="Create a new product" />
+      <PageMeta title="Add Product | Lapina Bakers Admin" description="Create a new product" />
       <PageBreadcrumb pageTitle="Add Product" />
       <div className="space-y-6">
         <ComponentCard title="Add Product">

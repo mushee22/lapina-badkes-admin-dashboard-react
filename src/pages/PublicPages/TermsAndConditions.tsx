@@ -6,8 +6,8 @@ export default function TermsAndConditions() {
     return (
         <>
             <PageMeta
-                title="Terms & Conditions | Lapina Bakes"
-                description="Terms and Conditions for Lapina Bakes"
+                title="Terms & Conditions | Lapina Bakers"
+                description="Terms and Conditions for Lapina Bakers"
             />
             <PublicLayout>
                 <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
@@ -21,7 +21,7 @@ export default function TermsAndConditions() {
                         <section>
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">1. Agreement to Terms</h2>
                             <p>
-                                By accessing or using Lapina Bakes, you agree to be bound by these Terms and Conditions.
+                                By accessing or using Lapina Bakers, you agree to be bound by these Terms and Conditions.
                                 If you disagree with any part of the terms, then you may not access the service.
                             </p>
                         </section>
@@ -30,7 +30,7 @@ export default function TermsAndConditions() {
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">2. Intellectual Property</h2>
                             <p>
                                 The Service and its original content, features and functionality are and will remain the exclusive
-                                property of Lapina Bakes and its licensors. The Service is protected by copyright, trademark, and other
+                                property of Lapina Bakers and its licensors. The Service is protected by copyright, trademark, and other
                                 laws of both the Country and foreign countries.
                             </p>
                         </section>
@@ -59,7 +59,7 @@ export default function TermsAndConditions() {
                         <section>
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">5. Limitation of Liability</h2>
                             <p>
-                                In no event shall Lapina Bakes, nor its directors, employees, partners, agents, suppliers, or affiliates,
+                                In no event shall Lapina Bakers, nor its directors, employees, partners, agents, suppliers, or affiliates,
                                 be liable for any indirect, incidental, special, consequential or punitive damages, including without
                                 limitation, loss of profits, data, use, goodwill, or other intangible losses.
                             </p>

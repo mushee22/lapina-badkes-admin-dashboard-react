@@ -93,7 +93,7 @@ export function CategoriesView(props: Props) {
 
   return (
     <>
-      <PageMeta title="Product Categories | Lapina Bakes Admin" description="Manage product categories" />
+      <PageMeta title="Product Categories | Lapina Bakers Admin" description="Manage product categories" />
       <PageBreadcrumb pageTitle="Product Categories" />
       <div className="space-y-6">
         <ComponentCard title="Categories">

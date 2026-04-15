@@ -195,7 +195,7 @@ export function OrdersView(props: Props) {
 
   return (
     <>
-      <PageMeta title="All Orders | Lapina Bakes Admin" description="View all orders" />
+      <PageMeta title="All Orders | Lapina Bakers Admin" description="View all orders" />
       <PageBreadcrumb pageTitle="All Orders" />
       <div className="space-y-6">
         <ComponentCard title="">

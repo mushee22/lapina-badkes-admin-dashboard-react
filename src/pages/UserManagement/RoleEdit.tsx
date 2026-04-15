@@ -41,7 +41,7 @@ export default function RoleEdit() {
 
     return (
         <>
-            <PageMeta title="Edit Role | Lapina Bakes Admin" description="Edit user role" />
+            <PageMeta title="Edit Role | Lapina Bakers Admin" description="Edit user role" />
             <PageBreadcrumb pageTitle="Edit Role" />
             <RoleForm
                 title={`Edit Role: ${role.name}`}

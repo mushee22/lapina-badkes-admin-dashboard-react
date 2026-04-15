@@ -7,8 +7,8 @@ export default function Avatars() {
   return (
     <>
       <PageMeta
-        title="React.js Avatars Dashboard | Lapina Bakes Admin - React.js Admin Dashboard Template"
-        description="This is React.js Avatars Dashboard page for Lapina Bakes Admin - React.js Tailwind CSS Admin Dashboard Template"
+        title="React.js Avatars Dashboard | Lapina Bakers Admin - React.js Admin Dashboard Template"
+        description="This is React.js Avatars Dashboard page for Lapina Bakers Admin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Avatars" />
       <div className="space-y-5 sm:space-y-6">

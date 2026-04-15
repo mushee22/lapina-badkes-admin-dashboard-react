@@ -29,7 +29,7 @@ export default function StoreEdit() {
   if (isLoadingStore) {
     return (
       <>
-        <PageMeta title="Edit Outlet | Lapina Bakes Admin" description="Edit Outlet details" />
+        <PageMeta title="Edit Outlet | Lapina Bakers Admin" description="Edit Outlet details" />
         <PageBreadcrumb pageTitle="Edit Outlet" />
         <div className="space-y-6">
           <ComponentCard title="Edit Outlet">
@@ -43,7 +43,7 @@ export default function StoreEdit() {
   if (!store) {
     return (
       <>
-        <PageMeta title="Edit Outlet | Lapina Bakes Admin" description="Edit Outlet details" />
+        <PageMeta title="Edit Outlet | Lapina Bakers Admin" description="Edit Outlet details" />
         <PageBreadcrumb pageTitle="Edit Outlet" />
         <div className="space-y-6">
           <ComponentCard title="Edit Outlet">
@@ -81,7 +81,7 @@ export default function StoreEdit() {
 
   return (
     <>
-      <PageMeta title={`Edit Outlet | Lapina Bakes Admin`} description="Edit Outlet details" />
+      <PageMeta title={`Edit Outlet | Lapina Bakers Admin`} description="Edit Outlet details" />
       <PageBreadcrumb pageTitle="Edit Outlet" />
       <div className="space-y-6">
         <ComponentCard title={`Edit Outlet: ${store.name}`}>

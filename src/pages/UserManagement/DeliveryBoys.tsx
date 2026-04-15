@@ -6,7 +6,7 @@ export default function DeliveryBoys() {
   const page = useDeliveryBoysPage();
   return (
     <>
-      <PageMeta title="Delivery Boys | Lapina Bakes Admin" description="Manage delivery personnel" />
+      <PageMeta title="Delivery Boys | Lapina Bakers Admin" description="Manage delivery personnel" />
       <DeliveryBoysView
         users={page.users}
         isLoading={page.isLoading}

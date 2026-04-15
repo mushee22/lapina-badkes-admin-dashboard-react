@@ -33,7 +33,7 @@ export default function ProductDetails() {
   if (isLoading) {
     return (
       <>
-        <PageMeta title="Product Details | Lapina Bakes Admin" description="Product details" />
+        <PageMeta title="Product Details | Lapina Bakers Admin" description="Product details" />
         <PageBreadcrumb pageTitle="Product Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -47,7 +47,7 @@ export default function ProductDetails() {
   if (!product) {
     return (
       <>
-        <PageMeta title="Product Details | Lapina Bakes Admin" description="Product details" />
+        <PageMeta title="Product Details | Lapina Bakers Admin" description="Product details" />
         <PageBreadcrumb pageTitle="Product Details" />
         <div className="space-y-6">
           <ComponentCard title="">
@@ -65,7 +65,7 @@ export default function ProductDetails() {
 
   return (
     <>
-      <PageMeta title={`Product ${product.name} | Lapina Bakes Admin`} description="Product details" />
+      <PageMeta title={`Product ${product.name} | Lapina Bakers Admin`} description="Product details" />
       <PageBreadcrumb pageTitle="Product Details" />
       <div className="space-y-6">
         <div className="flex items-center justify-between">

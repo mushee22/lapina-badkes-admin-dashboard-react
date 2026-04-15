@@ -25,7 +25,7 @@ export default function StoreCreate() {
 
   return (
     <>
-      <PageMeta title="Add Outlet | Lapina Bakes Admin" description="Create a new outlet" />
+      <PageMeta title="Add Outlet | Lapina Bakers Admin" description="Create a new outlet" />
       <PageBreadcrumb pageTitle="Add Outlet" />
       <div className="space-y-6">
         <ComponentCard title="Add Outlet">

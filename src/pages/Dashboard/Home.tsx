@@ -49,8 +49,8 @@ export default function Home() {
   return (
     <>
       <PageMeta
-        title="Lapina Bakes Admin - Dashboard"
-        description="This is Dashboard page for Lapina Bakes Admin"
+        title="Lapina Bakers Admin - Dashboard"
+        description="This is Dashboard page for Lapina Bakers Admin"
       />
       
       {/* Filters */}

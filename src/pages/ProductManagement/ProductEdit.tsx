@@ -28,7 +28,7 @@ export default function ProductEdit() {
   if (isLoadingProduct) {
     return (
       <>
-        <PageMeta title="Edit Product | Lapina Bakes Admin" description="Edit product details" />
+        <PageMeta title="Edit Product | Lapina Bakers Admin" description="Edit product details" />
         <PageBreadcrumb pageTitle="Edit Product" />
         <div className="space-y-6">
           <ComponentCard title="Edit Product">
@@ -42,7 +42,7 @@ export default function ProductEdit() {
   if (!product) {
     return (
       <>
-        <PageMeta title="Edit Product | Lapina Bakes Admin" description="Edit product details" />
+        <PageMeta title="Edit Product | Lapina Bakers Admin" description="Edit product details" />
         <PageBreadcrumb pageTitle="Edit Product" />
         <div className="space-y-6">
           <ComponentCard title="Edit Product">
@@ -67,7 +67,7 @@ export default function ProductEdit() {
 
   return (
     <>
-      <PageMeta title={`Edit Product | Lapina Bakes Admin`} description="Edit product details" />
+      <PageMeta title={`Edit Product | Lapina Bakers Admin`} description="Edit product details" />
       <PageBreadcrumb pageTitle="Edit Product" />
       <div className="space-y-6">
         <ComponentCard title={`Edit Product: ${product.name}`}>
