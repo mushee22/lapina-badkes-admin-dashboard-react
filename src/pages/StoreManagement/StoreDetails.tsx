@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router";
-import { useStoreQuery, useUpdateStoreMutation, useDeleteStoreMutation, useSetStoreDiscountMutation, useDeactivateStoreDiscountMutation } from "../../hooks/queries/stores";
+import { useStoreQuery, useUpdateStoreStatusMutation, useDeleteStoreMutation, useSetStoreDiscountMutation, useDeactivateStoreDiscountMutation } from "../../hooks/queries/stores";
 import { useOrdersPaginatedQuery } from "../../hooks/queries/orders";
 import { useCreateStoreTransactionMutation } from "../../hooks/queries/transactions";
 import { useAdminUsersQuery } from "../../hooks/queries/adminUsers";
@@ -86,7 +86,7 @@ export default function StoreDetails() {
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
   const { isOpen: isStorePaymentOpen, openModal: openStorePaymentModal, closeModal: closeStorePaymentModal } = useModal();
 
-  const updateStoreMutation = useUpdateStoreMutation();
+  const updateStoreStatusMutation = useUpdateStoreStatusMutation();
   const deleteStoreMutation = useDeleteStoreMutation();
   const setDiscountMutation = useSetStoreDiscountMutation();
   const deactivateDiscountMutation = useDeactivateStoreDiscountMutation();
@@ -139,9 +139,9 @@ export default function StoreDetails() {
 
   const onToggleActive = () => {
     if (id && store) {
-      updateStoreMutation.mutate({
+      updateStoreStatusMutation.mutate({
         id: Number(id),
-        data: { is_active: !store.is_active },
+        data: { status: store.is_active ? "inactive" : "active" },
       });
     }
   };
@@ -372,7 +372,7 @@ export default function StoreDetails() {
                       label={store.is_active ? "Active" : "Inactive"}
                       checked={store.is_active}
                       onChange={onToggleActive}
-                      disabled={updateStoreMutation.isPending}
+                      disabled={updateStoreStatusMutation.isPending}
                     />
                   </div>
                 </div>
