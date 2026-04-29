@@ -66,17 +66,17 @@ export const StoreSchema = z.object({
 export const CreateStoreSchema = z.object({
   store_name: z.string().min(1, "Store name is required"),
   store_description: z.string().nullable().optional(),
-  store_phone: z.string().nullable().optional(),
+  store_phone: z.string().min(1, "Store phone is required"),
   store_address: z.string().nullable().optional(),
   store_email: z.string().nullable().optional(),
   gst_number: z.string().nullable().optional(),
   store_website: z.string().nullable().optional(),
   location_id: z.number().nullable().optional(),
   route_id: z.number().nullable().optional(),
-  owner_name: z.string().nullable().optional(),
+  owner_name: z.string().min(1, "Owner name is required"),
   owner_email: z.string().nullable().optional(),
-  owner_phone: z.string().nullable().optional(),
-  owner_password: z.string().nullable().optional(),
+  owner_phone: z.string().min(1, "Owner phone is required"),
+  owner_password: z.string().min(1, "Owner password is required"),
   is_active: z.boolean(),
   discount_percentage: z.number().nullable().optional(),
   discount_start_date: z.string().nullable().optional(),
@@ -85,7 +85,13 @@ export const CreateStoreSchema = z.object({
   discount_is_active: z.boolean().nullable().optional(),
   settings: StoreSettingsSchema.nullable().optional(),
 });
-export const UpdateStoreSchema = CreateStoreSchema.partial();
+export const UpdateStoreSchema = CreateStoreSchema.partial().extend({
+  store_name: z.string().min(1, "Store name is required"),
+  store_phone: z.string().min(1, "Store phone is required"),
+  owner_name: z.string().min(1, "Owner name is required"),
+  owner_phone: z.string().min(1, "Owner phone is required"),
+  owner_password: z.string().min(1, "Owner password is required"),
+});
 
 export const UpdateStoreStatusSchema = z.object({
   status: z.string(),

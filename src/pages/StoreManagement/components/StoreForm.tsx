@@ -134,7 +134,14 @@ export default function StoreForm({
     Object.keys(cleaned).forEach((key) => {
       const value = cleaned[key as keyof typeof cleaned];
       if (value === "" || value === null) {
-        if (key === "store_name" || key === "is_active") {
+        if (
+          key === "store_name" ||
+          key === "store_phone" ||
+          key === "owner_name" ||
+          key === "owner_phone" ||
+          key === "owner_password" ||
+          key === "is_active"
+        ) {
           // Don't remove required fields
           return;
         }
@@ -231,7 +238,9 @@ export default function StoreForm({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="store_phone">Phone</Label>
+            <Label htmlFor="store_phone">
+              Phone <span className="text-error-500">*</span>
+            </Label>
             <InputField
               id="store_phone"
               placeholder="+1234567890"
@@ -293,7 +302,9 @@ export default function StoreForm({
         <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Owner Information</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <Label htmlFor="owner_name">Owner Name</Label>
+            <Label htmlFor="owner_name">
+              Owner Name <span className="text-error-500">*</span>
+            </Label>
             <InputField
               id="owner_name"
               placeholder="Owner name"
@@ -314,7 +325,9 @@ export default function StoreForm({
             />
           </div>
           <div>
-            <Label htmlFor="owner_phone">Owner Phone</Label>
+            <Label htmlFor="owner_phone">
+              Owner Phone <span className="text-error-500">*</span>
+            </Label>
             <InputField
               id="owner_phone"
               placeholder="+1234567890"
@@ -325,7 +338,9 @@ export default function StoreForm({
           </div>
         </div>
         <div>
-          <Label htmlFor="owner_password">Owner Password</Label>
+          <Label htmlFor="owner_password">
+            Owner Password <span className="text-error-500">*</span>
+          </Label>
           <InputField
             id="owner_password"
             type="password"
