@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Order, UpdateOrderInput, CreateManualOrderInput } from "../../types/order";
+import type { Order, UpdateOrderInput, CreateManualOrderInput, UpdateInvoiceInput } from "../../types/order";
 import {
   listOrdersPaginated,
   getOrder,
@@ -20,6 +20,8 @@ import {
   getOrderReturns,
   cancelOrderReturn,
   processOrderReturn,
+  updateInvoice,
+  listInvoices,
   type OrderListParams,
   type UpdateOrderItemsInput,
   type BulkStatusUpdateItem,
@@ -322,5 +324,43 @@ export function useProcessOrderReturnMutation() {
       const message = error.message || "Failed to process return";
       showToast("error", message, "Error");
     },
+  });
+}
+
+export function useUpdateInvoiceMutation() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  return useMutation<void, Error, { id: number; orderId: number; data: UpdateInvoiceInput }>({
+    mutationFn: ({ id, data }) => updateInvoice(id, data),
+    onSuccess: (_, { orderId }) => {
+      qc.invalidateQueries({ queryKey: ordersKey });
+      qc.invalidateQueries({ queryKey: [...ordersKey, orderId] });
+      showToast("success", "Invoice updated successfully", "Success");
+    },
+    onError: (error) => {
+      const message = error.message || "Failed to update invoice";
+      showToast("error", message, "Error");
+    },
+  });
+}
+
+export function useInvoicesPaginatedQuery(params?: { page?: number; per_page?: number; search?: string }) {
+  const { showToast } = useToast();
+  const effectiveParams = params ?? {};
+  return useQuery<PaginatedResponse<import("../../types/order").Invoice>>({
+    queryKey: ["invoices", "paginated", effectiveParams],
+    queryFn: async () => {
+      try {
+        return await listInvoices(effectiveParams);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load invoices";
+        showToast("error", message, "Error");
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }

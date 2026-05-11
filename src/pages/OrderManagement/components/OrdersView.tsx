@@ -20,6 +20,9 @@ import Pagination from "../../../components/common/Pagination";
 import { useUpdateOrderStatusMutation } from "../../../hooks/queries/orders";
 import { useToast } from "../../../context/ToastContext";
 import { exportOrders } from "../../../services/orders";
+import { exportOrderProductQuantities } from "../../../services/reports";
+import { useModal } from "../../../hooks/useModal";
+import ProductQuantityExportModal from "./ProductQuantityExportModal";
 
 const getStatusBadgeColor = (status: string | undefined): "warning" | "info" | "success" | "error" | "light" => {
   if (!status) return "light";
@@ -88,6 +91,8 @@ export function OrdersView(props: Props) {
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
   const [bulkStatus, setBulkStatus] = useState<string>("");
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isExportingProducts, setIsExportingProducts] = useState(false);
+  const { isOpen: isExportModalOpen, openModal: openExportModal, closeModal: closeExportModal } = useModal();
 
   const {
     orders,
@@ -193,6 +198,32 @@ export function OrdersView(props: Props) {
     }
   };
 
+  const handleExportProductQuantities = async (params: {
+    store_id?: number;
+    route_id?: number;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    setIsExportingProducts(true);
+    try {
+      const blob = await exportOrderProductQuantities(params);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `product-quantities-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showToast("success", "Product quantities exported successfully", "Success");
+      closeExportModal();
+    } catch (error) {
+      showToast("error", error instanceof Error ? error.message : "Failed to export product quantities", "Error");
+    } finally {
+      setIsExportingProducts(false);
+    }
+  };
+
   return (
     <>
       <PageMeta title="All Orders | Lapina Bakers Admin" description="View all orders" />
@@ -203,7 +234,15 @@ export function OrdersView(props: Props) {
             <p className="text-sm text-gray-600 dark:text-gray-400">View and manage all orders here.</p>
             <div className="flex items-center gap-2">
               <Button size="sm" onClick={handleExport} startIcon={<DownloadIcon className="w-4 h-4" />} variant="outline">
-                Export
+                Export Orders
+              </Button>
+              <Button
+                size="sm"
+                onClick={openExportModal}
+                startIcon={<DownloadIcon className="w-4 h-4" />}
+                variant="outline"
+              >
+                Export Product Quantities for Production
               </Button>
               <Button size="sm" onClick={() => navigate("/orders/manual-create")} startIcon={<PlusIcon className="w-4 h-4" />}>
                 Create Manual Order
@@ -479,6 +518,21 @@ export function OrdersView(props: Props) {
           </div>
         </ComponentCard>
       </div>
+
+      <ProductQuantityExportModal
+        isOpen={isExportModalOpen}
+        onClose={closeExportModal}
+        onExport={handleExportProductQuantities}
+        stores={stores}
+        locations={locations}
+        isExporting={isExportingProducts}
+        initialFilters={{
+          storeId,
+          locationId,
+          dateFrom,
+          dateTo,
+        }}
+      />
     </>
   );
 }

@@ -98,7 +98,7 @@ export default function InvoiceModal({ isOpen, closeModal, invoice }: InvoiceMod
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                    {invoice.items.map((item, index) => (
+                                    {invoice.items.map((item: any, index: number) => (
                                         <tr key={index} className="hover:bg-gray-50/30 dark:hover:bg-white/[0.01]">
                                             <td className="px-5 py-4 text-gray-900 dark:text-white font-medium">{item.product_name}</td>
                                             <td className="px-5 py-4 text-right text-gray-600 dark:text-gray-400">{item.quantity}</td>

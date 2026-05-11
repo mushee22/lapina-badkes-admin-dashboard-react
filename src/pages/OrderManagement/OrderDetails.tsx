@@ -27,6 +27,7 @@ import type { UpdateOrderItemsInput } from "../../services/orders";
 
 import { DownloadIcon, TrashBinIcon, FileIcon, DollarLineIcon, PencilIcon, PlusIcon, EyeIcon } from "../../icons";
 import InvoiceModal from "./components/InvoiceModal";
+import EditInvoiceModal from "./components/EditInvoiceModal";
 import OrderAuditLog from "./components/OrderAuditLog";
 import ReturnOrderModal from "./components/ReturnOrderModal";
 import OrderReturns from "./components/OrderReturns";
@@ -97,6 +98,7 @@ export default function OrderDetails() {
   const { isOpen: isDeleteTransactionOpen, openModal: openDeleteTransactionModal, closeModal: closeDeleteTransactionModal } = useModal();
   const { isOpen: isEditItemsOpen, openModal: openEditItemsModal, closeModal: closeEditItemsModal } = useModal();
   const { isOpen: isInvoiceOpen, openModal: openInvoiceModal, closeModal: closeInvoiceModal } = useModal();
+  const { isOpen: isEditInvoiceOpen, openModal: openEditInvoiceModal, closeModal: closeEditInvoiceModal } = useModal();
   const { isOpen: isReturnOpen, openModal: openReturnModal, closeModal: closeReturnModal } = useModal();
   const [selectedTransaction, setSelectedTransaction] = useState<import("../../services/transactions").Transaction | null>(null);
 
@@ -357,7 +359,7 @@ export default function OrderDetails() {
     if (!order?.order_items) return;
     // Only existing items for editing quantity or removal
     setEditingItems(
-      order.order_items.map(item => ({
+      order.order_items.map((item: any) => ({
         id: item.id,
         product_id: item.product_id,
         quantity: item.quantity,
@@ -532,6 +534,18 @@ export default function OrderDetails() {
               >
                 <span className="hidden sm:inline">View Invoice</span>
                 <span className="sm:hidden">View</span>
+              </Button>
+            )}
+            {order.has_invoice && order.invoice && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openEditInvoiceModal}
+                startIcon={<PencilIcon className="w-4 h-4" />}
+                className="w-full"
+              >
+                <span className="hidden sm:inline">Edit Invoice</span>
+                <span className="sm:hidden">Edit Inv</span>
               </Button>
             )}
 
@@ -795,7 +809,7 @@ export default function OrderDetails() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {order.order_items.map((item) => (
+                        {order.order_items.map((item: any) => (
                           <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
@@ -1033,7 +1047,7 @@ export default function OrderDetails() {
                         placeholder="Enter order notes..."
                         rows={4}
                         value={field.value || ""}
-                        onChange={(value) => field.onChange(value)}
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     )}
                   />
@@ -1112,7 +1126,7 @@ export default function OrderDetails() {
                         placeholder="Enter order notes..."
                         rows={4}
                         value={field.value || ""}
-                        onChange={(value) => field.onChange(value)}
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     )}
                   />
@@ -1194,7 +1208,7 @@ export default function OrderDetails() {
                         placeholder="Enter notes for this assignment..."
                         rows={4}
                         value={field.value || ""}
-                        onChange={(value) => field.onChange(value)}
+                        onChange={(e) => field.onChange(e.target.value)}
                         error={!!assignErrors.notes}
                         hint={assignErrors.notes?.message}
                       />
@@ -1391,7 +1405,7 @@ export default function OrderDetails() {
                         placeholder="Enter payment notes..."
                         rows={3}
                         value={field.value || ""}
-                        onChange={(value) => field.onChange(value || null)}
+                        onChange={(e) => field.onChange(e.target.value || null)}
                         error={!!paymentErrors.payment_note}
                         hint={paymentErrors.payment_note?.message}
                       />
@@ -1584,7 +1598,7 @@ export default function OrderDetails() {
                         placeholder="Enter payment notes..."
                         rows={3}
                         value={field.value || ""}
-                        onChange={(value) => field.onChange(value || null)}
+                        onChange={(e) => field.onChange(e.target.value || null)}
                         error={!!updateTransactionErrors.payment_note}
                         hint={updateTransactionErrors.payment_note?.message}
                       />
@@ -1635,7 +1649,7 @@ export default function OrderDetails() {
                   <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Existing Items</h4>
                   <div className="space-y-3">
                     {editingItems.map((item, index) => {
-                      const orderItem = order?.order_items?.find(oi => oi.id === item.id);
+                      const orderItem = order?.order_items?.find((oi: any) => oi.id === item.id);
                       return (
                         <div key={`existing-${index}`} className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                           <div>
@@ -1750,6 +1764,14 @@ export default function OrderDetails() {
           </div>
         </Modal >
       </div >
+      {order?.invoice && (
+        <EditInvoiceModal
+          isOpen={isEditInvoiceOpen}
+          onClose={closeEditInvoiceModal}
+          invoice={order.invoice}
+          orderId={order.id}
+        />
+      )}
     </>
   );
 }

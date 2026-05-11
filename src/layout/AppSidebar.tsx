@@ -12,6 +12,7 @@ import {
   ChevronDownIcon,
   HorizontaLDots,
   BoxIcon,
+  FileIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -45,6 +46,11 @@ const navItems: NavItem[] = [
       { name: "Pending Orders", path: "/orders/pending" },
     ],
   },
+  {
+    icon: <FileIcon />,
+    name: "Invoices",
+    path: "/invoices",
+  },
 
   {
     icon: <BoxIcon />,
@@ -77,9 +83,10 @@ const navItems: NavItem[] = [
     icon: <DocsIcon />,
     name: "Reports",
     subItems: [
-      { name: "Orders Invoice", path: "/reports/invoices" },
+      // { name: "Orders Invoice", path: "/reports/invoices" },
       { name: "User Report", path: "/reports/users" },
-      { name: "Outlet Wise Report", path: "/reports/stores" },
+      // { name: "Outlet Wise Report", path: "/reports/stores" },
+      // { name: "Product Quantities", path: "/reports/outlet-product-quantities" },
     ],
   },
 ];

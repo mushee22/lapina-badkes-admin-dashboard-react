@@ -11,6 +11,7 @@ import AdminUsers from "./pages/UserManagement/AdminUsers";
 import DeliveryBoys from "./pages/UserManagement/DeliveryBoys";
 import AllOrders from "./pages/OrderManagement/AllOrders";
 import PendingOrders from "./pages/OrderManagement/PendingOrders";
+import Invoices from "./pages/InvoiceManagement/Invoices";
 import Locations from "./pages/StoreManagement/Locations";
 import Stores from "./pages/StoreManagement/Stores";
 import Settings from "./pages/Settings";
@@ -18,6 +19,7 @@ import Transactions from "./pages/Transactions";
 import OrdersInvoice from "./pages/Reports/OrdersInvoice";
 import UserReport from "./pages/Reports/UserReport";
 import StoreWiseReport from "./pages/Reports/StoreWiseReport";
+import OutletProductQuantities from "./pages/Reports/OutletProductQuantities";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Categories from "./pages/ProductManagement/Categories.tsx";
 import Products from "./pages/ProductManagement/Products.tsx";
@@ -62,6 +64,7 @@ export default function App() {
                   <Route path="/orders/:id" element={<OrderDetails />} />
                   <Route path="/orders/all" element={<AllOrders />} />
                   <Route path="/orders/pending" element={<PendingOrders />} />
+                  <Route path="/invoices" element={<Invoices />} />
                   <Route path="/products/categories" element={<Categories />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/products/new" element={<ProductCreate />} />
@@ -79,6 +82,7 @@ export default function App() {
                   <Route path="/reports/invoices" element={<OrdersInvoice />} />
                   <Route path="/reports/users" element={<UserReport />} />
                   <Route path="/reports/stores" element={<StoreWiseReport />} />
+                  <Route path="/reports/outlet-product-quantities" element={<OutletProductQuantities />} />
                   <Route path="/overview/store/:storeId" element={<Overview />} />
                   <Route path="/overview/delivery-boy/:deliveryBoyId" element={<Overview />} />
                   <Route path="/routes" element={<RoutesPage />} />

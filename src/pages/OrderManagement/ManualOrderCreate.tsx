@@ -49,7 +49,7 @@ export default function ManualOrderCreate() {
   const watchedCustomerId = watch("customer_id");
   
   // Find selected store owner and auto-fill phone if available
-  const selectedStoreOwner = storeOwners.find(owner => owner.id === watchedCustomerId);
+  const selectedStoreOwner = storeOwners.find((owner: any) => owner.id === watchedCustomerId);
   
   // Auto-fill phone number when store owner is selected
   React.useEffect(() => {
@@ -377,7 +377,7 @@ export default function ManualOrderCreate() {
                     placeholder="Enter order notes..."
                     rows={4}
                     value={field.value || ""}
-                    onChange={(value) => field.onChange(value || null)}
+                    onChange={(e) => field.onChange(e.target.value || null)}
                     error={!!errors.notes}
                     hint={errors.notes?.message}
                   />

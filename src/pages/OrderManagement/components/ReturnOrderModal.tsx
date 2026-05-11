@@ -6,7 +6,7 @@ import Button from "../../../components/ui/button/Button";
 import InputField from "../../../components/form/input/InputField";
 import Label from "../../../components/form/Label";
 import { ReturnOrderSchema } from "../../../types/order";
-import type { Order, ReturnOrderInput } from "../../../types/order";
+import type { Order, OrderItem, ReturnOrderInput } from "../../../types/order";
 
 interface ReturnOrderModalProps {
     isOpen: boolean;
@@ -149,7 +149,7 @@ export default function ReturnOrderModal({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {order.order_items.map((orderItem) => {
+                                    {order.order_items.map((orderItem: OrderItem) => {
                                         const isSelected = selectedItemIds.includes(orderItem.id);
                                         const formIndex = getFormItemIndex(orderItem.id);
 

@@ -211,8 +211,7 @@ export function TransactionsView(props: Props) {
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Outlet</label>
               <Autocomplete
                 options={[
-                  { value: "", label: "All Outlets" },
-                  ...stores.map((store) => ({ value: String(store.id), label: store.name }))
+                  ...stores.map((store: any) => ({ value: String(store.id), label: store.name }))
                 ]}
                 placeholder="All Outlets"
                 value={storeId ? String(storeId) : ""}
@@ -348,7 +347,7 @@ export function TransactionsView(props: Props) {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    transactions.map((transaction) => (
+                    transactions.map((transaction: any) => (
                       <TableRow key={transaction.id}>
                         <TableCell className="px-3 py-4 sm:px-5">
                           <div className="flex flex-col gap-1">
@@ -399,7 +398,7 @@ export function TransactionsView(props: Props) {
                               }
                               size="sm"
                             >
-                              {transaction.payment_status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                              {transaction.payment_status.replace("_", " ").replace(/\b\w/g, (l: any) => l.toUpperCase())}
                             </Badge>
                           )}
                         </TableCell>
@@ -582,7 +581,7 @@ export function TransactionsView(props: Props) {
                   control={control}
                   render={({ field }) => (
                     <Autocomplete
-                      options={allUsers.map((user) => ({
+                      options={allUsers.map((user: any) => ({
                         value: String(user.id),
                         label: user.name,
                       }))}
@@ -686,7 +685,7 @@ export function TransactionsView(props: Props) {
                     <Autocomplete
                       options={[
                         { value: "", label: "Select Outlet" },
-                        ...stores.map((store) => ({ value: String(store.id), label: store.name }))
+                        ...stores.map((store: any) => ({ value: String(store.id), label: store.name }))
                       ]}
                       placeholder="Select Outlet"
                       value={field.value ? String(field.value) : ""}
@@ -772,7 +771,7 @@ export function TransactionsView(props: Props) {
                     <Autocomplete
                       options={[
                         { value: "", label: "Select User" },
-                        ...allUsers.map((user) => ({ value: String(user.id), label: user.name }))
+                        ...allUsers.map((user: any) => ({ value: String(user.id), label: user.name }))
                       ]}
                       placeholder="Select User"
                       value={field.value ? String(field.value) : ""}

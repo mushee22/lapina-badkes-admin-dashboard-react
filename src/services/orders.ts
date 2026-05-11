@@ -1,6 +1,6 @@
 import * as http from "./http";
 import { API_BASE_URL, getAuthToken } from "../config/api";
-import type { Order, UpdateOrderInput } from "../types/order";
+import type { Order, UpdateOrderInput, UpdateInvoiceInput } from "../types/order";
 import type { PaginatedResponse } from "../types/pagination";
 
 export interface OrderListParams {
@@ -77,6 +77,26 @@ export async function updateOrder(id: number, input: UpdateOrderInput): Promise<
 
 export async function generateOrderInvoice(id: number): Promise<void> {
   await http.post(`/orders/${id}/generate-invoice`, {});
+}
+
+export async function updateInvoice(id: number, input: UpdateInvoiceInput): Promise<void> {
+  await http.put(`/invoices/${id}`, input);
+}
+
+export async function listInvoices(params?: { page?: number; per_page?: number; search?: string }): Promise<PaginatedResponse<import("../types/order").Invoice>> {
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set("page", String(params.page));
+  if (params?.per_page !== undefined) qs.set("per_page", String(params.per_page));
+  if (params?.search) qs.set("search", params.search);
+  const query = qs.toString();
+  const path = query ? `/invoices?${query}` : "/invoices";
+  const response = await http.get<import("../types/order").Invoice[] | PaginatedResponse<import("../types/order").Invoice>>(path);
+
+  if (Array.isArray(response)) {
+    return { data: response };
+  }
+
+  return response;
 }
 
 export async function downloadOrderInvoice(invoiceId: number): Promise<Blob> {

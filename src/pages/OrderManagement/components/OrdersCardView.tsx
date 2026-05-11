@@ -206,13 +206,13 @@ export function OrdersCardView(props: Props) {
   const getNextStatus = (currentStatus: string | undefined): string | null => {
     if (!currentStatus) return null;
     const transitions = getAllowedStatusTransitions(currentStatus);
-    const nextTransition = transitions.find((t) => t.value !== "cancelled");
+    const nextTransition = transitions.find((t: any) => t.value !== "cancelled");
     return nextTransition?.value || null;
   };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedOrderIds(orders.map((order) => order.id));
+      setSelectedOrderIds(orders.map((order: any) => order.id));
     } else {
       setSelectedOrderIds([]);
     }
@@ -222,7 +222,7 @@ export function OrdersCardView(props: Props) {
     if (checked) {
       setSelectedOrderIds((prev) => [...prev, orderId]);
     } else {
-      setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId));
+      setSelectedOrderIds((prev) => prev.filter((id: any) => id !== orderId));
     }
   };
 
@@ -234,7 +234,7 @@ export function OrdersCardView(props: Props) {
     }
 
     const ordersToUpdate = changeAll
-      ? orders.map((order) => order.id)
+      ? orders.map((order: any) => order.id)
       : selectedOrderIds;
 
     if (ordersToUpdate.length === 0) {
@@ -242,7 +242,7 @@ export function OrdersCardView(props: Props) {
       return;
     }
 
-    const items = ordersToUpdate.map((id) => ({ order_id: id, status: nextStatus }));
+    const items = ordersToUpdate.map((id: any) => ({ order_id: id, status: nextStatus }));
 
     bulkUpdateStatusMutation.mutate(items, {
       onSuccess: (result) => {
@@ -255,7 +255,7 @@ export function OrdersCardView(props: Props) {
           );
         }
         if (result.error_count > 0) {
-          const details = result.errors.map((e) => `Order #${e.order_id}: ${e.message}`).join("\n");
+          const details = result.errors.map((e: any) => `Order #${e.order_id}: ${e.message}`).join("\n");
           showToast(
             "error",
             `${result.error_count} order(s) failed to update:\n${details}`,
@@ -402,7 +402,7 @@ export function OrdersCardView(props: Props) {
                 <Autocomplete
                   options={[
                     { value: "", label: "All Locations" },
-                    ...locations.map((location) => ({ value: String(location.id), label: location.name }))
+                    ...locations.map((location: any) => ({ value: String(location.id), label: location.name }))
                   ]}
                   placeholder="Filter by Location"
                   value={locationId ? String(locationId) : ""}
@@ -413,7 +413,7 @@ export function OrdersCardView(props: Props) {
                 <Autocomplete
                   options={[
                     { value: "", label: "All Stores" },
-                    ...stores.map((store) => ({ value: String(store.id), label: store.name }))
+                    ...stores.map((store: any) => ({ value: String(store.id), label: store.name }))
                   ]}
                   placeholder="Filter by Store"
                   value={storeId ? String(storeId) : ""}
@@ -424,7 +424,7 @@ export function OrdersCardView(props: Props) {
                 <Autocomplete
                   options={[
                     { value: "", label: "All Delivery Boys" },
-                    ...deliveryBoys.map((deliveryBoy) => ({ value: String(deliveryBoy.id), label: deliveryBoy.name }))
+                    ...deliveryBoys.map((deliveryBoy: any) => ({ value: String(deliveryBoy.id), label: deliveryBoy.name }))
                   ]}
                   placeholder="Filter by Delivery Boy"
                   value={deliveryBoyId ? String(deliveryBoyId) : ""}
@@ -437,7 +437,7 @@ export function OrdersCardView(props: Props) {
           {/* Status Tabs */}
           <div className="mb-4">
             <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900 overflow-x-auto">
-              {statusTabs.map((tab) => {
+              {statusTabs.map((tab: any) => {
                 const isActive = status === tab.value;
                 const count = isLoadingOverview ? 0 : getStatusCount(tab.value, overview);
                 const getTabColor = () => {
@@ -522,7 +522,7 @@ export function OrdersCardView(props: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {orders.map((order) => {
+              {orders.map((order: any) => {
                 const statusCount = getStatusCount(order.status, overview);
                 return (
                   <div
@@ -597,7 +597,7 @@ export function OrdersCardView(props: Props) {
                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Quick Actions:</span>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            {allowedTransitions.map((transition) => {
+                            {allowedTransitions.map((transition: any) => {
                               const getButtonClasses = () => {
                                 if (transition.color === "success") {
                                   return "bg-success-50 text-success-700 hover:bg-success-100 border-success-200 dark:bg-success-900/20 dark:text-success-300 dark:hover:bg-success-900/30 dark:border-success-800";
@@ -719,7 +719,7 @@ export function OrdersCardView(props: Props) {
                       placeholder="Enter notes for this status update..."
                       rows={4}
                       value={field.value || ""}
-                      onChange={(value) => field.onChange(value)}
+                      onChange={(e) => field.onChange(e.target.value)}
                       error={!!statusErrors.notes}
                       hint={statusErrors.notes?.message}
                     />
@@ -756,7 +756,7 @@ export function OrdersCardView(props: Props) {
                   control={assignControl}
                   render={({ field }) => (
                     <Autocomplete
-                      options={deliveryBoys.map((boy) => ({
+                      options={deliveryBoys.map((boy: any) => ({
                         value: String(boy.id),
                         label: boy.name,
                       }))}
@@ -802,7 +802,7 @@ export function OrdersCardView(props: Props) {
                       placeholder="Enter notes for this assignment..."
                       rows={4}
                       value={field.value || ""}
-                      onChange={(value) => field.onChange(value)}
+                      onChange={(e) => field.onChange(e.target.value)}
                       error={!!assignErrors.notes}
                       hint={assignErrors.notes?.message}
                     />

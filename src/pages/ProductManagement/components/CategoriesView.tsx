@@ -141,7 +141,7 @@ export function CategoriesView(props: Props) {
                       <TableCell>{null}</TableCell>
                     </TableRow>
                   ) : Array.isArray(categories) && categories.length > 0 ? (
-                    categories.map((category) => (
+                    categories.map((category: any) => (
                       <TableRow key={category.id}>
                         <TableCell className="px-5 py-4 text-start">
                           <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">

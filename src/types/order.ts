@@ -112,12 +112,14 @@ export const InvoiceBillingDetailsSchema = z.object({
   customer_email: z.string().nullable().optional(),
   customer_phone: z.string().nullable().optional(),
   delivery_address: z.string().nullable().optional(),
+  customer_gst: z.string().nullable().optional(),
 });
 
 // Invoice Schema
-export const InvoiceSchema = z.object({
+export const InvoiceSchema: z.ZodType<any> = z.object({
   id: z.number(),
   invoice_number: z.string(),
+  formatted_invoice_number: z.string().nullable().optional(),
   invoice_date: z.string(),
   due_date: z.string().nullable().optional(),
   subtotal: z.number(),
@@ -125,17 +127,20 @@ export const InvoiceSchema = z.object({
   tax_amount: z.number(),
   total_amount: z.number(),
   status: z.string(),
+  status_label: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   billing_details: InvoiceBillingDetailsSchema.nullable().optional(),
   items: z.array(InvoiceItemSchema),
   pdf_path: z.string().nullable().optional(),
   is_overdue: z.boolean().optional(),
+  order_id: z.number().optional(),
+  order: z.lazy((): z.ZodType<any> => OrderSchema).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
 
 // Order Schema
-export const OrderSchema = z.object({
+export const OrderSchema: z.ZodType<any> = z.object({
   id: z.number(),
   user_id: z.number(),
   user: OrderUserSchema,
@@ -176,6 +181,17 @@ export const UpdateOrderSchema = z.object({
   discount_description: z.string().nullable().optional(),
 });
 
+export const UpdateInvoiceSchema = z.object({
+  invoice_number: z.string().min(1, "Invoice number is required"),
+  status: z.string().min(1, "Status is required"),
+  notes: z.string().nullable().optional(),
+  due_date: z.string().nullable().optional(),
+  subtotal: z.number(),
+  discount_amount: z.number(),
+  tax_amount: z.number(),
+  total_amount: z.number(),
+});
+
 export const ManualOrderItemSchema = z.object({
   product_id: z.number().min(1, "Product is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -198,6 +214,7 @@ export type Invoice = z.infer<typeof InvoiceSchema>;
 export type InvoiceItem = z.infer<typeof InvoiceItemSchema>;
 export type OrderItemProduct = z.infer<typeof OrderItemProductSchema>;
 export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>;
+export type UpdateInvoiceInput = z.infer<typeof UpdateInvoiceSchema>;
 export type ManualOrderItem = z.infer<typeof ManualOrderItemSchema>;
 export type CreateManualOrderInput = z.infer<typeof CreateManualOrderSchema>;
 
