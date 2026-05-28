@@ -137,10 +137,11 @@ export default function StoreForm({
         if (
           key === "store_name" ||
           key === "store_phone" ||
+          key === "store_address" ||
           key === "owner_name" ||
           key === "owner_phone" ||
-          key === "owner_password" ||
-          key === "is_active"
+          key === "is_active" ||
+          (!isEdit && key === "owner_password")
         ) {
           // Don't remove required fields
           return;
@@ -263,7 +264,9 @@ export default function StoreForm({
         </div>
 
         <div>
-          <Label htmlFor="store_address">Address</Label>
+          <Label htmlFor="store_address">
+            Address <span className="text-error-500">*</span>
+          </Label>
           <InputField
             id="store_address"
             placeholder="Outlet address"
@@ -339,12 +342,12 @@ export default function StoreForm({
         </div>
         <div>
           <Label htmlFor="owner_password">
-            Owner Password <span className="text-error-500">*</span>
+            Owner Password {!isEdit && <span className="text-error-500">*</span>}
           </Label>
           <InputField
             id="owner_password"
             type="password"
-            placeholder="Enter owner password"
+            placeholder={isEdit ? "Leave blank to keep current password" : "Enter owner password"}
             {...register("owner_password")}
             error={!!errors.owner_password}
             hint={errors.owner_password?.message}
