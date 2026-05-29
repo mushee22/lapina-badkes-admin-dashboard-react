@@ -140,8 +140,8 @@ export default function StoreForm({
           key === "store_address" ||
           key === "owner_name" ||
           key === "owner_phone" ||
-          key === "is_active" ||
-          (!isEdit && key === "owner_password")
+          (key === "owner_password" && !isEdit) ||
+          key === "is_active"
         ) {
           // Don't remove required fields
           return;
@@ -347,7 +347,7 @@ export default function StoreForm({
           <InputField
             id="owner_password"
             type="password"
-            placeholder={isEdit ? "Leave blank to keep current password" : "Enter owner password"}
+            placeholder={isEdit ? "Leave empty to keep current password" : "Enter owner password"}
             {...register("owner_password")}
             error={!!errors.owner_password}
             hint={errors.owner_password?.message}
