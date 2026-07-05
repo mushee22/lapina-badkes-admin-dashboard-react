@@ -4,7 +4,6 @@ import ComponentCard from "../../../components/common/ComponentCard";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../components/ui/table";
 import Button from "../../../components/ui/button/Button";
 import InputField from "../../../components/form/input/InputField";
-import Select from "../../../components/form/Select";
 import type { StoreUser, StoreUserOwner } from "../../../types/store";
 import type { Location } from "../../../types/location";
 import type { PaginationMeta } from "../../../types/pagination";
@@ -13,6 +12,7 @@ import Badge from "../../../components/ui/badge/Badge";
 import { DownloadIcon, EyeIcon, CopyIcon } from "../../../icons";
 import { Modal } from "../../../components/ui/modal";
 import { useToast } from "../../../context/ToastContext";
+import Autocomplete from "../../../components/form/Autocomplete";
 
 type Props = {
   users: StoreUser[];
@@ -34,6 +34,7 @@ type Props = {
   viewPassword: (storeId: number) => void;
   userDetails: StoreUserOwner[];
   isDetailsLoading: boolean;
+  onLocationSearch?: (value: string) => void;
 };
 
 export function OutletUsersView(props: Props) {
@@ -54,6 +55,7 @@ export function OutletUsersView(props: Props) {
     viewPassword,
     userDetails,
     isDetailsLoading,
+    onLocationSearch,
   } = props;
 
   const { showToast } = useToast();
@@ -84,14 +86,15 @@ export function OutletUsersView(props: Props) {
               />
             </div>
             <div>
-              <Select
+              <Autocomplete
                 options={[
                   { value: "", label: "All Locations" },
                   ...locations.map((loc) => ({ value: String(loc.id), label: loc.name })),
                 ]}
                 placeholder="Filter by Location"
-                defaultValue={locationId ? String(locationId) : ""}
+                value={locationId ? String(locationId) : ""}
                 onChange={(value) => setLocationId(value ? Number(value) : undefined)}
+                onSearchChange={onLocationSearch}
               />
             </div>
             <div>

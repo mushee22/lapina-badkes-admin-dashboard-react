@@ -1,17 +1,21 @@
 import { useNavigate } from "react-router";
+import { useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import StoreForm from "./components/StoreForm";
 import { useCreateStoreMutation } from "../../hooks/queries/stores";
 import { useLocationsQuery } from "../../hooks/queries/locations";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 import type { CreateStoreInput, UpdateStoreInput } from "../../types/store";
 
 export default function StoreCreate() {
   const navigate = useNavigate();
   const createMutation = useCreateStoreMutation();
-  const { data: locations = [] } = useLocationsQuery();
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
 
 
   const handleSubmit = async (values: CreateStoreInput | UpdateStoreInput) => {
@@ -33,6 +37,7 @@ export default function StoreCreate() {
             onSubmit={handleSubmit}
             submitLabel="Create Outlet"
             locations={locations}
+            onLocationSearch={setLocationSearch}
 
             isLoading={createMutation.isPending}
           />

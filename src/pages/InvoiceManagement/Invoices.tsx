@@ -8,8 +8,6 @@ import Badge from "../../components/ui/badge/Badge";
 import { DownloadIcon, EyeIcon, PencilIcon } from "../../icons";
 import Pagination from "../../components/common/Pagination";
 import { useModal } from "../../hooks/useModal";
-import { useStoresPaginatedQuery } from "../../hooks/queries/stores";
-import { useLocationsQuery } from "../../hooks/queries/locations";
 import { useDeliveryBoysListQuery } from "../../hooks/queries/deliveryBoys";
 import { useToast } from "../../context/ToastContext";
 import { exportInvoices } from "../../services/reports";
@@ -40,9 +38,6 @@ export default function Invoices() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Data for filters
-  const { data: locations = [] } = useLocationsQuery();
-  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
-  const stores = storesRes?.data ?? [];
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
 
   useEffect(() => {
@@ -318,8 +313,6 @@ export default function Invoices() {
         isOpen={isExportModalOpen}
         onClose={closeExportModal}
         onExport={handleExport}
-        stores={stores}
-        locations={locations}
         deliveryBoys={deliveryBoys}
         isExporting={isExporting}
       />

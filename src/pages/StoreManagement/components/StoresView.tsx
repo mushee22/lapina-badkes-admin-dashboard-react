@@ -8,6 +8,7 @@ import { Modal } from "../../../components/ui/modal";
 import InputField from "../../../components/form/input/InputField";
 import Switch from "../../../components/form/switch/Switch";
 import Select from "../../../components/form/Select";
+import Autocomplete from "../../../components/form/Autocomplete";
 import type { Store } from "../../../types/store";
 import type { Location } from "../../../types/location";
 import type { PaginationMeta } from "../../../types/pagination";
@@ -42,6 +43,7 @@ type Props = {
   confirmDelete: () => void;
 
   isDeletePending: boolean;
+  onLocationSearch?: (value: string) => void;
 };
 
 export function StoresView(props: Props) {
@@ -67,6 +69,7 @@ export function StoresView(props: Props) {
     openDelete,
     confirmDelete,
     isDeletePending,
+    onLocationSearch,
   } = props;
 
   return (
@@ -93,14 +96,15 @@ export function StoresView(props: Props) {
               />
             </div>
             <div>
-              <Select
+              <Autocomplete
                 options={[
                   { value: "", label: "All Locations" },
                   ...locations.map((loc) => ({ value: String(loc.id), label: loc.name })),
                 ]}
                 placeholder="Filter by Location"
-                defaultValue={locationId ? String(locationId) : ""}
+                value={locationId ? String(locationId) : ""}
                 onChange={(value) => setLocationId(value ? Number(value) : undefined)}
+                onSearchChange={onLocationSearch}
               />
             </div>
             <div>

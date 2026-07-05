@@ -10,6 +10,7 @@ interface AutocompleteProps {
   options: Option[];
   placeholder?: string;
   onChange: (value: string) => void;
+  onSearchChange?: (value: string) => void;
   className?: string;
   defaultValue?: string;
   value?: string;
@@ -20,6 +21,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   options,
   placeholder = "Select an option",
   onChange,
+  onSearchChange,
   className = "",
   defaultValue = "",
   value,
@@ -39,12 +41,16 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       setSelectedValue(value);
       const selectedOption = options.find((opt) => opt.value === value);
       if (selectedOption) {
-        setSearchTerm(selectedOption.label);
-      } else {
-        setSearchTerm("");
+        if (!isOpen) {
+          setSearchTerm(selectedOption.label);
+        }
+      } else if (!value) {
+        if (!isOpen) {
+          setSearchTerm("");
+        }
       }
     }
-  }, [value, isControlled, options]);
+  }, [value, isControlled, options, isOpen]);
 
   // Sync internal state with defaultValue prop changes
   useEffect(() => {
@@ -52,12 +58,16 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       setSelectedValue(defaultValue);
       const selectedOption = options.find((opt) => opt.value === defaultValue);
       if (selectedOption) {
-        setSearchTerm(selectedOption.label);
-      } else {
-        setSearchTerm("");
+        if (!isOpen) {
+          setSearchTerm(selectedOption.label);
+        }
+      } else if (!defaultValue) {
+        if (!isOpen) {
+          setSearchTerm("");
+        }
       }
     }
-  }, [defaultValue, isControlled, options]);
+  }, [defaultValue, isControlled, options, isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -73,9 +83,16 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
           const selectedOption = options.find((opt) => opt.value === selectedValue);
           if (selectedOption) {
             setSearchTerm(selectedOption.label);
+          } else {
+            if (onSearchChange) {
+              onSearchChange("");
+            }
           }
         } else {
           setSearchTerm("");
+          if (onSearchChange) {
+            onSearchChange("");
+          }
         }
       }
     };
@@ -84,7 +101,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [isOpen, selectedValue, options]);
+  }, [isOpen, selectedValue, options, onSearchChange]);
 
   // Always show the "All" option (empty value) at the top if it exists, then filter other options
   const allOption = options.find((opt) => opt.value === "");
@@ -108,6 +125,9 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     const selectedOption = options.find((opt) => opt.value === optionValue);
     if (selectedOption) {
       setSearchTerm(selectedOption.label);
+      if (onSearchChange) {
+        onSearchChange("");
+      }
     }
     setIsOpen(false);
     setFocusedIndex(-1);
@@ -119,6 +139,10 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     setSearchTerm(newSearchTerm);
     setIsOpen(true);
     setFocusedIndex(-1);
+    
+    if (onSearchChange) {
+      onSearchChange(newSearchTerm);
+    }
     
     // Clear selection if search doesn't match current selection
     if (selectedValue) {
@@ -136,6 +160,9 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
     setIsOpen(true);
     // Clear search term when opening to show all options
     setSearchTerm("");
+    if (onSearchChange) {
+      onSearchChange("");
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

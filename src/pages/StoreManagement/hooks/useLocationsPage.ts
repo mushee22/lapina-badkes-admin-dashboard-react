@@ -3,13 +3,14 @@ import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import type { FormEventHandler } from "react";
 import { useModal } from "../../../hooks/useModal";
 import {
-  useLocationsQuery,
+  useLocationsPaginatedQuery,
   useCreateLocationMutation,
   useUpdateLocationMutation,
   useDeleteLocationMutation,
   useSetLocationStatusMutation,
 } from "../../../hooks/queries/locations";
 import type { Location, CreateLocationInput } from "../../../types/location";
+
 import { useForm } from "react-hook-form";
 import type { FieldError, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +18,18 @@ import { CreateLocationSchema } from "../../../types/location";
 
 export function useLocationsPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState<number>(1);
+  const [perPage] = useState<number>(15);
+
   const debouncedSearch = useDebouncedValue(search, 400);
-  const { data: locations = [], isLoading } = useLocationsQuery({ search: debouncedSearch });
+  const { data: locationsRes, isLoading } = useLocationsPaginatedQuery({
+    page,
+    per_page: perPage,
+    search: debouncedSearch,
+  });
+
+  const locations = locationsRes?.data ?? [];
+  const meta = locationsRes?.meta;
 
   const { isOpen: isFormOpen, openModal: openFormModal, closeModal: closeFormModal } = useModal();
   const { isOpen: isDetailOpen, openModal: openDetailModal, closeModal: closeDetailModal } = useModal();
@@ -148,7 +159,13 @@ export function useLocationsPage() {
     locations,
     isLoading,
     search,
-    onSearchChange: (value: string) => setSearch(value),
+    onSearchChange: (value: string) => {
+      setSearch(value);
+      setPage(1);
+    },
+    page,
+    setPage,
+    meta,
     register,
     errors,
     onSubmit,

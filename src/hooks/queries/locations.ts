@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Location, CreateLocationInput, UpdateLocationInput } from "../../types/location";
-import { listLocations, getLocation, createLocation, updateLocation, deleteLocation } from "../../services/locations";
+import { listLocations, listLocationsPaginated, getLocation, createLocation, updateLocation, deleteLocation } from "../../services/locations";
 import type { LocationListParams } from "../../services/locations";
+import type { PaginatedResponse } from "../../types/pagination";
 import { useToast } from "../../context/ToastContext";
 
 export const locationsKey = ["locations"] as const;
@@ -15,6 +16,27 @@ export function useLocationsQuery(params?: LocationListParams) {
       try {
         const rows = await listLocations(effectiveParams);
         return Array.isArray(rows) ? rows : [];
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load locations";
+        showToast("error", message, "Error");
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+}
+
+export function useLocationsPaginatedQuery(params?: LocationListParams) {
+  const { showToast } = useToast();
+  const effectiveParams = params ?? {};
+  return useQuery<PaginatedResponse<Location>>({
+    queryKey: [...locationsKey, "paginated", effectiveParams],
+    queryFn: async () => {
+      try {
+        return await listLocationsPaginated(effectiveParams);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load locations";
         showToast("error", message, "Error");

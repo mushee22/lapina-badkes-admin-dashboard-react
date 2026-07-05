@@ -29,7 +29,9 @@ export function useOutletUsersPage() {
   const { data: userDetails = [], isLoading: isDetailsLoading } = useStoreUsersDetailsQuery(selectedStoreId);
   
   // Get locations for filter dropdown
-  const { data: locations = [] } = useLocationsQuery();
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
 
   const onSearchChange = (value: string) => {
     setSearch(value);
@@ -100,5 +102,6 @@ export function useOutletUsersPage() {
     viewPassword,
     userDetails,
     isDetailsLoading,
+    onLocationSearch: setLocationSearch,
   };
 }

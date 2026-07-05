@@ -22,6 +22,7 @@ interface StoreFormProps {
   onSubmit: (values: CreateStoreInput | UpdateStoreInput) => void | Promise<void>;
   submitLabel?: string;
   locations: Location[];
+  onLocationSearch?: (value: string) => void;
 
   isLoading?: boolean;
   isEdit?: boolean;
@@ -32,6 +33,7 @@ export default function StoreForm({
   onSubmit,
   submitLabel = "Save",
   locations,
+  onLocationSearch,
 
   isLoading = false,
   isEdit = false,
@@ -212,6 +214,7 @@ export default function StoreForm({
                   placeholder="Select Location"
                   value={field.value ? String(field.value) : ""}
                   onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                  onSearchChange={onLocationSearch}
                 />
               )}
             />

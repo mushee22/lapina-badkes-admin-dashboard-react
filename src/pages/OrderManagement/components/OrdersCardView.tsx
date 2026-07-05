@@ -111,6 +111,7 @@ type Props = {
   deliveryBoys: AdminUser[];
   clearFilters: () => void;
   hasActiveFilters: boolean;
+  onLocationSearch?: (value: string) => void;
 };
 
 const getStatusCount = (status: string | undefined, overview: OverviewData | undefined): number => {
@@ -169,6 +170,7 @@ export function OrdersCardView(props: Props) {
     deliveryBoyId,
     setDeliveryBoyId,
     deliveryBoys,
+    onLocationSearch,
   } = props;
 
   // Fetch overview data for order counts with current filters
@@ -407,6 +409,7 @@ export function OrdersCardView(props: Props) {
                   placeholder="Filter by Location"
                   value={locationId ? String(locationId) : ""}
                   onChange={(value) => setLocationId(value ? Number(value) : undefined)}
+                  onSearchChange={onLocationSearch}
                 />
               </div>
               <div>

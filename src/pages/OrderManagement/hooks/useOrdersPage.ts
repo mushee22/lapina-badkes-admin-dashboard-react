@@ -5,6 +5,7 @@ import { useStoresPaginatedQuery } from "../../../hooks/queries/stores";
 import { useAdminUsersQuery } from "../../../hooks/queries/adminUsers";
 import { useLocationsQuery } from "../../../hooks/queries/locations";
 import { useDeliveryBoysListQuery } from "../../../hooks/queries/deliveryBoys";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import type { PaginationMeta } from "../../../types/pagination";
 import type { Order } from "../../../types/order";
 import type { Store } from "../../../types/store";
@@ -72,7 +73,9 @@ export function useOrdersPage() {
   const { data: storesRes } = useStoresPaginatedQuery({ per_page: 200 });
   const stores: Store[] = storesRes?.data ?? [];
   const { data: users = [] } = useAdminUsersQuery();
-  const { data: locations = [] } = useLocationsQuery();
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
 
   const clearFilters = () => {
@@ -118,6 +121,7 @@ export function useOrdersPage() {
     deliveryBoys,
     clearFilters,
     hasActiveFilters,
+    onLocationSearch: setLocationSearch,
   };
 }
 

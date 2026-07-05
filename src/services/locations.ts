@@ -2,14 +2,18 @@ import * as http from "./http";
 import { z } from "zod";
 import { LocationSchema, CreateLocationSchema, UpdateLocationSchema } from "../types/location";
 import type { Location, CreateLocationInput, UpdateLocationInput } from "../types/location";
+import type { PaginatedResponse } from "../types/pagination";
 
 export interface LocationListParams {
+  page?: number;
+  per_page?: number;
   search?: string;
 }
 
 export async function listLocations(params?: LocationListParams): Promise<Location[]> {
   const qs = new URLSearchParams();
   if (params?.search) qs.set("search", params.search);
+  if (params?.per_page) qs.set("per_page", params.per_page.toString());
   const query = qs.toString();
   const path = query ? `/locations?${query}` : "/locations";
   const payload = await http.get<unknown>(path);
@@ -43,6 +47,21 @@ export async function listLocations(params?: LocationListParams): Promise<Locati
   // If shape is unexpected but the request succeeded, return empty list
   // instead of throwing, per user preference to avoid hard failures.
   return [];
+}
+
+export async function listLocationsPaginated(params?: LocationListParams): Promise<PaginatedResponse<Location>> {
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set("page", String(params.page));
+  if (params?.per_page !== undefined) qs.set("per_page", String(params.per_page));
+  if (params?.search) qs.set("search", params.search);
+  const query = qs.toString();
+  const path = query ? `/locations?${query}` : "/locations";
+  const payload = await http.get<Location[] | PaginatedResponse<Location>>(path);
+
+  if (Array.isArray(payload)) {
+    return { data: payload };
+  }
+  return payload;
 }
 
 export async function getLocation(id: number): Promise<Location> {

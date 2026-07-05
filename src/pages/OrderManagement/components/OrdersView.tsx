@@ -82,6 +82,7 @@ type Props = {
   deliveryBoys: AdminUser[];
   clearFilters: () => void;
   hasActiveFilters: boolean;
+  onLocationSearch?: (value: string) => void;
 };
 
 export function OrdersView(props: Props) {
@@ -119,6 +120,7 @@ export function OrdersView(props: Props) {
     deliveryBoys,
     clearFilters,
     hasActiveFilters,
+    onLocationSearch,
   } = props;
 
   const handleSelectAll = (checked: boolean) => {
@@ -338,6 +340,7 @@ export function OrdersView(props: Props) {
                 placeholder="Filter by Location"
                 value={locationId ? String(locationId) : ""}
                 onChange={(value) => setLocationId(value ? Number(value) : undefined)}
+                onSearchChange={onLocationSearch}
               />
             </div>
             <div>
@@ -523,8 +526,6 @@ export function OrdersView(props: Props) {
         isOpen={isExportModalOpen}
         onClose={closeExportModal}
         onExport={handleExportProductQuantities}
-        stores={stores}
-        locations={locations}
         isExporting={isExportingProducts}
         initialFilters={{
           storeId,

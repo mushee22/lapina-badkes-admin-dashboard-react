@@ -12,6 +12,8 @@ import Switch from "../../../components/form/switch/Switch";
 import type { Location, CreateLocationInput } from "../../../types/location";
 import type { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { EyeIcon, PencilIcon, TrashBinIcon, BoxIcon } from "../../../icons";
+import type { PaginationMeta } from "../../../types/pagination";
+import Pagination from "../../../components/common/Pagination";
 
 type Props = {
   locations: Location[];
@@ -48,6 +50,9 @@ type Props = {
   isSaving: boolean;
   isDeletePending: boolean;
   isStatusPending: boolean;
+  page: number;
+  setPage: (page: number) => void;
+  meta: PaginationMeta | undefined;
 };
 
 export function LocationsView(props: Props) {
@@ -81,6 +86,8 @@ export function LocationsView(props: Props) {
     isSaving,
     isDeletePending,
     isStatusPending,
+    setPage,
+    meta,
   } = props;
 
   return (
@@ -198,6 +205,9 @@ export function LocationsView(props: Props) {
                 </TableBody>
               </Table>
             </div>
+            {meta && meta.last_page > 1 && (
+              <Pagination meta={meta} onPageChange={setPage} isLoading={isLoading} />
+            )}
           </div>
         </ComponentCard>
       </div>

@@ -1,10 +1,12 @@
 import { useParams, useNavigate } from "react-router";
+import { useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import StoreForm from "./components/StoreForm";
 import { useStoreQuery, useUpdateStoreMutation } from "../../hooks/queries/stores";
 import { useLocationsQuery } from "../../hooks/queries/locations";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 import type { CreateStoreInput, UpdateStoreInput } from "../../types/store";
 
@@ -13,7 +15,9 @@ export default function StoreEdit() {
   const navigate = useNavigate();
   const { data: store, isLoading: isLoadingStore } = useStoreQuery(id ? Number(id) : null);
   const updateMutation = useUpdateStoreMutation();
-  const { data: locations = [] } = useLocationsQuery();
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 200 });
 
 
   const handleSubmit = async (values: CreateStoreInput | UpdateStoreInput) => {
@@ -90,6 +94,7 @@ export default function StoreEdit() {
             onSubmit={handleSubmit}
             submitLabel="Save Changes"
             locations={locations}
+            onLocationSearch={setLocationSearch}
 
             isLoading={updateMutation.isPending}
             isEdit={true}

@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "../../../components/ui/modal";
 import Button from "../../../components/ui/button/Button";
-import Select from "../../../components/form/Select";
+import Autocomplete from "../../../components/form/Autocomplete";
 import DatePicker from "../../../components/form/date-picker";
 import Label from "../../../components/form/Label";
-import type { Store } from "../../../types/store";
-import type { Location } from "../../../types/location";
+import { useLocationsQuery } from "../../../hooks/queries/locations";
+import { useStoresPaginatedQuery } from "../../../hooks/queries/stores";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 
 interface ProductQuantityExportModalProps {
   isOpen: boolean;
@@ -16,8 +17,6 @@ interface ProductQuantityExportModalProps {
     start_date?: string;
     end_date?: string;
   }) => void;
-  stores: Store[];
-  locations: Location[];
   isExporting: boolean;
   initialFilters?: {
     storeId?: number;
@@ -31,8 +30,6 @@ export default function ProductQuantityExportModal({
   isOpen,
   onClose,
   onExport,
-  stores,
-  locations,
   isExporting,
   initialFilters,
 }: ProductQuantityExportModalProps) {
@@ -48,6 +45,31 @@ export default function ProductQuantityExportModal({
   const [endDate, setEndDate] = useState<string | undefined>(
     initialFilters?.dateTo || today.toISOString().split("T")[0]
   );
+
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
+
+  const [storeSearch, setStoreSearch] = useState("");
+  const debouncedStoreSearch = useDebouncedValue(storeSearch, 400);
+  const { data: storesRes } = useStoresPaginatedQuery({ search: debouncedStoreSearch, per_page: 100 });
+  const stores = storesRes?.data ?? [];
+
+  useEffect(() => {
+    if (isOpen) {
+      setStoreId(initialFilters?.storeId);
+      setRouteId(initialFilters?.locationId);
+      setStartDate(initialFilters?.dateFrom || yesterday.toISOString().split("T")[0]);
+      setEndDate(initialFilters?.dateTo || today.toISOString().split("T")[0]);
+    }
+  }, [isOpen, initialFilters]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setLocationSearch("");
+      setStoreSearch("");
+    }
+  }, [isOpen]);
 
   const handleExport = () => {
     onExport({
@@ -71,7 +93,7 @@ export default function ProductQuantityExportModal({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <Label>Location (Route)</Label>
-            <Select
+            <Autocomplete
               options={[
                 { value: "", label: "All Locations" },
                 ...locations.map((loc) => ({ value: String(loc.id), label: loc.name })),
@@ -79,12 +101,13 @@ export default function ProductQuantityExportModal({
               placeholder="Select Location"
               value={routeId ? String(routeId) : ""}
               onChange={(value) => setRouteId(value ? Number(value) : undefined)}
+              onSearchChange={setLocationSearch}
             />
           </div>
 
           <div className="space-y-1">
             <Label>Outlet (Store)</Label>
-            <Select
+            <Autocomplete
               options={[
                 { value: "", label: "All Outlets" },
                 ...stores.map((store) => ({ value: String(store.id), label: store.name })),
@@ -92,6 +115,7 @@ export default function ProductQuantityExportModal({
               placeholder="Select Outlet"
               value={storeId ? String(storeId) : ""}
               onChange={(value) => setStoreId(value ? Number(value) : undefined)}
+              onSearchChange={setStoreSearch}
             />
           </div>
 

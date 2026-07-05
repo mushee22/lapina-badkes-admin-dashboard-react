@@ -16,21 +16,23 @@ export function useStoresPage() {
   const [locationId, setLocationId] = useState<number | undefined>(undefined);
   const [isActive, setIsActive] = useState<boolean | undefined>(undefined);
   const [status, setStatus] = useState<string | undefined>(undefined);
-  
+
   const debouncedSearch = useDebouncedValue(search, 400);
-  const { data: storesRes, isLoading } = useStoresPaginatedQuery({ 
-    page, 
+  const { data: storesRes, isLoading } = useStoresPaginatedQuery({
+    page,
     per_page: perPage,
     location_id: locationId,
     is_active: isActive,
     status: status,
-    search: debouncedSearch 
+    search: debouncedSearch
   });
   const stores: Store[] = storesRes?.data ?? [];
   const meta: PaginationMeta | undefined = storesRes?.meta;
-  
+
   // Get locations for filter dropdown
-  const { data: locations = [] } = useLocationsQuery();
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 200 });
 
   const { isOpen: isDeleteOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
 
@@ -90,6 +92,6 @@ export function useStoresPage() {
     confirmDelete,
 
     isDeletePending: deleteMutation.isPending,
+    onLocationSearch: setLocationSearch,
   };
 }
-

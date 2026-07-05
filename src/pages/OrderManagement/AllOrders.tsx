@@ -30,6 +30,7 @@ export default function AllOrders() {
     deliveryBoys,
     clearFilters,
     hasActiveFilters,
+    onLocationSearch,
   } = useOrdersPage();
 
   return (
@@ -61,6 +62,7 @@ export default function AllOrders() {
       deliveryBoys={deliveryBoys}
       clearFilters={clearFilters}
       hasActiveFilters={hasActiveFilters}
+      onLocationSearch={onLocationSearch}
     />
   );
 }

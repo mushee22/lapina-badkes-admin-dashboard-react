@@ -4,6 +4,7 @@ import { useOrdersPaginatedQuery } from "../../hooks/queries/orders";
 import { useDeliveryBoysListQuery } from "../../hooks/queries/deliveryBoys";
 import { useLocationsQuery } from "../../hooks/queries/locations";
 import { useStoresPaginatedQuery } from "../../hooks/queries/stores";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import type { PaginationMeta } from "../../types/pagination";
 import type { Order } from "../../types/order";
 import { OrdersCardView } from "./components/OrdersCardView";
@@ -57,7 +58,9 @@ export default function PendingOrders() {
   const meta: PaginationMeta | undefined = ordersRes?.meta;
 
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
-  const { data: locations = [] } = useLocationsQuery();
+  const [locationSearch, setLocationSearch] = useState("");
+  const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
+  const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
   const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
   const stores = storesRes?.data ?? [];
 
@@ -90,6 +93,7 @@ export default function PendingOrders() {
       deliveryBoys={deliveryBoys}
       clearFilters={() => {}}
       hasActiveFilters={false}
+      onLocationSearch={setLocationSearch}
     />
   );
 }
