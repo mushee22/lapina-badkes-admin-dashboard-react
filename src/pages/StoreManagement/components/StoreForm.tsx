@@ -46,7 +46,9 @@ export default function StoreForm({
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    watch,
+    setValue,
+    formState: { errors, touchedFields },
   } = useForm<CreateStoreInput | UpdateStoreInput>({
     resolver: zodResolver(isEdit ? UpdateStoreSchema : CreateStoreSchema),
     defaultValues: initialValues || {
@@ -75,6 +77,41 @@ export default function StoreForm({
       },
     },
   });
+
+  const storeName = watch("store_name");
+  const storePhone = watch("store_phone");
+  const storeEmail = watch("store_email");
+
+  const isAddressTouched = !!touchedFields.store_address;
+  const isOwnerTouched = !!touchedFields.owner_name;
+  const isPhoneTouched = !!touchedFields.owner_phone;
+  const isOwnerEmailTouched = !!touchedFields.owner_email;
+
+  // Prefill store_address and owner_name with the value of store_name
+  useEffect(() => {
+    if (!storeName) return;
+
+    if (!isAddressTouched) {
+      setValue("store_address", storeName, { shouldValidate: true });
+    }
+    if (!isOwnerTouched) {
+      setValue("owner_name", storeName, { shouldValidate: true });
+    }
+  }, [storeName, isAddressTouched, isOwnerTouched, setValue]);
+
+  // Prefill store_phone to owner_phone
+  useEffect(() => {
+    if (!isPhoneTouched && storePhone) {
+      setValue("owner_phone", storePhone, { shouldValidate: true });
+    }
+  }, [storePhone, isPhoneTouched, setValue]);
+
+  // Prefill store_email to owner_email
+  useEffect(() => {
+    if (!isOwnerEmailTouched && storeEmail) {
+      setValue("owner_email", storeEmail, { shouldValidate: true });
+    }
+  }, [storeEmail, isOwnerEmailTouched, setValue]);
 
   // Reset form when initialValues change
   useEffect(() => {
