@@ -81,6 +81,7 @@ export default function StoreEdit() {
       min_order_amount: undefined,
       delivery_fee: undefined,
     },
+    opening_balance: store.opening_balance ?? undefined,
   };
 
   return (

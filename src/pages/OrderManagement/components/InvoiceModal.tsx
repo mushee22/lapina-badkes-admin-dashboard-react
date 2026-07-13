@@ -136,6 +136,14 @@ export default function InvoiceModal({ isOpen, closeModal, invoice }: InvoiceMod
                                     <span className="text-xl font-bold text-brand-600 dark:text-brand-400">₹{invoice.total_amount.toFixed(2)}</span>
                                 </div>
                             </div>
+                            {invoice.order?.store && (
+                                <div className="pt-2 flex justify-between items-center border-t border-dashed border-gray-100 dark:border-white/[0.05]">
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Outstanding Balance</span>
+                                    <span className={`text-base font-bold ${invoice.order.store.remaining_balance > 0 ? "text-error-600 dark:text-error-400" : "text-gray-900 dark:text-white"}`}>
+                                        ₹{invoice.order.store.remaining_balance.toFixed(2)}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

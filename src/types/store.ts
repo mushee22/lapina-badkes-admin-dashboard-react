@@ -58,6 +58,10 @@ export const StoreSchema = z.object({
   route: RouteSchema.nullable().optional(),
   owner: StoreOwnerSchema.nullable().optional(),
   store_products: z.array(StoreProductSchema).optional(),
+  opening_balance: z.number().optional(),
+  total_orders_value: z.number().optional(),
+  amount_received: z.number().optional(),
+  remaining_balance: z.number().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
@@ -84,6 +88,7 @@ export const CreateStoreSchema = z.object({
   discount_description: z.string().nullable().optional(),
   discount_is_active: z.boolean().nullable().optional(),
   settings: StoreSettingsSchema.nullable().optional(),
+  opening_balance: z.number().nullable().optional(),
 });
 export const UpdateStoreSchema = CreateStoreSchema.partial().extend({
   store_name: z.string().min(1, "Store name is required"),

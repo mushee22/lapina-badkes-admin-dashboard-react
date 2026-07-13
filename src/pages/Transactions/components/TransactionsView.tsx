@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import ComponentCard from "../../../components/common/ComponentCard";
@@ -54,9 +55,15 @@ type Props = {
 };
 
 export function TransactionsView(props: Props) {
+  const [storeSearch, setStoreSearch] = useState("");
+  const debouncedStoreSearch = useDebouncedValue(storeSearch, 400);
+
   const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
   const { data: adminUsers = [] } = useAdminUsersQuery();
-  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
+  const { data: storesRes } = useStoresPaginatedQuery({
+    search: debouncedStoreSearch || undefined,
+    per_page: 100,
+  });
   const stores = storesRes?.data ?? [];
   const updateMutation = useUpdateTransactionMutation();
   const deleteMutation = useDeleteTransactionMutation();
@@ -211,11 +218,13 @@ export function TransactionsView(props: Props) {
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Outlet</label>
               <Autocomplete
                 options={[
+                  { value: "", label: "All Outlets" },
                   ...stores.map((store: any) => ({ value: String(store.id), label: store.name }))
                 ]}
                 placeholder="All Outlets"
                 value={storeId ? String(storeId) : ""}
                 onChange={(value) => setStoreId(value ? Number(value) : undefined)}
+                onSearchChange={setStoreSearch}
               />
             </div>
 
@@ -223,6 +232,7 @@ export function TransactionsView(props: Props) {
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Payment Mode</label>
               <Select
                 options={[
+                  { value: "", label: "All Modes" },
                   { value: "cash", label: "Cash" },
                   { value: "card", label: "Card" },
                   { value: "online", label: "Online" },
@@ -238,6 +248,7 @@ export function TransactionsView(props: Props) {
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Payment Status</label>
               <Select
                 options={[
+                  { value: "", label: "All Statuses" },
                   { value: "fully_paid", label: "Fully Paid" },
                   { value: "partially_paid", label: "Partially Paid" },
                   { value: "unpaid", label: "Unpaid" },
@@ -250,10 +261,13 @@ export function TransactionsView(props: Props) {
             <div>
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Collected By</label>
               <Autocomplete
-                options={allUsers.map((user) => ({
-                  value: String(user.id),
-                  label: user.name,
-                }))}
+                options={[
+                  { value: "", label: "All Users" },
+                  ...allUsers.map((user) => ({
+                    value: String(user.id),
+                    label: user.name,
+                  }))
+                ]}
                 placeholder="All Users"
                 value={collectedBy ? String(collectedBy) : ""}
                 onChange={(value) => setCollectedBy(value ? Number(value) : undefined)}
@@ -262,10 +276,13 @@ export function TransactionsView(props: Props) {
             <div>
               <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">Added By</label>
               <Autocomplete
-                options={allUsers.map((user) => ({
-                  value: String(user.id),
-                  label: user.name,
-                }))}
+                options={[
+                  { value: "", label: "All Users" },
+                  ...allUsers.map((user) => ({
+                    value: String(user.id),
+                    label: user.name,
+                  }))
+                ]}
                 placeholder="All Users"
                 value={addedBy ? String(addedBy) : ""}
                 onChange={(value) => setAddedBy(value ? Number(value) : undefined)}
@@ -392,13 +409,10 @@ export function TransactionsView(props: Props) {
                           {transaction.payment_status && (
                             <Badge
                               variant="light"
-                              color={
-                                transaction.payment_status === "fully_paid" ? "success" :
-                                  transaction.payment_status === "partially_paid" ? "warning" : "error"
-                              }
+                              color="success"
                               size="sm"
                             >
-                              {transaction.payment_status.replace("_", " ").replace(/\b\w/g, (l: any) => l.toUpperCase())}
+                              Paid
                             </Badge>
                           )}
                         </TableCell>
@@ -690,6 +704,7 @@ export function TransactionsView(props: Props) {
                       placeholder="Select Outlet"
                       value={field.value ? String(field.value) : ""}
                       onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                      onSearchChange={setStoreSearch}
                     />
                   )}
                 />
@@ -862,13 +877,10 @@ export function TransactionsView(props: Props) {
                     <div className="mt-1">
                       <Badge
                         variant="light"
-                        color={
-                          selectedTransaction.payment_status === "fully_paid" ? "success" :
-                            selectedTransaction.payment_status === "partially_paid" ? "warning" : "error"
-                        }
+                        color="success"
                         size="sm"
                       >
-                        {selectedTransaction.payment_status.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                        Paid
                       </Badge>
                     </div>
                   ) : "—"}

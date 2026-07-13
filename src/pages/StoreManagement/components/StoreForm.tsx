@@ -75,6 +75,7 @@ export default function StoreForm({
         min_order_amount: undefined,
         delivery_fee: undefined,
       },
+      opening_balance: undefined,
     },
   });
 
@@ -395,10 +396,10 @@ export default function StoreForm({
         </div>
       </div>
 
-      {/* Settings */}
+      {/* Settings & Financials */}
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Store Settings</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90">Store Settings & Financials</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <Label htmlFor="min_order_amount">Min Order Amount</Label>
             <Controller
@@ -428,6 +429,23 @@ export default function StoreForm({
                   step="0.01"
                   placeholder="5.00"
                   value={field.value ? String(field.value) : ""}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                />
+              )}
+            />
+          </div>
+          <div>
+            <Label htmlFor="opening_balance">Opening Balance</Label>
+            <Controller
+              name="opening_balance"
+              control={control}
+              render={({ field }) => (
+                <InputField
+                  id="opening_balance"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={field.value !== undefined && field.value !== null ? String(field.value) : ""}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                 />
               )}

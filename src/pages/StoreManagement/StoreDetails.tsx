@@ -359,6 +359,39 @@ export default function StoreDetails() {
           </div>
         </ComponentCard>
 
+        {/* Financial Information */}
+        <ComponentCard title="Financial Overview">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Opening Balance</span>
+              <p className="mt-2 text-lg font-bold text-gray-800 dark:text-white/90">
+                ₹{(store.opening_balance ?? 0).toFixed(2)}
+              </p>
+            </div>
+            
+            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Total Orders Value</span>
+              <p className="mt-2 text-lg font-bold text-gray-800 dark:text-white/90">
+                ₹{(store.total_orders_value ?? 0).toFixed(2)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Amount Received</span>
+              <p className="mt-2 text-lg font-bold text-success-600 dark:text-success-400">
+                ₹{(store.amount_received ?? 0).toFixed(2)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 dark:border-white/[0.05] dark:bg-white/[0.02]">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Remaining Balance</span>
+              <p className={`mt-2 text-lg font-bold ${(store.remaining_balance ?? 0) > 0 ? "text-error-600 dark:text-error-400" : "text-gray-800 dark:text-white/90"}`}>
+                ₹{(store.remaining_balance ?? 0).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        </ComponentCard>
+
         {/* Store Status & Settings */}
         <ComponentCard title="Status & Settings">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

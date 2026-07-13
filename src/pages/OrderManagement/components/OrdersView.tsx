@@ -83,6 +83,9 @@ type Props = {
   clearFilters: () => void;
   hasActiveFilters: boolean;
   onLocationSearch?: (value: string) => void;
+  onUserSearch?: (value: string) => void;
+  onStoreSearch?: (value: string) => void;
+  onDeliveryBoySearch?: (value: string) => void;
 };
 
 export function OrdersView(props: Props) {
@@ -121,6 +124,9 @@ export function OrdersView(props: Props) {
     clearFilters,
     hasActiveFilters,
     onLocationSearch,
+    onUserSearch,
+    onStoreSearch,
+    onDeliveryBoySearch,
   } = props;
 
   const handleSelectAll = (checked: boolean) => {
@@ -318,6 +324,7 @@ export function OrdersView(props: Props) {
                 placeholder="Filter by User"
                 value={userId ? String(userId) : ""}
                 onChange={(value) => setUserId(value ? Number(value) : undefined)}
+                onSearchChange={onUserSearch}
               />
             </div>
             <div>
@@ -329,6 +336,7 @@ export function OrdersView(props: Props) {
                 placeholder="Filter by Outlet"
                 value={storeId ? String(storeId) : ""}
                 onChange={(value) => setStoreId(value ? Number(value) : undefined)}
+                onSearchChange={onStoreSearch}
               />
             </div>
             <div>
@@ -352,6 +360,7 @@ export function OrdersView(props: Props) {
                 placeholder="Filter by Delivery Boy"
                 value={deliveryBoyId ? String(deliveryBoyId) : ""}
                 onChange={(value) => setDeliveryBoyId(value ? Number(value) : undefined)}
+                onSearchChange={onDeliveryBoySearch}
               />
             </div>
             <div>

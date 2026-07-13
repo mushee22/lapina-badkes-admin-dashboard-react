@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { useOrdersPaginatedQuery } from "../../../hooks/queries/orders";
 import { useStoresPaginatedQuery } from "../../../hooks/queries/stores";
-import { useAdminUsersQuery } from "../../../hooks/queries/adminUsers";
+import { useAdminUsersListQuery } from "../../../hooks/queries/adminUsers";
 import { useLocationsQuery } from "../../../hooks/queries/locations";
 import { useDeliveryBoysListQuery } from "../../../hooks/queries/deliveryBoys";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
@@ -70,13 +70,22 @@ export function useOrdersPage() {
   const meta: PaginationMeta | undefined = ordersRes?.meta;
 
   // Fetch stores, users, locations, and delivery boys for filters
-  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 200 });
+  const [storeSearch, setStoreSearch] = useState("");
+  const debouncedStoreSearch = useDebouncedValue(storeSearch, 400);
+  const { data: storesRes } = useStoresPaginatedQuery({ search: debouncedStoreSearch || undefined, per_page: 200 });
   const stores: Store[] = storesRes?.data ?? [];
-  const { data: users = [] } = useAdminUsersQuery();
+
+  const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebouncedValue(userSearch, 400);
+  const { data: users = [] } = useAdminUsersListQuery({ search: debouncedUserSearch || undefined });
+
   const [locationSearch, setLocationSearch] = useState("");
   const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
   const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
-  const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
+
+  const [deliveryBoySearch, setDeliveryBoySearch] = useState("");
+  const debouncedDeliveryBoySearch = useDebouncedValue(deliveryBoySearch, 400);
+  const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({ search: debouncedDeliveryBoySearch || undefined });
 
   const clearFilters = () => {
     setStatus(undefined);
@@ -122,6 +131,9 @@ export function useOrdersPage() {
     clearFilters,
     hasActiveFilters,
     onLocationSearch: setLocationSearch,
+    onUserSearch: setUserSearch,
+    onStoreSearch: setStoreSearch,
+    onDeliveryBoySearch: setDeliveryBoySearch,
   };
 }
 

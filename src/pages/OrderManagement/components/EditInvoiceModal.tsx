@@ -20,6 +20,7 @@ interface EditInvoiceModalProps {
 
 export default function EditInvoiceModal({ isOpen, onClose, invoice, orderId }: EditInvoiceModalProps) {
   const updateInvoiceMutation = useUpdateInvoiceMutation();
+  const store = invoice.order?.store;
 
   const {
     register,
@@ -51,6 +52,11 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, orderId }: 
     const total = Number(subtotal) - Number(discountAmount) + Number(taxAmount);
     setValue("total_amount", Number(total.toFixed(2)));
   }, [subtotal, discountAmount, taxAmount, setValue]);
+
+  const totalAmount = watch("total_amount") || 0;
+  const storeRemainingBalance = store?.remaining_balance ?? 0;
+  const originalInvoiceTotal = invoice.total_amount || 0;
+  const liveOutstandingBalance = storeRemainingBalance + (totalAmount - originalInvoiceTotal);
 
   useEffect(() => {
     if (isOpen) {
@@ -151,17 +157,29 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, orderId }: 
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Total Amount (Auto-calculated)</Label>
-            <InputField
-              type="number"
-              step="0.01"
-              readOnly
-              {...register("total_amount", { valueAsNumber: true })}
-              hint={errors.total_amount?.message}
-              error={!!errors.total_amount}
-              className="bg-gray-50 dark:bg-gray-800"
-            />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Total Amount (Auto-calculated)</Label>
+              <InputField
+                type="number"
+                step="0.01"
+                readOnly
+                {...register("total_amount", { valueAsNumber: true })}
+                hint={errors.total_amount?.message}
+                error={!!errors.total_amount}
+                className="bg-gray-50 dark:bg-gray-800"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Outstanding Balance</Label>
+              <InputField
+                type="text"
+                readOnly
+                disabled
+                value={store ? `₹${liveOutstandingBalance.toFixed(2)}` : "Loading..."}
+                className="bg-gray-100 dark:bg-gray-850 cursor-not-allowed"
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">

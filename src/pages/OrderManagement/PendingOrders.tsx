@@ -57,11 +57,17 @@ export default function PendingOrders() {
   const orders: Order[] = ordersRes?.data ?? [];
   const meta: PaginationMeta | undefined = ordersRes?.meta;
 
-  const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({});
+  const [deliveryBoySearch, setDeliveryBoySearch] = useState("");
+  const debouncedDeliveryBoySearch = useDebouncedValue(deliveryBoySearch, 400);
+  const { data: deliveryBoys = [] } = useDeliveryBoysListQuery({ search: debouncedDeliveryBoySearch || undefined });
+
   const [locationSearch, setLocationSearch] = useState("");
   const debouncedLocationSearch = useDebouncedValue(locationSearch, 400);
   const { data: locations = [] } = useLocationsQuery({ search: debouncedLocationSearch, per_page: 100 });
-  const { data: storesRes } = useStoresPaginatedQuery({ per_page: 100 });
+
+  const [storeSearch, setStoreSearch] = useState("");
+  const debouncedStoreSearch = useDebouncedValue(storeSearch, 400);
+  const { data: storesRes } = useStoresPaginatedQuery({ search: debouncedStoreSearch || undefined, per_page: 100 });
   const stores = storesRes?.data ?? [];
 
   return (
@@ -94,6 +100,8 @@ export default function PendingOrders() {
       clearFilters={() => {}}
       hasActiveFilters={false}
       onLocationSearch={setLocationSearch}
+      onStoreSearch={setStoreSearch}
+      onDeliveryBoySearch={setDeliveryBoySearch}
     />
   );
 }

@@ -31,6 +31,9 @@ export default function AllOrders() {
     clearFilters,
     hasActiveFilters,
     onLocationSearch,
+    onUserSearch,
+    onStoreSearch,
+    onDeliveryBoySearch,
   } = useOrdersPage();
 
   return (
@@ -63,6 +66,9 @@ export default function AllOrders() {
       clearFilters={clearFilters}
       hasActiveFilters={hasActiveFilters}
       onLocationSearch={onLocationSearch}
+      onUserSearch={onUserSearch}
+      onStoreSearch={onStoreSearch}
+      onDeliveryBoySearch={onDeliveryBoySearch}
     />
   );
 }
