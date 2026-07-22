@@ -20,7 +20,7 @@ import { PlusIcon, TrashBinIcon, ChevronLeftIcon } from "../../icons";
 export default function ManualOrderCreate() {
   const navigate = useNavigate();
   const createMutation = useCreateManualOrderMutation();
-  
+
   const [storeOwnerSearch, setStoreOwnerSearch] = useState("");
   const debouncedStoreOwnerSearch = useDebouncedValue(storeOwnerSearch, 400);
   const { data: storeOwners = [] } = useOrderStoreOwnersQuery(debouncedStoreOwnerSearch);
@@ -47,10 +47,10 @@ export default function ManualOrderCreate() {
   // Watch all items to validate stock and customer selection
   const watchedItems = watch("items");
   const watchedCustomerId = watch("customer_id");
-  
+
   // Find selected store owner and auto-fill phone if available
   const selectedStoreOwner = storeOwners.find((owner: any) => owner.id === watchedCustomerId);
-  
+
   // Auto-fill phone number when store owner is selected
   React.useEffect(() => {
     if (selectedStoreOwner?.store?.phone) {
@@ -135,20 +135,13 @@ export default function ManualOrderCreate() {
                       placeholder="Search and select store owner..."
                       value={field.value ? String(field.value) : ""}
                       onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                      onSearchChange={setStoreOwnerSearch}
                     />
                   )}
                 />
                 {errors.customer_id && (
                   <p className="mt-1.5 text-xs text-error-500">{errors.customer_id.message}</p>
                 )}
-                <div className="mt-2">
-                  <InputField
-                    id="store_owner_search"
-                    placeholder="Search store owners..."
-                    value={storeOwnerSearch}
-                    onChange={(e) => setStoreOwnerSearch(e.target.value)}
-                  />
-                </div>
                 {selectedStoreOwner?.store && (
                   <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                     <p className="text-xs text-blue-700 dark:text-blue-300">
@@ -291,12 +284,12 @@ export default function ManualOrderCreate() {
                             const product = productId ? products.find((p) => p.id === productId) : null;
                             const quantity = itemField.value || 0;
                             const exceedsStock = product ? quantity > product.stock : false;
-                            
+
                             // Initialize input value from form value or stored input
-                            const inputValue = quantityInputs[index] !== undefined 
-                              ? quantityInputs[index] 
+                            const inputValue = quantityInputs[index] !== undefined
+                              ? quantityInputs[index]
                               : (itemField.value !== undefined && itemField.value !== null ? String(itemField.value) : "");
-                            
+
                             return (
                               <>
                                 <InputField
@@ -309,7 +302,7 @@ export default function ManualOrderCreate() {
                                     const newValue = e.target.value;
                                     // Store the raw input value
                                     setQuantityInputs(prev => ({ ...prev, [index]: newValue }));
-                                    
+
                                     // Update form value if it's a valid number
                                     if (newValue === "") {
                                       itemField.onChange(undefined);
@@ -328,7 +321,7 @@ export default function ManualOrderCreate() {
                                       delete newState[index];
                                       return newState;
                                     });
-                                    
+
                                     // Ensure we have a valid number
                                     if (inputValue === "" || inputValue === "0") {
                                       itemField.onChange(undefined);
